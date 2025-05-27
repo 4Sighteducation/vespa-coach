@@ -1,0 +1,284 @@
+{
+  "generalIntroductoryQuestions": [
+    "To what extent is the report a fairly accurate description of your current characteristics?",
+    "Does your highest score represent a personal strength? Your lowest an area for development?",
+    "If you had to challenge a score, or adjust it, which would it be, and why?",
+    "Think back over the last few weeks. What are you currently finding hard about study at this level?"
+  ],
+  "conditionalFramingStatements": [
+    {
+      "id": "default_response",
+      "conditionLogic": "Default statement for all users.",
+      "statement": "…that if you answer the questions below honestly, you will soon be in a good position to make manageable and meaningful changes to the way you work, lowering your stress and increasing feelings of confidence and control.",
+      "prefix_for_display_only": "Before we look at the rest of the report, remember…"
+    },
+    {
+      "id": "low_4_or_5_scores",
+      "conditionLogic": "If 4 out of 5 scores are 3 or below, or 5 out of 5 scores are 3 or below",
+      "statement": "…these numbers are just a snapshot of how you feel right now. Small, manageable changes to the way you work will vastly improve how you feel about your potential. It might not take too long to improve things. Answering the questions below honestly will be a good starting point.",
+      "prefix_for_display_only": "Before we look at the rest of the report, remember…"
+    },
+    {
+      "id": "low_vision_attitude",
+      "conditionLogic": "If vision and attitude are both 3 or below, and other scores are above 3",
+      "statement": "…it's quite normal to feel you don't know what you're trying to achieve or why you're studying. But by answering the questions below honestly, reflecting on this report, and making small, manageable changes, you could soon be feeling much more positive.",
+      "prefix_for_display_only": "Before we look at the rest of the report, remember…"
+    },
+    {
+      "id": "low_vision_effort",
+      "conditionLogic": "If vision and effort are both 3 or below, but other scores are above 3",
+      "statement": "…your study habits from last year don't define who you are now. By making small, manageable changes to the way you work, you could soon find your habits changing and your grades improving. Consider the questions below, and try answering as honestly and openly as you can.",
+      "prefix_for_display_only": "Before we look at the rest of the report, remember…"
+    },
+    {
+      "id": "low_effort_systems",
+      "conditionLogic": "If effort and systems are both 3 or below, but other scores are above 3",
+      "statement": "…your study habits and levels of organisation last year don't define who you are now, or who you want to become. By making small, manageable changes to the way you work, you could soon find your habits changing and your grades improving. Considering the questions below honestly and openly might be a positive first step.",
+      "prefix_for_display_only": "Before we look at the rest of the report, remember…"
+    },
+    {
+      "id": "low_effort_practice",
+      "conditionLogic": "If effort and practice are both 3 or below, but other scores are above 3",
+      "statement": "…your study habits and your approach to revision last year doesn't define who you are now, or who you want to become. Consider making small, manageable changes to the way you work – you could soon find your habits changing and your grades improving. Answer the questions below with as much honesty and openness as you can – it will give you a good starting point to work from.",
+      "prefix_for_display_only": "Before we look at the rest of the report, remember…"
+    },
+    {
+      "id": "low_systems_practice",
+      "conditionLogic": "If systems and practice are both 3 or below, but other scores are above 3",
+      "statement": "…the way you organised yourself and your revision last year doesn't define who you are now. You can still make small, manageable changes to the way you study, and you could soon find your habits changing and your grades improving. Considering the questions below honestly and openly will be a positive first step.",
+      "prefix_for_display_only": "Before we look at the rest of the report, remember…"
+    }
+  ],
+  "vespaSpecificCoachingQuestions": {
+    "Vision": {
+      "Level 3": {
+        "High": [
+          "What skills are you learning that will benefit your future self?",
+          "Imagine you are 25 and when you wake up in the morning… what does your perfect working life look like?",
+          "What do you see as the benefits of getting a good education?"
+        ],
+        "Medium": [
+          "What do you want to do next? What if you don't get the grades? What other options are there?",
+          "Do you compare yourself to other people? Who would you like to be, and why?",
+          "Where do you want to be next year, in 2 years or 5 years? What will stop you getting there?"
+        ],
+        "Low": [
+          "What does success look like for you? What might you want to achieve in the next year?",
+          "What would be important to you in a job? Describe a good day at work.",
+          "What things do you not want to be doing in 2 years' time?"
+        ],
+        "Very Low": [
+          "If you could only do one subject in lots of detail, which would it be and why?",
+          "Describe a lesson you've enjoyed recently.",
+          "What obstacles do you think you may have to overcome while studying at this level?"
+        ]
+      },
+      "Level 2": {
+        "High": [
+          "What skills are you learning that will benefit your future self?",
+          "Imagine you are 25 and when you wake up in the morning… what does your perfect working life look like?",
+          "What do you see as the benefits of getting a good education?"
+        ],
+        "Medium": [
+          "What do you want to do next? What if you don't get the grades? What other options are there?",
+          "Do you compare yourself to other people? Who would you like to be, and why?",
+          "Where do you want to be next year, in 2 years or 5 years? What will stop you getting there?"
+        ],
+        "Low": [
+          "What would help you decide what you want to achieve in the future?",
+          "Have you spent some quality time actively considering your options?",
+          "What is your favourite subject/which do you enjoy the most?"
+        ],
+        "Very Low": [
+          "If you could only do one subject in lots of detail, which would it be and why?",
+          "Describe a lesson you've enjoyed recently.",
+          "What obstacles do you think you may have to overcome while studying at this level?"
+        ]
+      }
+    },
+    "Effort": {
+      "Level 3": {
+        "High": [
+          "1.Describe a typical hour of your study.",
+          "2.What is your best time of day for working?",
+          "3.How much work would you have to do in order to feel satisfied? How do you know you have done enough?"
+        ],
+        "Medium": [
+          "In an average week how many hours do you spend on hard/challenging/uncomfortable study outside of class?",
+          "What are you good at, and what did you do to get so good at it?",
+          "Where do you normally spend your study periods?"
+        ],
+        "Low": [
+          "Think of a student who works harder than you. What do they do?",
+          "If you get stuck on a piece of work, what do you do to get past the blockage?",
+          "What should you be doing, that you know you're not?"
+        ],
+        "Very Low": [
+          "1.How many hours have you studied for this week outside the classroom? How many hours do you think you should be studying?",
+          "2.Are you working now as hard as you did last year or earlier in your school career?",
+          "3.For your last homework, was your objective… to avoid doing it for as long as possible… to complete it as quickly as possible… or to get the best possible grade?"
+        ]
+      },
+      "Level 2": {
+        "High": [
+          "Describe a typical hour of your study.",
+          "What is your best time of day for working?",
+          "How much work would you have to do in order to feel satisfied? How do you know you have done enough?"
+        ],
+        "Medium": [
+          "In an average week how many hours do you spend on hard/challenging/uncomfortable study outside of class?",
+          "What are you good at, and what did you do to get so good at it?",
+          "Where do you normally spend your study periods"
+        ],
+        "Low": [
+          "Think of a student who works harder than you. What do they do?",
+          "If you get stuck on a piece of work, what do you do to get past the blockage?",
+          "What should you be doing, that you know you're not?"
+        ],
+        "Very Low": [
+          "How many hours have you studied for this week outside the classroom? How many hours do you think you should be studying?",
+          "Are you working now as hard as you did last year or earlier in your school career?",
+          "For your last homework, was your objective… to avoid doing it for as long as possible… to complete it as quickly as possible… or to get the best possible grade?"
+        ]
+      }
+    },
+    "Systems": {
+      "Level 3": {
+        "High": [
+          "Are you spending more time on one subject than the others? Why?",
+          "How could you create an extra hour every day to use in a productive way?",
+          "What organisational advice would you give to a new student?"
+        ],
+        "Medium": [
+          "What is next week looking like for you?",
+          "How do you tackle writing an extended response to a difficult question if you're given ten days to do it?",
+          "How do you follow-up classwork done during the day?"
+        ],
+        "Low": [
+          "Are you comfortable meeting all deadlines? Describe a time you missed a deadline.",
+          "Do you still work in the same ways as you used to? What is good about these? What isn't working and why?",
+          "Suggest an object/thing – maybe something you could buy or borrow - that would make you more organised."
+        ],
+        "Very Low": [
+          "Would you rather spend 1 hour working in class or 1 hr working at home? Why?",
+          "How do you know what work is currently outstanding?",
+          "If you could change one aspect about the way you work – what would it be and how would you change it?"
+        ]
+      },
+      "Level 2": {
+        "High": [
+          "Are you spending more time on one subject than the others? Why?",
+          "How could you create an extra hour every day to use in a productive way?",
+          "What organisational advice would you give to a new student?"
+        ],
+        "Medium": [
+          "What is next week looking like for you?",
+          "How do you tackle writing an extended response to a difficult question if you're given ten days to do it?",
+          "How do you follow-up classwork done during the day"
+        ],
+        "Low": [
+          "Are you comfortable meeting all deadlines? Describe a time you missed a deadline.",
+          "Do you still work in the same ways as you used to? What is good about these ways? What isn't working and why?",
+          "Suggest an object/thing – maybe something you could buy or borrow - that would make you more organised."
+        ],
+        "Very Low": [
+          "Would you rather spend 1 hour working in class or 1 hr working at home? Why?",
+          "How do you know what work is currently outstanding?",
+          "If you could change one aspect about the way you work – what would it be and how would you change it?"
+        ]
+      }
+    },
+    "Practice": {
+      "Level 3": {
+        "High": [
+          "What do you 'do' with the information we give you? How do you use it/transform it?",
+          "When was the last time you tested yourself? When did you last ask someone else to test you?",
+          "Is getting something wrong a disaster, is it a spur to (eventually) find the right answer, or something else?"
+        ],
+        "Medium": [
+          "Pick one of your subjects - which aspects of this subject do you least need to revise? Why?",
+          "How comfortable is the process of revision for you? How could you make it less comfortable?",
+          "Do you tend to focus/practice the content that you enjoy?"
+        ],
+        "Low": [
+          "Choose a subject. If you had one hour, and no homework, what would you do to help your learning in it?",
+          "Do you do past paper questions? Describe the last time you tried something under timed conditions.",
+          "What's the hardest exam question you expect to face? What are you doing about it?"
+        ],
+        "Very Low": [
+          "Is revision boring for you? Why? Explain your answer.",
+          "If you could pick one revision activity to use to prepare for an exam what would it be?",
+          "Describe a revision session you've recently done."
+        ]
+      },
+      "Level 2": {
+        "High": [
+          "1.What do you 'do' with the information we give you? How do you use it/transform it?",
+          "2.When was the last time you tested yourself? When did you last ask someone else to test you?",
+          "3.Is getting something wrong a disaster, is it a spur to (eventually) find the right answer, or something else?"
+        ],
+        "Medium": [
+          "Pick one of your subjects - which aspects of this subject do you least need to revise? Why?",
+          "How comfortable is the process of revision for you? How could you make it less comfortable?",
+          "Do you tend to focus/practice the content that you enjoy?"
+        ],
+        "Low": [
+          "Choose a subject. If you had one hour, and no homework, what would you do to help your learning in it?",
+          "Do you do past paper questions? Describe the last time you tried something under timed conditions.",
+          "What's the hardest exam question you expect to face? What are you doing about it?"
+        ],
+        "Very Low": [
+          "Is revision boring for you? Why? Explain your answer.",
+          "If you could pick one revision activity to use to prepare for an exam what would it be?",
+          "Describe a revision session you've recently done."
+        ]
+      }
+    },
+    "Attitude": {
+      "Level 3": {
+        "High": [
+          "How do you feel and respond when you get marked work back?",
+          "If you get a low grade, what do you do to make sure it doesn't happen again?",
+          "Describe a moment when you felt proud."
+        ],
+        "Medium": [
+          "When something goes wrong in your studies, what do you do?",
+          "Describe something you have persevered with in the past. How did you conquer the challenge?",
+          "Describe a time you've taken the initiative."
+        ],
+        "Low": [
+          "What's the biggest mistake you have made so far? What have you learnt/how did you deal with it?",
+          "How do other people respond to disappointing grades? Can you name someone who responds differently to you? How?",
+          "What do you feel is the difference between you and a top 'A grade' student? List five if you can"
+        ],
+        "Very Low": [
+          "What have you done since the start of the year that you are proud of?",
+          "Are you willing to contribute in class? Name a student who contributes more than you. What is their learning like?",
+          "Advise your friend if they have a grade they're unhappy with."
+        ]
+      },
+      "Level 2": {
+        "High": [
+          "1.How do you feel and respond when you get marked work back?",
+          "2.If you get a low grade, what do you do to make sure it doesn't happen again?",
+          "3.Describe a moment when you felt proud."
+        ],
+        "Medium": [
+          "When something goes wrong in your studies, what do you do?",
+          "Describe something you have persevered with in the past. How did you conquer the challenge?",
+          "Describe a time you've taken the initiative."
+        ],
+        "Low": [
+          "What's the biggest mistake you have made so far? What have you learnt/how did you deal with it?",
+          "How do other people respond to disappointing grades? Can you name someone who responds differently to you? How?",
+          "What do you feel is the difference between you and a top 'A grade' student? List five if you can"
+        ],
+        "Very Low": [
+          "1.What have you done since the start of the year that you are proud of?",
+          "2.Are you willing to contribute in class? Name a student who contributes more than you. What is their learning like?",
+          "3.Advise your friend if they have a grade they're unhappy with."
+        ]
+      }
+    }
+  }
+} 
