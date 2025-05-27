@@ -282,20 +282,24 @@ def generate_student_summary_with_llm(student_data_dict):
         # Fallback to a more informative placeholder if API key is missing
         return f"LLM summary for {student_data_dict.get('student_name', 'N/A')} is unavailable (AI key not configured). Key data would be summarized here."
 
+    student_level = student_data_dict.get('student_level', 'N/A')
+    student_name = student_data_dict.get('student_name', 'Unknown Student')
+    current_cycle = student_data_dict.get('current_cycle', 'N/A')
+
     # Construct a detailed prompt for the LLM
     prompt_parts = []
-    prompt_parts.append(f"You are an expert AI coaching assistant. Based on the following data for student '{student_data_dict.get('student_name', 'Unknown Student')}' (Level: {student_data_dict.get('student_level', 'N/A')}, Current Cycle: {student_data_dict.get('current_cycle', 'N/A')}):")
+    prompt_parts.append(f"The following data is for student '{student_name}' (Level: {student_level}, Current Cycle: {current_cycle}).")
 
     # VESPA Profile
-    prompt_parts.append("\n--- VESPA Profile ---")
+    prompt_parts.append("\n--- VESPA Profile (Vision, Effort, Systems, Practice, Attitude) ---")
     if student_data_dict.get('vespa_profile'):
         for element, details in student_data_dict['vespa_profile'].items():
             prompt_parts.append(f"- {element}: Score {details.get('score_1_to_10', 'N/A')}/10 ({details.get('score_profile_text', 'N/A')})")
-            report_text_raw = details.get('primary_tutor_coaching_comments', '') # Using tutor comments as a concise note
+            report_text_raw = details.get('primary_tutor_coaching_comments', '') 
             if report_text_raw and report_text_raw != "Coaching comments not found.":
                  report_text_clean = report_text_raw[:150].replace('\n', ' ')
                  ellipsis = '...' if len(report_text_raw) > 150 else ''
-                 prompt_parts.append(f"  Note ({element}): {report_text_clean}{ellipsis}")
+                 prompt_parts.append(f"  Tutor Note ({element}): {report_text_clean}{ellipsis}")
 
     # Academic Profile
     prompt_parts.append("\n--- Academic Profile (First 3 Subjects) ---")
@@ -305,17 +309,14 @@ def generate_student_summary_with_llm(student_data_dict):
             for subject_info in profile_data[:3]: # Limit to first 3 subjects for brevity
                 prompt_parts.append(f"- Subject: {subject_info.get('subject', 'N/A')}, Current: {subject_info.get('currentGrade', 'N/A')}, Target: {subject_info.get('targetGrade', 'N/A')}, Effort: {subject_info.get('effortGrade', 'N/A')}")
         else:
-            prompt_parts.append("  No detailed academic profile summary available.")
+            prompt_parts.append("  No detailed academic profile summary available or profile indicates issues.")
 
     # Reflections and Goals (Current Cycle Focus)
     prompt_parts.append("\n--- Student Reflections & Goals (Current Cycle Focus) ---")
     reflections_goals_found = False
     if student_data_dict.get('student_reflections_and_goals'):
         reflections = student_data_dict['student_reflections_and_goals']
-        current_cycle = student_data_dict.get('current_cycle')
-        # Define a mapping for which reflection/goal fields correspond to which cycle
-        # This needs to align with how your data is structured (e.g. rrc1 for cycle 1, goal1 for cycle 1 etc)
-        # Assuming simple mapping for now: rrcX for cycle X, goalX for cycle X
+        # current_cycle is already defined from student_data_dict
         current_rrc_key = f"rrc{current_cycle}_comment"
         current_goal_key = f"goal{current_cycle}"
 
@@ -329,7 +330,6 @@ def generate_student_summary_with_llm(student_data_dict):
             reflections_goals_found = True
         
         if not reflections_goals_found:
-             # Fallback to RRC1/Goal1 if current cycle specific ones are not found or not applicable (e.g. cycle 0)
             if reflections.get('rrc1_comment') and reflections['rrc1_comment'] != "Not specified":
                 rrc1_text_clean = str(reflections['rrc1_comment'])[:200].replace('\n', ' ')
                 prompt_parts.append(f"- RRC1 Reflection: {rrc1_text_clean}...")
@@ -340,10 +340,10 @@ def generate_student_summary_with_llm(student_data_dict):
                 reflections_goals_found = True
 
     if not reflections_goals_found:
-        prompt_parts.append("  No specific current reflections or goals provided.")
+        prompt_parts.append("  No specific current reflections or goals provided, or no fallback RRC1/Goal1 data.")
 
     # Key Insights from Questionnaire (Object_29) - pick a few flagged ones if available
-    prompt_parts.append("\n--- Key Questionnaire Insights (Flagged Low Scores) ---")
+    prompt_parts.append("\n--- Key Questionnaire Insights (Flagged Low Scores from Object_29) ---")
     flagged_insights = []
     if student_data_dict.get('vespa_profile'):
         for element_details in student_data_dict['vespa_profile'].values():
@@ -356,32 +356,46 @@ def generate_student_summary_with_llm(student_data_dict):
         for i, fi_insight in enumerate(flagged_insights[:2]): # Max 2 flagged insights
             prompt_parts.append(f"  - {fi_insight}")
     else:
-        prompt_parts.append("  No specific low-score questionnaire insights flagged.")
+        prompt_parts.append("  No specific low-score questionnaire insights flagged from Object_29 data.")
         
     # Previous Interaction Summary
     prev_summary = student_data_dict.get('previous_interaction_summary')
     if prev_summary and prev_summary != "No previous AI coaching summary found.":
-        prompt_parts.append("\n--- Previous AI Interaction Summary (Context) ---")
+        prompt_parts.append("\n--- Previous AI Interaction Summary (For Context) ---")
         prev_summary_clean = str(prev_summary)[:300].replace('\n', ' ')
         prompt_parts.append(f"  {prev_summary_clean}...")
 
-    prompt_parts.append("\n--- TASK ---")
-    prompt_parts.append("Provide a concise (2-3 sentences, max 100 words) overview summary of this student's current situation for their tutor. Highlight 1-2 key strengths and 1-2 primary areas for development or discussion based ONLY on the data provided above. The tone should be objective, analytical, and supportive, aimed at helping the tutor quickly grasp the student's profile for a coaching conversation. Do not ask questions. Do not give advice.")
+    prompt_parts.append("\n--- TASK FOR THE AI ACADEMIC MENTOR ---")
+    prompt_parts.append("Based ONLY on the data provided above, provide a concise (2-3 sentences, max 100-120 words) 'AI Student Snapshot' for the student's TUTOR.")
+    prompt_parts.append("This snapshot should highlight 1-2 key strengths and 1-2 primary areas for development or discussion, strongly rooted in the VESPA principles (Vision, Effort, Systems, Practice, Attitude).")
+    prompt_parts.append("The tone should be objective, analytical, and supportive, aimed at helping the tutor quickly grasp the student's profile to effectively prepare for a coaching conversation focused on student ownership.")
+    prompt_parts.append("Frame your insights to help the tutor ask open-ended questions (inspired by the style in the `coaching_questions_knowledge_base.json`) and guide the student towards self-assessment and finding their own solutions (e.g., how they compare to the `100 statements - 2023.txt`).")
+    prompt_parts.append("The ultimate aim of the tutor's conversation is to co-create an action plan with the student and use techniques like the 1-10 commitment scale ('How likely are you to stick to these goals?' -> 'What could move that score to an 8 or 9?').")
+    prompt_parts.append("IMPORTANT: Do NOT directly ask questions TO THE STUDENT or give direct advice TO THE STUDENT in this summary. Instead, provide insights and talking points that will help the TUTOR facilitate these conversations effectively. Do not use conversational filler like 'Okay, let's look at...'.")
     
     prompt_to_send = "\n".join(prompt_parts)
     app.logger.info(f"Generated LLM Prompt (first 500 chars): {prompt_to_send[:500]}")
     app.logger.info(f"Generated LLM Prompt (last 500 chars): {prompt_to_send[-500:]}")
     app.logger.info(f"Total LLM Prompt length: {len(prompt_to_send)} characters")
 
+    system_message_content = (
+        f"You are a professional academic mentor with significant experience working with school-age students, "
+        f"specifically at {student_level} (Level 2 is GCSE age 14-16, Level 3 is A-Level/Post-16 age 16-18). "
+        f"Your responses should reflect this understanding. You are assisting a tutor who is preparing for a "
+        f"coaching session with a student, guided by the VESPA (Vision, Effort, Systems, Practice, Attitude) framework. "
+        f"The tutor aims to foster student ownership, encourage self-reflection, and co-create action plans. "
+        f"Your role is to provide a concise data-driven summary to the TUTOR to support this process."
+    )
+
     try:
-        response = openai.chat.completions.create( # Updated API call for openai >= 1.0
-            model="gpt-3.5-turbo", # Or your preferred model like "gpt-4-turbo-preview"
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo", 
             messages=[
-                {"role": "system", "content": "You are an expert educational coaching assistant providing a summary for a tutor based on student data."},
+                {"role": "system", "content": system_message_content},
                 {"role": "user", "content": prompt_to_send}
             ],
-            max_tokens=120, # Adjust as needed for 2-3 sentences
-            temperature=0.6, # Slightly more deterministic for summaries
+            max_tokens=120, 
+            temperature=0.6, 
             n=1,
             stop=None
         )
