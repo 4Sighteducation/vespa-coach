@@ -6,6 +6,7 @@ from flask_cors import CORS # Import CORS
 from dotenv import load_dotenv
 import requests
 import logging # Add logging import
+import openai # Import the OpenAI library
 
 # Load environment variables from .env file
 load_dotenv()
@@ -35,6 +36,12 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 # SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY') # For later use
 
 KNACK_BASE_URL = f"https://api.knack.com/v1/objects"
+
+# Initialize OpenAI client
+if OPENAI_API_KEY:
+    openai.api_key = OPENAI_API_KEY
+else:
+    app.logger.warning("OPENAI_API_KEY not found in environment variables. LLM features will be disabled.")
 
 # --- Helper Functions ---
 
@@ -264,6 +271,54 @@ if not coaching_kb:
     app.logger.warning("Coaching Questions Knowledge Base (coaching_questions_knowledge_base.json) is empty or failed to load.")
 else:
     app.logger.info("Successfully loaded Coaching Questions Knowledge Base.")
+
+
+# --- Function to Generate Student Summary with LLM (Placeholder) ---
+def generate_student_summary_with_llm(student_data_dict):
+    app.logger.info(f"Attempting to generate LLM summary for student: {student_data_dict.get('student_name', 'N/A')}")
+    # Actual OPENAI_API_KEY check and prompt construction would go here
+    # For now, directly return the placeholder if the key for it is present, or a generic one.
+    
+    # This simplified version uses the placeholder logic directly
+    # The more complex prompt construction can be re-introduced when activating the LLM call.
+    if not OPENAI_API_KEY:
+        # Log the absence of the API key but still return a placeholder so the frontend structure works.
+        app.logger.warning("OpenAI API key is not configured. Using generic placeholder for LLM summary.")
+        return f"Placeholder LLM Summary for {student_data_dict.get('student_name', 'N/A')}: Strengths and areas for development would be noted here by the AI."
+
+    # Placeholder logic (actual LLM call remains commented out)
+    # Construct a basic prompt (can be expanded later)
+    prompt_parts = []
+    prompt_parts.append(f"Student: {student_data_dict.get('student_name', 'Unknown Student')}")
+    vespa_overall = student_data_dict.get('vespa_profile', {}).get('Overall', {}).get('score_1_to_10', 'N/A')
+    prompt_parts.append(f"Overall VESPA Score: {vespa_overall}")
+    # Add more key data points here for a real prompt later
+    prompt_to_send = "\n".join(prompt_parts) 
+    # app.logger.info(f"Generated LLM Prompt (basic for placeholder): {prompt_to_send}")
+
+    try:
+        # --- PLACEHOLDER FOR ACTUAL OPENAI API CALL ---
+        # response = openai.ChatCompletion.create(
+        # model="gpt-3.5-turbo", 
+        # messages=[
+        # {"role": "system", "content": "You are an expert educational coaching assistant."},
+        # {"role": "user", "content": prompt_to_send}
+        # ],
+        # max_tokens=150, 
+        # temperature=0.7 
+        # )
+        # summary = response.choices[0].message.content.strip()
+        # app.logger.info(f"LLM generated summary: {summary}")
+        # return summary
+        # --- END OF PLACEHOLDER ---
+
+        placeholder_summary = f"Placeholder LLM Summary: Student {student_data_dict.get('student_name', 'N/A')} shows [strength based on data from prompt: {prompt_to_send[:100]}...] and could focus on [area for development based on data]."
+        app.logger.info(f"Using placeholder LLM summary logic: {placeholder_summary}")
+        return placeholder_summary
+
+    except Exception as e:
+        app.logger.error(f"Error during (placeholder) LLM summary generation: {e}")
+        return "Error generating placeholder summary."
 
 
 @app.route('/api/v1/coaching_suggestions', methods=['POST'])
@@ -584,6 +639,10 @@ def coaching_suggestions():
         },
         "previous_interaction_summary": previous_interaction_summary
     }
+
+    # Add LLM-generated summary (placeholder for now)
+    llm_student_overview = generate_student_summary_with_llm(response_data) 
+    response_data["llm_generated_summary_and_suggestions"]["student_overview_summary"] = llm_student_overview
 
     app.logger.info(f"Successfully prepared response for student_object10_record_id: {student_obj10_id_from_request}")
     return jsonify(response_data)
