@@ -1,14 +1,9 @@
-# Environment variables and secrets
+# Environment variables
 .env
-*.env
-secrets.json
+.env.*
+!/.env.example
 
-# Virtual environment
-venv/
-env/
-ENV/
-
-# Python cache files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -51,20 +46,24 @@ data/logs/*
 logs/
 *.log.*
 
-# IDE specific files
-.idea/
+# IDE / OS specific
 .vscode/
+.idea/
 *.swp
 *.swo
 .vs/
-.DS_Store
+*.DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # WebDriver binaries
 chromedriver*
 geckodriver*
+
+# Specific files to ignore
+.env copy
