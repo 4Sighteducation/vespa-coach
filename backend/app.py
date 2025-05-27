@@ -122,77 +122,63 @@ def get_knack_record(object_key, record_id=None, filters=None):
 
 
 # --- Function to fetch Academic Profile (Object_112) ---
-def get_academic_profile(student_email, student_name_from_obj10, student_obj10_id_log_ref):
-    app.logger.info(f"Starting academic profile fetch for student (Obj10 ID: {student_obj10_id_log_ref}), Email: '{student_email}', Name: '{student_name_from_obj10}'.")
+def get_academic_profile(actual_student_obj3_id, student_name_for_fallback, student_obj10_id_log_ref):
+    app.logger.info(f"Starting academic profile fetch. Target Object_3 ID: '{actual_student_obj3_id}', Fallback Name: '{student_name_for_fallback}', Original Obj10 ID for logging: {student_obj10_id_log_ref}.")
     
     academic_profile_record = None
-    subjects_summary_from_email_link = []
-    profile_found_via_email = False
+    subjects_summary = [] # Initialize
 
-    # Attempt 1: Fetch via email linkage (Object_10.email -> Object_3.id -> Object_112.field_3070)
-    if student_email:
-        app.logger.info(f"Attempting to fetch Object_112 via email link for: {student_email}")
-        filters_object3 = [{'field': 'field_70', 'operator': 'is', 'value': student_email}]
-        user_accounts = get_knack_record("object_3", filters=filters_object3)
+    # Attempt 1: Fetch via direct Object_3 ID link (Object_112.field_3064)
+    if actual_student_obj3_id:
+        app.logger.info(f"Attempting to fetch Object_112 directly using Object_3 ID: {actual_student_obj3_id} via field_3064.")
+        # Prefer _raw for connection ID fields if available
+        filters_object112_direct_link = [{'field': 'field_3064_raw', 'operator': 'is', 'value': actual_student_obj3_id}]
+        linked_profiles = get_knack_record("object_112", filters=filters_object112_direct_link)
 
-        if user_accounts:
-            user_account_record = user_accounts[0]
-            user_account_id = user_account_record.get('id')
-            if user_account_id:
-                app.logger.info(f"Found User Account (Object_3) ID: {user_account_id} for email: {student_email}")
-                filters_object112_email_link = [{'field': 'field_3070_raw', 'operator': 'is', 'value': user_account_id}]
-                homepage_profiles_email_link = get_knack_record("object_112", filters=filters_object112_email_link)
-                
-                if not homepage_profiles_email_link:
-                    app.logger.info(f"No Object_112 profile found with field_3070_raw for account ID {user_account_id}. Trying 'field_3070'.")
-                    filters_object112_email_link_alt = [{'field': 'field_3070', 'operator': 'is', 'value': user_account_id}]
-                    homepage_profiles_email_link = get_knack_record("object_112", filters=filters_object112_email_link_alt)
+        if not linked_profiles: # Try without _raw if first attempt fails or _raw isn't the correct field for ID
+            app.logger.info(f"No Object_112 profile found with field_3064_raw for Object_3 ID {actual_student_obj3_id}. Trying 'field_3064'.")
+            filters_object112_direct_link_alt = [{'field': 'field_3064', 'operator': 'is', 'value': actual_student_obj3_id}]
+            linked_profiles = get_knack_record("object_112", filters=filters_object112_direct_link_alt)
 
-                if homepage_profiles_email_link:
-                    academic_profile_record = homepage_profiles_email_link[0]
-                    profile_found_via_email = True
-                    app.logger.info(f"Successfully fetched Homepage Profile (Object_112) ID: {academic_profile_record.get('id')} via email link.")
-                    # Try parsing subjects from this email-linked profile
-                    subjects_summary_from_email_link = parse_subjects_from_profile_record(academic_profile_record)
-                    # Check if the parsed subjects are meaningful (not just the default "No academic subjects...")
-                    if not subjects_summary_from_email_link or (len(subjects_summary_from_email_link) == 1 and subjects_summary_from_email_link[0]["subject"].startswith("No academic subjects")):
-                        app.logger.info(f"Email-linked Object_112 record ID {academic_profile_record.get('id')} yielded no valid subjects. Will attempt name fallback.")
-                        academic_profile_record = None # Nullify to allow name fallback
-                    else:
-                        app.logger.info(f"Email-linked Object_112 record ID {academic_profile_record.get('id')} yielded valid subjects. Using this profile.")
-                else:
-                    app.logger.info(f"No Object_112 profile found via email link for User Account ID: {user_account_id} (email: {student_email}).")
+        if linked_profiles:
+            academic_profile_record = linked_profiles[0]
+            app.logger.info(f"Successfully fetched Homepage Profile (Object_112) ID: {academic_profile_record.get('id')} via direct Object_3 ID link (field_3064).")
+            subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
+            if not subjects_summary or (len(subjects_summary) == 1 and subjects_summary[0]["subject"].startswith("No academic subjects")):
+                app.logger.info(f"Directly linked Object_112 record ID {academic_profile_record.get('id')} yielded no valid subjects. Will attempt name fallback.")
+                academic_profile_record = None # Nullify to allow name fallback
             else:
-                app.logger.warning(f"User account found for email {student_email}, but it's missing an ID.")
+                app.logger.info(f"Directly linked Object_112 record ID {academic_profile_record.get('id')} yielded valid subjects. Using this profile.")
+                return subjects_summary # Success with direct link, return early
         else:
-            app.logger.info(f"No user account (Object_3) found for email: {student_email}.")
+            app.logger.info(f"No Object_112 profile found via direct Object_3 ID link (field_3064) for ID: {actual_student_obj3_id}.")
     else:
-        app.logger.info(f"No student email provided. Skipping email-based Object_112 search.")
+        app.logger.warning("No actual_student_obj3_id provided for direct Object_112 lookup. Proceeding to name fallback if available.")
 
-    # Attempt 2: Fallback to fetch by student name if email attempt failed OR yielded no valid subjects
-    if not academic_profile_record and student_name_from_obj10 and student_name_from_obj10 != "N/A":
-        log_reason = "profile not found via email" if not profile_found_via_email else "email-linked profile had no valid subjects"
-        app.logger.info(f"Attempting Object_112 fallback search by student name ('{student_name_from_obj10}') because: {log_reason}.")
-        filters_object112_name = [{'field': 'field_3066', 'operator': 'is', 'value': student_name_from_obj10}]
+    # Attempt 2: Fallback to fetch by student name if direct link failed OR yielded no valid subjects
+    if student_name_for_fallback and student_name_for_fallback != "N/A":
+        log_reason = "direct Object_3 ID link failed" if not academic_profile_record else "direct link profile had no valid subjects"
+        app.logger.info(f"Attempting Object_112 fallback search by student name ('{student_name_for_fallback}') because: {log_reason}.")
+        filters_object112_name = [{'field': 'field_3066', 'operator': 'is', 'value': student_name_for_fallback}]
         homepage_profiles_name_search = get_knack_record("object_112", filters=filters_object112_name)
         
         if homepage_profiles_name_search:
-            academic_profile_record = homepage_profiles_name_search[0]
-            app.logger.info(f"Successfully fetched Homepage Profile (Object_112) ID: {academic_profile_record.get('id')} via NAME fallback.")
-            # Parse subjects from this name-fallback profile
-            subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
-            return subjects_summary # Return subjects from name fallback
+            name_fallback_record = homepage_profiles_name_search[0] # Use a different variable name
+            app.logger.info(f"Successfully fetched Homepage Profile (Object_112) ID: {name_fallback_record.get('id')} via NAME fallback.")
+            subjects_from_name_fallback = parse_subjects_from_profile_record(name_fallback_record)
+            # Check if the parsed subjects are meaningful
+            if not subjects_from_name_fallback or (len(subjects_from_name_fallback) == 1 and subjects_from_name_fallback[0]["subject"].startswith("No academic subjects")):
+                app.logger.info(f"Name-fallback Object_112 record ID {name_fallback_record.get('id')} yielded no valid subjects.")
+                # Fall through to the final default return
+            else:
+                app.logger.info(f"Name-fallback Object_112 record ID {name_fallback_record.get('id')} yielded valid subjects. Using this profile.")
+                return subjects_from_name_fallback
         else:
-            app.logger.warning(f"Fallback search: No Homepage Profile (Object_112) found for student name: '{student_name_from_obj10}'.")
-            # If email also failed and name fallback failed, return the empty/default from email attempt or new default
-            return subjects_summary_from_email_link if subjects_summary_from_email_link else [{"subject": "Academic profile not found.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}]
-    elif academic_profile_record:
-        # This means email link was successful and yielded valid subjects
-        app.logger.info("Object_112 record from email link was valid. Using its subjects.")
-        return subjects_summary_from_email_link
-    else:
-        app.logger.warning(f"All attempts to fetch and parse Object_112 failed decisively (email: '{student_email}', name: '{student_name_from_obj10}').")
-        return [{"subject": "Academic profile not found.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}]
+            app.logger.warning(f"Fallback search: No Homepage Profile (Object_112) found for student name: '{student_name_for_fallback}'.")
+    
+    # Final fallback if all else fails
+    app.logger.warning(f"All attempts to fetch and parse Object_112 failed (Direct Obj3 ID: '{actual_student_obj3_id}', Fallback name: '{student_name_for_fallback}').")
+    return [{"subject": "Academic profile not found by any method.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}]
 
 
 # Helper function to parse subjects from a given academic_profile_record
@@ -288,16 +274,28 @@ def coaching_suggestions():
     app.logger.info(f"Successfully fetched Object_10 data for ID {student_obj10_id_from_request}")
 
     student_name_for_profile_lookup = student_vespa_data.get("field_187_raw", {}).get("full", "N/A")
-    # Extract student email from Object_10 for linking to Object_3 and then Object_112
-    student_email_obj = student_vespa_data.get("field_197_raw") # This is usually an object e.g. {'email': 'student@example.com'}
+    # Extract student email from Object_10 for linking to Object_3
+    student_email_obj = student_vespa_data.get("field_197_raw") 
     student_email = None
     if isinstance(student_email_obj, dict) and 'email' in student_email_obj:
         student_email = student_email_obj['email']
-    elif isinstance(student_email_obj, str): # Less common but handle if it's just a string
+    elif isinstance(student_email_obj, str): 
         student_email = student_email_obj
     
-    if not student_email:
-        app.logger.warning(f"Student email (field_197_raw) not found or in unexpected format in Object_10 ID: {student_obj10_id_from_request}. Academic profile may be unavailable.")
+    actual_student_object3_id = None
+    if student_email:
+        filters_object3_for_id = [{'field': 'field_70', 'operator': 'is', 'value': student_email}]
+        user_accounts_for_id = get_knack_record("object_3", filters=filters_object3_for_id)
+        if user_accounts_for_id:
+            actual_student_object3_id = user_accounts_for_id[0].get('id')
+            app.logger.info(f"Determined actual Object_3 ID for current student ({student_name_for_profile_lookup}, {student_email}): {actual_student_object3_id}")
+        else:
+            app.logger.warning(f"Could not find Object_3 record for email {student_email} to get actual_student_object3_id.")
+    else:
+        app.logger.warning(f"No student email from Object_10, cannot determine actual_student_object3_id for direct Object_112 lookup.")
+        
+    if not student_email: # This log was here before, keeping it for context if email is missing
+        app.logger.warning(f"Student email (field_197_raw) not found or in unexpected format in Object_10 ID: {student_obj10_id_from_request}. Academic profile may be unavailable or rely on name fallback only.")
         # student_email will be None, and get_academic_profile will handle it
 
     student_level = student_vespa_data.get("field_568_raw", "N/A")
@@ -524,7 +522,7 @@ def coaching_suggestions():
 
     
     # Fetch Academic Profile Data (Object_112)
-    academic_profile_summary_data = get_academic_profile(student_email, student_name_for_profile_lookup, student_obj10_id_from_request)
+    academic_profile_summary_data = get_academic_profile(actual_student_object3_id, student_name_for_profile_lookup, student_obj10_id_from_request)
 
     # Populate general introductory questions and overall framing statement from coaching_kb
     general_intro_questions = ["No general introductory questions found."]
