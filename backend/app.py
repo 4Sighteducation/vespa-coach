@@ -109,95 +109,122 @@ def get_knack_record(object_key, record_id=None, filters=None):
 
 
 # --- Function to fetch Academic Profile (Object_112) ---
-def get_academic_profile(student_email, student_obj10_id_log_ref):
-    app.logger.info(f"Starting academic profile fetch for student email (from Obj10 ID: {student_obj10_id_log_ref}).")
-    if not student_email:
-        app.logger.warning(f"No email found for student (Obj10 ID: {student_obj10_id_log_ref}), cannot fetch academic profile.")
-        return []
-
-    # 1. Find User Account (Object_3) by email
-    filters_object3 = [{'field': 'field_70', 'operator': 'is', 'value': student_email}]
-    user_accounts = get_knack_record("object_3", filters=filters_object3)
-
-    if not user_accounts: # get_knack_record returns a list for filtered queries
-        app.logger.warning(f"No user account (Object_3) found for email: {student_email}")
-        return []
+def get_academic_profile(student_email, student_name_from_obj10, student_obj10_id_log_ref):
+    app.logger.info(f"Starting academic profile fetch for student (Obj10 ID: {student_obj10_id_log_ref}), Email: '{student_email}', Name: '{student_name_from_obj10}'.")
     
-    # Assuming one user account per email for this context
-    user_account_record = user_accounts[0]
-    user_account_id = user_account_record.get('id')
-    if not user_account_id:
-        app.logger.warning(f"User account found for email {student_email}, but it's missing an ID.")
-        return []
-    
-    app.logger.info(f"Found User Account (Object_3) ID: {user_account_id} for email: {student_email}")
+    academic_profile_record = None
+    subjects_summary_from_email_link = []
+    profile_found_via_email = False
 
-    # 2. Fetch Homepage Profile (Object_112) using User Account ID connection
-    # The connection is Object_112.field_3070 (Account) to Object_3.id
-    filters_object112 = [{'field': 'field_3070_raw', 'operator': 'is', 'value': user_account_id}] # field_3070 is a connection
-    
-    # According to Knack API, when filtering on a connection field,
-    # you usually use the raw field name (e.g., field_XXX_raw) or just field_XXX
-    # and provide the connected record ID. Let's try field_3070_raw first.
-    # If that doesn't work, we might need to adjust to 'field_3070' if the API expects the connection field ID itself.
-    
-    homepage_profiles = get_knack_record("object_112", filters=filters_object112)
+    # Attempt 1: Fetch via email linkage (Object_10.email -> Object_3.id -> Object_112.field_3070)
+    if student_email:
+        app.logger.info(f"Attempting to fetch Object_112 via email link for: {student_email}")
+        filters_object3 = [{'field': 'field_70', 'operator': 'is', 'value': student_email}]
+        user_accounts = get_knack_record("object_3", filters=filters_object3)
 
-    if not homepage_profiles:
-        # Try with 'field_3070' if '_raw' didn't work
-        app.logger.info(f"No Object_112 profile found with field_3070_raw for account ID {user_account_id}. Trying 'field_3070'.")
-        filters_object112_alt = [{'field': 'field_3070', 'operator': 'is', 'value': user_account_id}]
-        homepage_profiles = get_knack_record("object_112", filters=filters_object112_alt)
+        if user_accounts:
+            user_account_record = user_accounts[0]
+            user_account_id = user_account_record.get('id')
+            if user_account_id:
+                app.logger.info(f"Found User Account (Object_3) ID: {user_account_id} for email: {student_email}")
+                filters_object112_email_link = [{'field': 'field_3070_raw', 'operator': 'is', 'value': user_account_id}]
+                homepage_profiles_email_link = get_knack_record("object_112", filters=filters_object112_email_link)
+                
+                if not homepage_profiles_email_link:
+                    app.logger.info(f"No Object_112 profile found with field_3070_raw for account ID {user_account_id}. Trying 'field_3070'.")
+                    filters_object112_email_link_alt = [{'field': 'field_3070', 'operator': 'is', 'value': user_account_id}]
+                    homepage_profiles_email_link = get_knack_record("object_112", filters=filters_object112_email_link_alt)
 
-    if not homepage_profiles:
-        app.logger.warning(f"No Homepage Profile (Object_112) found for User Account ID: {user_account_id} (original email: {student_email}).")
-        return []
+                if homepage_profiles_email_link:
+                    academic_profile_record = homepage_profiles_email_link[0]
+                    profile_found_via_email = True
+                    app.logger.info(f"Successfully fetched Homepage Profile (Object_112) ID: {academic_profile_record.get('id')} via email link.")
+                    # Try parsing subjects from this email-linked profile
+                    subjects_summary_from_email_link = parse_subjects_from_profile_record(academic_profile_record)
+                    # Check if the parsed subjects are meaningful (not just the default "No academic subjects...")
+                    if not subjects_summary_from_email_link or (len(subjects_summary_from_email_link) == 1 and subjects_summary_from_email_link[0]["subject"].startswith("No academic subjects")):
+                        app.logger.info(f"Email-linked Object_112 record ID {academic_profile_record.get('id')} yielded no valid subjects. Will attempt name fallback.")
+                        academic_profile_record = None # Nullify to allow name fallback
+                    else:
+                        app.logger.info(f"Email-linked Object_112 record ID {academic_profile_record.get('id')} yielded valid subjects. Using this profile.")
+                else:
+                    app.logger.info(f"No Object_112 profile found via email link for User Account ID: {user_account_id} (email: {student_email}).")
+            else:
+                app.logger.warning(f"User account found for email {student_email}, but it's missing an ID.")
+        else:
+            app.logger.info(f"No user account (Object_3) found for email: {student_email}.")
+    else:
+        app.logger.info(f"No student email provided. Skipping email-based Object_112 search.")
 
-    # Assuming one homepage profile record per user account
-    academic_profile_record = homepage_profiles[0]
-    app.logger.info(f"Successfully fetched Homepage Profile (Object_112) ID: {academic_profile_record.get('id')}")
+    # Attempt 2: Fallback to fetch by student name if email attempt failed OR yielded no valid subjects
+    if not academic_profile_record and student_name_from_obj10 and student_name_from_obj10 != "N/A":
+        log_reason = "profile not found via email" if not profile_found_via_email else "email-linked profile had no valid subjects"
+        app.logger.info(f"Attempting Object_112 fallback search by student name ('{student_name_from_obj10}') because: {log_reason}.")
+        filters_object112_name = [{'field': 'field_3066', 'operator': 'is', 'value': student_name_from_obj10}]
+        homepage_profiles_name_search = get_knack_record("object_112", filters=filters_object112_name)
+        
+        if homepage_profiles_name_search:
+            academic_profile_record = homepage_profiles_name_search[0]
+            app.logger.info(f"Successfully fetched Homepage Profile (Object_112) ID: {academic_profile_record.get('id')} via NAME fallback.")
+            # Parse subjects from this name-fallback profile
+            subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
+            return subjects_summary # Return subjects from name fallback
+        else:
+            app.logger.warning(f"Fallback search: No Homepage Profile (Object_112) found for student name: '{student_name_from_obj10}'.")
+            # If email also failed and name fallback failed, return the empty/default from email attempt or new default
+            return subjects_summary_from_email_link if subjects_summary_from_email_link else [{"subject": "Academic profile not found.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}]
+    elif academic_profile_record:
+        # This means email link was successful and yielded valid subjects
+        app.logger.info("Object_112 record from email link was valid. Using its subjects.")
+        return subjects_summary_from_email_link
+    else:
+        app.logger.warning(f"All attempts to fetch and parse Object_112 failed decisively (email: '{student_email}', name: '{student_name_from_obj10}').")
+        return [{"subject": "Academic profile not found.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}]
 
-    # 3. Parse Subject JSONs
+
+# Helper function to parse subjects from a given academic_profile_record
+def parse_subjects_from_profile_record(academic_profile_record):
+    if not academic_profile_record:
+        app.logger.error("parse_subjects_from_profile_record called with no record.")
+        return [] # Or a default indicating no data
+
+    app.logger.info(f"Parsing subjects for Object_112 record ID: {academic_profile_record.get('id')}. Record (first 500 chars): {str(academic_profile_record)[:500]}")
     subjects_summary = []
     # Subject fields are field_3080 (Sub1) to field_3094 (Sub15)
-    for i in range(1, 16): # Sub1 to Sub15
+    for i in range(1, 16):
         field_id_subject_json = f"field_30{79+i}" # field_3080 to field_3094
-        
-        # Knack might store these as direct JSON strings or within a _raw variant
         subject_json_str = academic_profile_record.get(field_id_subject_json)
         if subject_json_str is None:
             subject_json_str = academic_profile_record.get(f"{field_id_subject_json}_raw")
 
+        app.logger.debug(f"For Obj112 ID {academic_profile_record.get('id')}, field {field_id_subject_json}: Data type: {type(subject_json_str)}, Content (brief): '{str(subject_json_str)[:100]}...'")
+        
         if subject_json_str and isinstance(subject_json_str, str) and subject_json_str.strip().startswith('{'):
+            app.logger.info(f"Attempting to parse JSON for {field_id_subject_json}: '{subject_json_str[:200]}...'")
             try:
                 subject_data = json.loads(subject_json_str)
-                # Extract specific details as per README example: subject, currentGrade, targetGrade, effortGrade
-                # The actual keys within the JSON string might vary, adapt as needed.
-                # Example from README: {"subject": "Physics", "currentGrade": "B", "targetGrade": "A", "effortGrade": "C"}
-                # Let's assume the JSON has keys like 'subjectName', 'currentGradeValue', 'targetGradeValue', 'effortScore'
-                
-                # Standardize keys based on typical Knack JSON structure for subject details
-                # This part is an assumption based on typical Knack structures seen in similar projects.
-                # It may need adjustment based on the actual JSON structure in field_3080 etc.
+                app.logger.info(f"Parsed subject_data for {field_id_subject_json}: {subject_data}")
                 summary_entry = {
-                    "subject": subject_data.get("subject") or subject_data.get("subject_name") or subject_data.get("name", "N/A"),
-                    "currentGrade": subject_data.get("currentGrade") or subject_data.get("current_grade") or subject_data.get("cg", "N/A"),
-                    "targetGrade": subject_data.get("targetGrade") or subject_data.get("target_grade") or subject_data.get("tg", "N/A"),
-                    "effortGrade": subject_data.get("effortGrade") or subject_data.get("effort_grade") or subject_data.get("eg", "N/A")
-                    # Add other relevant fields if necessary, like MEG, attendance, behaviour
+                    "subject": subject_data.get("subject") or subject_data.get("subject_name") or subject_data.get("subjectName") or subject_data.get("name", "N/A"),
+                    "currentGrade": subject_data.get("currentGrade") or subject_data.get("current_grade") or subject_data.get("cg") or subject_data.get("currentgrade", "N/A"),
+                    "targetGrade": subject_data.get("targetGrade") or subject_data.get("target_grade") or subject_data.get("tg") or subject_data.get("targetgrade", "N/A"),
+                    "effortGrade": subject_data.get("effortGrade") or subject_data.get("effort_grade") or subject_data.get("eg") or subject_data.get("effortgrade", "N/A")
                 }
-                subjects_summary.append(summary_entry)
-                app.logger.debug(f"Parsed subject data for {field_id_subject_json}: {summary_entry}")
-            except json.JSONDecodeError:
-                app.logger.warning(f"Failed to decode JSON for subject field {field_id_subject_json} for Obj112 ID {academic_profile_record.get('id')}. Content: '{subject_json_str[:100]}...'") # Log first 100 chars
-        elif subject_json_str: # If it's not None/empty but not valid JSON
-            app.logger.info(f"Field {field_id_subject_json} for Obj112 ID {academic_profile_record.get('id')} was not empty but not a valid JSON string: '{subject_json_str[:100]}...'")
-
+                if summary_entry["subject"] != "N/A" and summary_entry["subject"] is not None:
+                    subjects_summary.append(summary_entry)
+                    app.logger.debug(f"Added subject: {summary_entry['subject']}")
+                else:
+                    app.logger.info(f"Skipped adding subject for {field_id_subject_json} as subject name was invalid or N/A. Parsed data: {subject_data}")
+            except json.JSONDecodeError as e:
+                app.logger.warning(f"JSONDecodeError for {field_id_subject_json}: {e}. Content: '{subject_json_str[:100]}...'")
+        elif subject_json_str:
+            app.logger.info(f"Field {field_id_subject_json} was not empty but not a valid JSON string start: '{subject_json_str[:100]}...'")
 
     if not subjects_summary:
-        app.logger.info(f"No valid subject JSONs found or parsed in Object_112 record {academic_profile_record.get('id')}.")
-        return [{"subject": "No academic subjects found or parsed.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}]
-        
+        app.logger.info(f"No valid subject JSONs parsed from Object_112 record {academic_profile_record.get('id')}. Returning default message list.")
+        return [{"subject": "No academic subjects parsed from profile.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}]
+    
+    app.logger.info(f"Successfully parsed {len(subjects_summary)} subjects from Object_112 record {academic_profile_record.get('id')}.")
     return subjects_summary
 
 
@@ -247,7 +274,7 @@ def coaching_suggestions():
     
     app.logger.info(f"Successfully fetched Object_10 data for ID {student_obj10_id_from_request}")
 
-    student_name = student_vespa_data.get("field_187_raw", {}).get("full", "N/A")
+    student_name_for_profile_lookup = student_vespa_data.get("field_187_raw", {}).get("full", "N/A")
     # Extract student email from Object_10 for linking to Object_3 and then Object_112
     student_email_obj = student_vespa_data.get("field_197_raw") # This is usually an object e.g. {'email': 'student@example.com'}
     student_email = None
@@ -475,7 +502,7 @@ def coaching_suggestions():
 
     
     # Fetch Academic Profile Data (Object_112)
-    academic_profile_summary_data = get_academic_profile(student_email, student_obj10_id_from_request)
+    academic_profile_summary_data = get_academic_profile(student_email, student_name_for_profile_lookup, student_obj10_id_from_request)
 
     # Populate general introductory questions and overall framing statement from coaching_kb
     general_intro_questions = ["No general introductory questions found."]
@@ -507,7 +534,7 @@ def coaching_suggestions():
 
     # --- Prepare Response ---
     response_data = {
-        "student_name": student_name,
+        "student_name": student_name_for_profile_lookup,
         "student_level": student_level,
         "current_cycle": current_m_cycle,
         "vespa_profile": vespa_profile_details,
