@@ -2,6 +2,7 @@ import os
 import json
 # Removed: import csv 
 from flask import Flask, request, jsonify
+from flask_cors import CORS # Import CORS
 from dotenv import load_dotenv
 import requests
 
@@ -9,6 +10,10 @@ import requests
 load_dotenv()
 
 app = Flask(__name__)
+
+# --- CORS Configuration ---
+# Allow requests from your Knack domain
+CORS(app, resources={r"/api/*": {"origins": "https://vespaacademy.knack.com"}})
 
 # --- Configuration ---
 KNACK_APP_ID = os.getenv('KNACK_APP_ID')
