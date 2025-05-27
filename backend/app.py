@@ -291,9 +291,11 @@ def generate_student_summary_with_llm(student_data_dict):
     if student_data_dict.get('vespa_profile'):
         for element, details in student_data_dict['vespa_profile'].items():
             prompt_parts.append(f"- {element}: Score {details.get('score_1_to_10', 'N/A')}/10 ({details.get('score_profile_text', 'N/A')})")
-            report_text = details.get('primary_tutor_coaching_comments', '') # Using tutor comments as a concise note
-            if report_text and report_text != "Coaching comments not found.":
-                 prompt_parts.append(f"  Note ({element}): {report_text[:150].replace('\n', ' ')}{( '...' if len(report_text) > 150 else '' )}")
+            report_text_raw = details.get('primary_tutor_coaching_comments', '') # Using tutor comments as a concise note
+            if report_text_raw and report_text_raw != "Coaching comments not found.":
+                 report_text_clean = report_text_raw[:150].replace('\n', ' ')
+                 ellipsis = '...' if len(report_text_raw) > 150 else ''
+                 prompt_parts.append(f"  Note ({element}): {report_text_clean}{ellipsis}")
 
     # Academic Profile
     prompt_parts.append("\n--- Academic Profile (First 3 Subjects) ---")
@@ -318,19 +320,23 @@ def generate_student_summary_with_llm(student_data_dict):
         current_goal_key = f"goal{current_cycle}"
 
         if reflections.get(current_rrc_key) and reflections[current_rrc_key] != "Not specified":
-            prompt_parts.append(f"- Current Reflection (RRC{current_cycle}): {str(reflections[current_rrc_key])[:200].replace('\n', ' ')}...")
+            rrc_text_clean = str(reflections[current_rrc_key])[:200].replace('\n', ' ')
+            prompt_parts.append(f"- Current Reflection (RRC{current_cycle}): {rrc_text_clean}...")
             reflections_goals_found = True
         if reflections.get(current_goal_key) and reflections[current_goal_key] != "Not specified":
-            prompt_parts.append(f"- Current Goal ({current_goal_key.replace('_',' ').upper()}): {str(reflections[current_goal_key])[:200].replace('\n', ' ')}...")
+            goal_text_clean = str(reflections[current_goal_key])[:200].replace('\n', ' ')
+            prompt_parts.append(f"- Current Goal ({current_goal_key.replace('_',' ').upper()}): {goal_text_clean}...")
             reflections_goals_found = True
         
         if not reflections_goals_found:
              # Fallback to RRC1/Goal1 if current cycle specific ones are not found or not applicable (e.g. cycle 0)
             if reflections.get('rrc1_comment') and reflections['rrc1_comment'] != "Not specified":
-                prompt_parts.append(f"- RRC1 Reflection: {str(reflections['rrc1_comment'])[:200].replace('\n', ' ')}...")
+                rrc1_text_clean = str(reflections['rrc1_comment'])[:200].replace('\n', ' ')
+                prompt_parts.append(f"- RRC1 Reflection: {rrc1_text_clean}...")
                 reflections_goals_found = True
             if reflections.get('goal1') and reflections['goal1'] != "Not specified":
-                prompt_parts.append(f"- Goal1: {str(reflections['goal1'])[:200].replace('\n', ' ')}...")
+                goal1_text_clean = str(reflections['goal1'])[:200].replace('\n', ' ')
+                prompt_parts.append(f"- Goal1: {goal1_text_clean}...")
                 reflections_goals_found = True
 
     if not reflections_goals_found:
@@ -356,7 +362,8 @@ def generate_student_summary_with_llm(student_data_dict):
     prev_summary = student_data_dict.get('previous_interaction_summary')
     if prev_summary and prev_summary != "No previous AI coaching summary found.":
         prompt_parts.append("\n--- Previous AI Interaction Summary (Context) ---")
-        prompt_parts.append(f"  {str(prev_summary)[:300].replace('\n', ' ')}...")
+        prev_summary_clean = str(prev_summary)[:300].replace('\n', ' ')
+        prompt_parts.append(f"  {prev_summary_clean}...")
 
     prompt_parts.append("\n--- TASK ---")
     prompt_parts.append("Provide a concise (2-3 sentences, max 100 words) overview summary of this student's current situation for their tutor. Highlight 1-2 key strengths and 1-2 primary areas for development or discussion based ONLY on the data provided above. The tone should be objective, analytical, and supportive, aimed at helping the tutor quickly grasp the student's profile for a coaching conversation. Do not ask questions. Do not give advice.")
