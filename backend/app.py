@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS # Import CORS
 from dotenv import load_dotenv
 import requests
+import logging # Add logging import
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,6 +15,18 @@ app = Flask(__name__)
 # --- CORS Configuration ---
 # Allow requests from your Knack domain
 CORS(app, resources={r"/api/*": {"origins": "https://vespaacademy.knack.com"}})
+
+# Explicitly configure the Flask app's logger
+if not app.debug:
+    app.logger.setLevel(logging.INFO)
+    # Optional: Add a stream handler if logs still don't appear consistently
+    # handler = logging.StreamHandler()
+    # handler.setLevel(logging.INFO)
+    # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # handler.setFormatter(formatter)
+    # if not app.logger.handlers: # Avoid adding multiple handlers on reloads
+    #     app.logger.addHandler(handler)
+
 
 # --- Configuration ---
 KNACK_APP_ID = os.getenv('KNACK_APP_ID')
