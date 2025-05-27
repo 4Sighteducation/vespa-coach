@@ -108,12 +108,106 @@ def get_knack_record(object_key, record_id=None, filters=None):
     return None
 
 
+# --- Function to fetch Academic Profile (Object_112) ---
+def get_academic_profile(student_email, student_obj10_id_log_ref):
+    app.logger.info(f"Starting academic profile fetch for student email (from Obj10 ID: {student_obj10_id_log_ref}).")
+    if not student_email:
+        app.logger.warning(f"No email found for student (Obj10 ID: {student_obj10_id_log_ref}), cannot fetch academic profile.")
+        return []
+
+    # 1. Find User Account (Object_3) by email
+    filters_object3 = [{'field': 'field_70', 'operator': 'is', 'value': student_email}]
+    user_accounts = get_knack_record("object_3", filters=filters_object3)
+
+    if not user_accounts: # get_knack_record returns a list for filtered queries
+        app.logger.warning(f"No user account (Object_3) found for email: {student_email}")
+        return []
+    
+    # Assuming one user account per email for this context
+    user_account_record = user_accounts[0]
+    user_account_id = user_account_record.get('id')
+    if not user_account_id:
+        app.logger.warning(f"User account found for email {student_email}, but it's missing an ID.")
+        return []
+    
+    app.logger.info(f"Found User Account (Object_3) ID: {user_account_id} for email: {student_email}")
+
+    # 2. Fetch Homepage Profile (Object_112) using User Account ID connection
+    # The connection is Object_112.field_3070 (Account) to Object_3.id
+    filters_object112 = [{'field': 'field_3070_raw', 'operator': 'is', 'value': user_account_id}] # field_3070 is a connection
+    
+    # According to Knack API, when filtering on a connection field,
+    # you usually use the raw field name (e.g., field_XXX_raw) or just field_XXX
+    # and provide the connected record ID. Let's try field_3070_raw first.
+    # If that doesn't work, we might need to adjust to 'field_3070' if the API expects the connection field ID itself.
+    
+    homepage_profiles = get_knack_record("object_112", filters=filters_object112)
+
+    if not homepage_profiles:
+        # Try with 'field_3070' if '_raw' didn't work
+        app.logger.info(f"No Object_112 profile found with field_3070_raw for account ID {user_account_id}. Trying 'field_3070'.")
+        filters_object112_alt = [{'field': 'field_3070', 'operator': 'is', 'value': user_account_id}]
+        homepage_profiles = get_knack_record("object_112", filters=filters_object112_alt)
+
+    if not homepage_profiles:
+        app.logger.warning(f"No Homepage Profile (Object_112) found for User Account ID: {user_account_id} (original email: {student_email}).")
+        return []
+
+    # Assuming one homepage profile record per user account
+    academic_profile_record = homepage_profiles[0]
+    app.logger.info(f"Successfully fetched Homepage Profile (Object_112) ID: {academic_profile_record.get('id')}")
+
+    # 3. Parse Subject JSONs
+    subjects_summary = []
+    # Subject fields are field_3080 (Sub1) to field_3094 (Sub15)
+    for i in range(1, 16): # Sub1 to Sub15
+        field_id_subject_json = f"field_30{79+i}" # field_3080 to field_3094
+        
+        # Knack might store these as direct JSON strings or within a _raw variant
+        subject_json_str = academic_profile_record.get(field_id_subject_json)
+        if subject_json_str is None:
+            subject_json_str = academic_profile_record.get(f"{field_id_subject_json}_raw")
+
+        if subject_json_str and isinstance(subject_json_str, str) and subject_json_str.strip().startswith('{'):
+            try:
+                subject_data = json.loads(subject_json_str)
+                # Extract specific details as per README example: subject, currentGrade, targetGrade, effortGrade
+                # The actual keys within the JSON string might vary, adapt as needed.
+                # Example from README: {"subject": "Physics", "currentGrade": "B", "targetGrade": "A", "effortGrade": "C"}
+                # Let's assume the JSON has keys like 'subjectName', 'currentGradeValue', 'targetGradeValue', 'effortScore'
+                
+                # Standardize keys based on typical Knack JSON structure for subject details
+                # This part is an assumption based on typical Knack structures seen in similar projects.
+                # It may need adjustment based on the actual JSON structure in field_3080 etc.
+                summary_entry = {
+                    "subject": subject_data.get("subject") or subject_data.get("subject_name") or subject_data.get("name", "N/A"),
+                    "currentGrade": subject_data.get("currentGrade") or subject_data.get("current_grade") or subject_data.get("cg", "N/A"),
+                    "targetGrade": subject_data.get("targetGrade") or subject_data.get("target_grade") or subject_data.get("tg", "N/A"),
+                    "effortGrade": subject_data.get("effortGrade") or subject_data.get("effort_grade") or subject_data.get("eg", "N/A")
+                    # Add other relevant fields if necessary, like MEG, attendance, behaviour
+                }
+                subjects_summary.append(summary_entry)
+                app.logger.debug(f"Parsed subject data for {field_id_subject_json}: {summary_entry}")
+            except json.JSONDecodeError:
+                app.logger.warning(f"Failed to decode JSON for subject field {field_id_subject_json} for Obj112 ID {academic_profile_record.get('id')}. Content: '{subject_json_str[:100]}...'") # Log first 100 chars
+        elif subject_json_str: # If it's not None/empty but not valid JSON
+            app.logger.info(f"Field {field_id_subject_json} for Obj112 ID {academic_profile_record.get('id')} was not empty but not a valid JSON string: '{subject_json_str[:100]}...'")
+
+
+    if not subjects_summary:
+        app.logger.info(f"No valid subject JSONs found or parsed in Object_112 record {academic_profile_record.get('id')}.")
+        return [{"subject": "No academic subjects found or parsed.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}]
+        
+    return subjects_summary
+
+
 # --- Load Knowledge Bases ---
 # These paths are relative to the 'backend' directory where app.py is located.
 psychometric_question_details = load_json_file('knowledge_base/psychometric_question_details.json')
 question_id_to_text_mapping = load_json_file('knowledge_base/question_id_to_text_mapping.json')
 # Changed from reporttext.csv to reporttext.json
 report_text_data = load_json_file('knowledge_base/reporttext.json') # Object_33 content
+coaching_kb = load_json_file('knowledge_base/coaching_questions_knowledge_base.json')
 
 if not psychometric_question_details:
     app.logger.warning("Psychometric question details KB is empty or failed to load.")
@@ -124,6 +218,11 @@ if not report_text_data:
     app.logger.warning("Report text data (Object_33 from reporttext.json) is empty or failed to load.")
 else:
     app.logger.info(f"Loaded {len(report_text_data)} records from reporttext.json")
+
+if not coaching_kb:
+    app.logger.warning("Coaching Questions Knowledge Base (coaching_questions_knowledge_base.json) is empty or failed to load.")
+else:
+    app.logger.info("Successfully loaded Coaching Questions Knowledge Base.")
 
 
 @app.route('/api/v1/coaching_suggestions', methods=['POST'])
@@ -149,6 +248,18 @@ def coaching_suggestions():
     app.logger.info(f"Successfully fetched Object_10 data for ID {student_obj10_id_from_request}")
 
     student_name = student_vespa_data.get("field_187_raw", {}).get("full", "N/A")
+    # Extract student email from Object_10 for linking to Object_3 and then Object_112
+    student_email_obj = student_vespa_data.get("field_197_raw") # This is usually an object e.g. {'email': 'student@example.com'}
+    student_email = None
+    if isinstance(student_email_obj, dict) and 'email' in student_email_obj:
+        student_email = student_email_obj['email']
+    elif isinstance(student_email_obj, str): # Less common but handle if it's just a string
+        student_email = student_email_obj
+    
+    if not student_email:
+        app.logger.warning(f"Student email (field_197_raw) not found or in unexpected format in Object_10 ID: {student_obj10_id_from_request}. Academic profile may be unavailable.")
+        # student_email will be None, and get_academic_profile will handle it
+
     student_level = student_vespa_data.get("field_568_raw", "N/A")
     current_m_cycle_str = student_vespa_data.get("field_146_raw", "0")
     try:
@@ -157,12 +268,51 @@ def coaching_suggestions():
         app.logger.warning(f"Could not parse current_m_cycle '{current_m_cycle_str}' to int. Defaulting to 0.")
         current_m_cycle = 0
     
-    previous_interaction_summary = student_vespa_data.get("field_3271", "No previous summary found.")
+    # Previous interaction summary from field_3271
+    previous_interaction_summary = student_vespa_data.get("field_3271", "No previous AI coaching summary found.")
+
+    # Current VESPA scores (1-10 scale)
     vespa_scores = {
         "Vision": student_vespa_data.get("field_147"), "Effort": student_vespa_data.get("field_148"),
         "Systems": student_vespa_data.get("field_149"), "Practice": student_vespa_data.get("field_150"),
         "Attitude": student_vespa_data.get("field_151"), "Overall": student_vespa_data.get("field_152"),
     }
+
+    # Historical Cycle Scores (1-10 scale)
+    historical_scores = {
+        "cycle1": {
+            "Vision": student_vespa_data.get("field_155"), "Effort": student_vespa_data.get("field_156"),
+            "Systems": student_vespa_data.get("field_157"), "Practice": student_vespa_data.get("field_158"),
+            "Attitude": student_vespa_data.get("field_159"), "Overall": student_vespa_data.get("field_160"),
+        },
+        "cycle2": {
+            "Vision": student_vespa_data.get("field_161"), "Effort": student_vespa_data.get("field_162"),
+            "Systems": student_vespa_data.get("field_163"), "Practice": student_vespa_data.get("field_164"),
+            "Attitude": student_vespa_data.get("field_165"), "Overall": student_vespa_data.get("field_166"),
+        },
+        "cycle3": {
+            "Vision": student_vespa_data.get("field_167"), "Effort": student_vespa_data.get("field_168"),
+            "Systems": student_vespa_data.get("field_169"), "Practice": student_vespa_data.get("field_170"),
+            "Attitude": student_vespa_data.get("field_171"), "Overall": student_vespa_data.get("field_172"),
+        }
+    }
+
+    # Student Reflections & Goals from Object_10
+    student_reflections_and_goals = {
+        "rrc1_comment": student_vespa_data.get("field_2302"),
+        "rrc2_comment": student_vespa_data.get("field_2303"),
+        "rrc3_comment": student_vespa_data.get("field_2304"),
+        "goal1": student_vespa_data.get("field_2499"),
+        "goal2": student_vespa_data.get("field_2493"),
+        "goal3": student_vespa_data.get("field_2494"),
+    }
+    # Ensure None values are replaced with a more JSON-friendly "N/A" or "Not specified"
+    for key, value in student_reflections_and_goals.items():
+        if value is None:
+            student_reflections_and_goals[key] = "Not specified"
+    
+    app.logger.info(f"Object_10 Reflections and Goals: {student_reflections_and_goals}")
+
 
     # Fetch and Process Object_29 (Questionnaire Qs) data
     key_individual_question_insights = ["No questionnaire data processed."] # Default
@@ -269,10 +419,35 @@ def coaching_suggestions():
             "report_questions_for_student": matching_report_text.get('field_846', "Questions not found.") if matching_report_text else "Questions not found.",
             "report_suggested_tools_for_student": matching_report_text.get('field_847', "Tools not found.") if matching_report_text else "Tools not found.",
             "primary_tutor_coaching_comments": matching_report_text.get('field_853', "Coaching comments not found.") if matching_report_text else "Coaching comments not found.",
-            "supplementary_tutor_questions": ["Placeholder supplementary Q1"], 
-            "key_individual_question_insights_from_object29": key_individual_question_insights, # Assign the processed insights
-            "historical_summary_scores": {"cycle1": "N/A (Placeholder)"} 
+            "supplementary_tutor_questions": [], # Initialize as empty list
+            "key_individual_question_insights_from_object29": [], # Initialize as empty list
+            "historical_summary_scores": {} 
         }
+        # Populate historical_summary_scores for each element
+        for cycle_num_str, cycle_data in historical_scores.items():
+            cycle_key = f"cycle{cycle_num_str[-1]}" # e.g. "cycle1"
+            score = cycle_data.get(element)
+            vespa_profile_details[element]["historical_summary_scores"][cycle_key] = score if score is not None else "N/A"
+        
+        # Assign specific insights for this VESPA element
+        element_specific_insights = []
+        if key_individual_question_insights and isinstance(key_individual_question_insights, list) and key_individual_question_insights[0] != "No questionnaire data processed." and key_individual_question_insights[0] != "Psychometric question details mapping not loaded. Cannot process Object_29 data." and not key_individual_question_insights[0].startswith("No questionnaire data found for cycle") and not key_individual_question_insights[0].startswith("Skipped fetching questionnaire data"):
+            for insight in key_individual_question_insights:
+                 # Ensure insight is a string before calling .startswith()
+                if isinstance(insight, str) and insight.upper().startswith(element.upper()): # Case-insensitive match on element
+                    element_specific_insights.append(insight)
+        vespa_profile_details[element]["key_individual_question_insights_from_object29"] = element_specific_insights if element_specific_insights else ["No specific insights for this category from questionnaire."]
+
+        # Populate supplementary_tutor_questions from coaching_kb
+        supplementary_questions = []
+        if coaching_kb and coaching_kb.get('vespaSpecificCoachingQuestions'):
+            element_questions = coaching_kb['vespaSpecificCoachingQuestions'].get(element, {})
+            # score_profile_text is "High", "Medium", "Low", "Very Low"
+            profile_questions = element_questions.get(score_profile_text, [])
+            supplementary_questions.extend(profile_questions)
+        
+        vespa_profile_details[element]["supplementary_tutor_questions"] = supplementary_questions if supplementary_questions else ["No supplementary questions found for this profile."]
+
 
     overall_score_value = vespa_scores.get("Overall")
     overall_score_profile_text = get_score_profile_text(overall_score_value)
@@ -290,16 +465,45 @@ def coaching_suggestions():
         "score_profile_text": overall_score_profile_text,
         "report_text_for_student": matching_overall_report_text.get('field_845', "Content not found.") if matching_overall_report_text else "Content not found.",
         "primary_tutor_coaching_comments": matching_overall_report_text.get('field_853', "Coaching comments not found.") if matching_overall_report_text else "Coaching comments not found.",
-        "historical_summary_scores": {"cycle1": "N/A (Placeholder)"} 
+        "historical_summary_scores": {} 
     }
+    # Populate historical_summary_scores for Overall
+    for cycle_num_str, cycle_data in historical_scores.items():
+        cycle_key = f"cycle{cycle_num_str[-1]}"
+        score = cycle_data.get("Overall")
+        vespa_profile_details["Overall"]["historical_summary_scores"][cycle_key] = score if score is not None else "N/A"
+
     
-    # TODO: Fetch Object_112 (Academic Profile) - requires linkage
-    # TODO: Logic for "supplementary_tutor_questions"
-    # TODO: Logic for "key_individual_question_insights_from_object29"
-    # TODO: Logic for "historical_summary_scores"
-    # TODO: Logic for "overall_framing_statement_for_tutor"
-    # TODO: Logic for "general_introductory_questions_for_tutor"
-    # TODO: LLM integration
+    # Fetch Academic Profile Data (Object_112)
+    academic_profile_summary_data = get_academic_profile(student_email, student_obj10_id_from_request)
+
+    # Populate general introductory questions and overall framing statement from coaching_kb
+    general_intro_questions = ["No general introductory questions found."]
+    if coaching_kb and coaching_kb.get('generalIntroductoryQuestions'):
+        general_intro_questions = coaching_kb['generalIntroductoryQuestions']
+        if not general_intro_questions: # Ensure it's not an empty list from KB
+            general_intro_questions = ["No general introductory questions found in KB."]
+    
+    overall_framing_statement = {"id": "default_framing", "statement": "No specific framing statement matched or available."}
+    if coaching_kb and coaching_kb.get('conditionalFramingStatements'):
+        # Basic logic: use the first one if available, or implement conditionLogic if defined
+        # For now, let's take the first one as a default if any exist, or a specific one by ID if needed.
+        # The README implies `conditionLogic` needs evaluation - this is a placeholder for that.
+        # Defaulting to a "default_response" or the first available conditional statement.
+        
+        default_statement_found = False
+        for stmt in coaching_kb['conditionalFramingStatements']:
+            if stmt.get('id') == 'default_response': # As per example in README API response
+                overall_framing_statement = {"id": stmt['id'], "statement": stmt.get('statement', "Default statement text missing.")}
+                default_statement_found = True
+                break
+        if not default_statement_found and coaching_kb['conditionalFramingStatements']:
+            # Fallback to the first conditional statement if default_response is not found
+            first_stmt = coaching_kb['conditionalFramingStatements'][0]
+            overall_framing_statement = {"id": first_stmt.get('id', 'unknown_conditional'), "statement": first_stmt.get('statement', "Conditional statement text missing.")}
+        elif not coaching_kb['conditionalFramingStatements']:
+            app.logger.info("No conditional framing statements found in KB.")
+            # Keep the initial default if none are in KB
 
     # --- Prepare Response ---
     response_data = {
@@ -307,16 +511,10 @@ def coaching_suggestions():
         "student_level": student_level,
         "current_cycle": current_m_cycle,
         "vespa_profile": vespa_profile_details,
-        "academic_profile_summary": [
-            {"subject": "Academic Subject (Placeholder)", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}
-        ],
-        "overall_framing_statement_for_tutor": {
-            "id": "default_response_placeholder",
-            "statement": "This is a placeholder framing statement for the tutor."
-        },
-        "general_introductory_questions_for_tutor": [
-            "How has your week been going regarding your studies? (Placeholder)"
-        ],
+        "academic_profile_summary": academic_profile_summary_data, # Use fetched data
+        "student_reflections_and_goals": student_reflections_and_goals,
+        "overall_framing_statement_for_tutor": overall_framing_statement, # Use populated statement
+        "general_introductory_questions_for_tutor": general_intro_questions, # Use populated questions
         "llm_generated_summary_and_suggestions": {
             "conversation_openers": ["Let's talk about your VESPA scores. (Placeholder)"],
             "key_discussion_points": ["Consider your VESPA profile. (Placeholder)"],
