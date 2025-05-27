@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // AI Coach Launcher Script (aiCoachLauncher.js)
 
 // Guard to prevent re-initialization
@@ -6,66 +7,16 @@ if (window.aiCoachLauncherInitialized) {
 } else {
     window.aiCoachLauncherInitialized = true;
 
-    let AI_COACH_LAUNCHER_CONFIG = null; 
-    let coachObserver = null;
-    let coachUIInitialized = false;
+    let AI_COACH_LAUNCHER_CONFIG = null; // Will be set by the loader
 
     function logAICoach(message, data) {
-        // Temporarily log unconditionally for debugging
-        console.log(`[AICoachLauncher] ${message}`, data === undefined ? '' : data);
-        // if (AI_COACH_LAUNCHER_CONFIG && AI_COACH_LAUNCHER_CONFIG.debugMode) {
-        //     console.log(`[AICoachLauncher] ${message}`, data === undefined ? '' : data);
-        // }
-    }
-
-    // Function to check if we are on the individual student report view
-    function isIndividualReportView() {
-        const studentNameDiv = document.querySelector('#student-name p'); // More specific selector for the student name paragraph
-        const backButton = document.querySelector('a.kn-back-link'); // General Knack back link
-        
-        if (studentNameDiv && studentNameDiv.textContent && studentNameDiv.textContent.includes('STUDENT:')) {
-            logAICoach("Individual report view confirmed by STUDENT: text in #student-name.");
-            return true;
+        if (AI_COACH_LAUNCHER_CONFIG && AI_COACH_LAUNCHER_CONFIG.debugMode) {
+            console.log(`[AICoachLauncher] ${message}`, data === undefined ? '' : data);
         }
-        // Fallback to back button if the #student-name structure changes or isn't specific enough
-        if (backButton && document.body.contains(backButton)) { 
-             logAICoach("Individual report view confirmed by BACK button presence.");
-            return true;
-        }
-        logAICoach("Not on individual report view.");
-        return false;
-    }
-
-    // Function to initialize the UI elements (button and panel)
-    function initializeCoachUI() {
-        if (coachUIInitialized) return;
-
-        logAICoach("Conditions met. Initializing AI Coach UI (button and panel).");
-        addAICoachStyles();
-        createAICoachPanel();
-        addLauncherButton();
-        setupEventListeners();
-        coachUIInitialized = true; // Mark as initialized
-        logAICoach("AICoachLauncher UI initialization complete.");
-    }
-    
-    // Function to clear/hide the UI elements when not on individual report
-    function clearCoachUI() {
-        if (!coachUIInitialized) return;
-        logAICoach("Clearing AI Coach UI.");
-        const launcherButtonContainer = document.getElementById('aiCoachLauncherButtonContainer');
-        if (launcherButtonContainer) {
-            launcherButtonContainer.innerHTML = ''; // Clear the button
-        }
-        toggleAICoachPanel(false); // Ensure panel is closed
-        // Optionally, remove the panel from DOM if preferred when navigating away
-        // const panel = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId);
-        // if (panel && panel.parentNode) panel.parentNode.removeChild(panel);
-        coachUIInitialized = false; // Reset for next individual report view
     }
 
     function initializeAICoachLauncher() {
-        logAICoach("AICoachLauncher initializing and setting up observer...");
+        logAICoach("AICoachLauncher initializing...");
 
         if (typeof window.AI_COACH_LAUNCHER_CONFIG === 'undefined') {
             console.error("[AICoachLauncher] AI_COACH_LAUNCHER_CONFIG is not defined. Cannot initialize.");
@@ -81,33 +32,13 @@ if (window.aiCoachLauncherInitialized) {
             console.error("[AICoachLauncher] Essential configuration properties missing.");
             return;
         }
-
-        const targetNode = document.querySelector('#kn-scene_1095'); // Observe the scene for changes
-
-        if (!targetNode) {
-            console.error("[AICoachLauncher] Target node for MutationObserver not found (#kn-scene_1095).");
-            return;
-        }
-
-        const observerCallback = function(mutationsList, observer) {
-            // We are looking for changes that indicate navigation to/from an individual report.
-            // A simple check on each mutation might be too frequent.
-            // Debounce or check specific conditions.
-            logAICoach("MutationObserver detected DOM change.");
-            if (isIndividualReportView()) {
-                initializeCoachUI();
-            } else {
-                clearCoachUI();
-            }
-        };
-
-        coachObserver = new MutationObserver(observerCallback);
-        coachObserver.observe(targetNode, { childList: true, subtree: true });
-
-        // Initial check in case the page loads directly on an individual report
-        if (isIndividualReportView()) {
-            initializeCoachUI();
-        }
+        
+        addAICoachStyles();
+        createAICoachPanel();
+        addLauncherButton();
+        setupEventListeners();
+        
+        logAICoach("AICoachLauncher initialization complete.");
     }
 
     function addAICoachStyles() {
@@ -116,44 +47,49 @@ if (window.aiCoachLauncherInitialized) {
 
         const css = `
             body.ai-coach-active ${AI_COACH_LAUNCHER_CONFIG.mainContentSelector} {
-                width: calc(100% - 400px);
-                margin-right: 400px;
+                width: calc(100% - 400px); /* Adjust 400px to your desired panel width */
+                margin-right: 400px; /* Same as panel width */
                 transition: width 0.3s ease-in-out, margin-right 0.3s ease-in-out;
             }
             #${AI_COACH_LAUNCHER_CONFIG.mainContentSelector} {
                  transition: width 0.3s ease-in-out, margin-right 0.3s ease-in-out;
             }
+
             #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} {
                 width: 0;
                 opacity: 0;
                 visibility: hidden;
                 position: fixed;
-                top: 0;
+                top: 0; /* Adjust if you have a fixed header */
                 right: 0;
-                height: 100vh;
+                height: 100vh; /* Full viewport height */
                 background-color: #f4f6f8;
                 border-left: 1px solid #ddd;
                 padding: 20px;
                 box-sizing: border-box;
                 overflow-y: auto;
-                z-index: 1050;
+                z-index: 1050; /* High z-index */
                 transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s;
             }
+
             body.ai-coach-active #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} {
-                width: 400px;
+                width: 400px; /* Desired panel width */
                 opacity: 1;
                 visibility: visible;
             }
+
             #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 15px;
             }
+
             #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-header h3 {
                 margin: 0;
                 font-size: 1.2em;
             }
+
             #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-close-btn {
                 background: none;
                 border: none;
@@ -180,6 +116,7 @@ if (window.aiCoachLauncherInitialized) {
             logAICoach("AI Coach panel already exists.");
             return;
         }
+
         const panel = document.createElement('div');
         panel.id = panelId;
         panel.className = 'ai-coach-panel';
@@ -202,10 +139,12 @@ if (window.aiCoachLauncherInitialized) {
             console.error(`[AICoachLauncher] Launcher button target element '${AI_COACH_LAUNCHER_CONFIG.elementSelector}' not found.`);
             return;
         }
+        
         if (document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId)) {
             logAICoach("AI Coach launcher button already exists.");
             return;
         }
+
         const buttonContainerHTML = `
             <div id="aiCoachLauncherButtonContainer">
               <p>Get AI-powered insights and suggestions to enhance your coaching conversation.</p>
@@ -251,3 +190,6 @@ if (window.aiCoachLauncherInitialized) {
 
     window.initializeAICoachLauncher = initializeAICoachLauncher;
 } 
+=======
+
+>>>>>>> 7fdd7d68719deb32db6eacf2adf77590f4b19a8f

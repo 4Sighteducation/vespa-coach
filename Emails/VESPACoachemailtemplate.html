@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VESPA AI Coaching Report Summary</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .email-container {
+      max-width: 680px;
+      margin: 20px auto;
+      background-color: #ffffff;
+      border: 1px solid #dddddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .header {
+      background-color: #23356f; /* Your specified VESPA Blue */
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .header img {
+        max-width: 150px; /* Adjust size as needed */
+        margin-bottom: 10px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 500;
+    }
+    .student-info {
+        padding: 20px;
+        background-color: #e9ecef; /* Light grey for student info section */
+        border-bottom: 1px solid #dddddd;
+    }
+    .student-info p {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+    .content {
+      padding: 20px 30px;
+    }
+    .content h2 {
+        font-size: 18px;
+        color: #23356f; /* Your specified VESPA Blue */
+        margin-top: 25px;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #23356f; /* Your specified VESPA Blue */
+        padding-bottom: 5px;
+    }
+    .content h3 {
+        font-size: 16px;
+        color: #4a90e2; /* A complementary lighter blue for subheadings */
+        margin-top: 15px;
+        margin-bottom: 5px;
+    }
+    .vespa-section {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #fdfdfd;
+        border: 1px solid #eeeeee;
+        border-radius: 4px;
+    }
+    .vespa-score {
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+    .label {
+      font-weight: bold;
+      color: #23356f; /* Your specified VESPA Blue */
+    }
+    ul {
+        padding-left: 20px;
+    }
+    li {
+        margin-bottom: 5px;
+    }
+    .footer {
+      background-color: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #777777;
+      border-top: 1px solid #dddddd;
+    }
+    .button {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 20px 0;
+        background-color: #4a90e2; /* Complementary lighter blue */
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+    .button:hover {
+        background-color: #357abd; /* Darker shade on hover */
+    }
+    .text-muted {
+        color: #6c757d;
+        font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="header">
+      <img src="https://www.vespa.academy/assets/images/full-trimmed-transparent-customcolor-1-832x947.png" alt="VESPA Academy Logo">
+      <h1>VESPA AI Coaching Report</h1>
+    </div>
+
+    <div class="student-info">
+        <p><span class="label">Student:</span> {{student_name}}</p>
+        <p><span class="label">Level:</span> {{student_level}}</p>
+        <p><span class="label">Current VESPA Cycle:</span> {{current_cycle}}</p>
+        <p><span class="label">Report Generated On:</span> {{generation_timestamp}}</p>
+    </div>
+
+    <div class="content">
+      <p>Dear {{tutor_name_or_user_name}},</p>
+      <p>Here is a summary of the AI-powered coaching suggestions for {{student_name}}.</p>
+
+      {{#if overall_framing_statement_for_tutor}}
+      <div class="vespa-section">
+        <h2>Overall Framing Statement for Tutor</h2>
+        <p>{{overall_framing_statement_for_tutor.statement}}</p>
+      </div>
+      {{/if}}
+
+      {{#if general_introductory_questions_for_tutor}}
+      <div class="vespa-section">
+        <h2>General Introductory Questions</h2>
+        <ul>
+          {{#each general_introductory_questions_for_tutor}}
+            <li>{{this}}</li>
+          {{/each}}
+        </ul>
+      </div>
+      {{/if}}
+
+      <h2>VESPA Profile Insights</h2>
+      {{#each vespa_profile_array}} 
+      {{!-- Assuming vespa_profile is converted to an array of {key: VESPA_ELEMENT, value: VESPA_DATA_OBJECT} --}}
+      {{#if this.value.score_1_to_10}} {{!-- Only show if there is a score (handles 'Overall' differently if needed) --}}
+      <div class="vespa-section">
+        <h3>{{this.key}} - Score: <span class="vespa-score">{{this.value.score_1_to_10}}/10</span> ({{this.value.score_profile_text}})</h3>
+        
+        {{#if this.value.primary_tutor_coaching_comments}}
+            <p><span class="label">Primary Tutor Coaching Comments:</span> {{this.value.primary_tutor_coaching_comments}}</p>
+        {{/if}}
+
+        {{#if this.value.supplementary_tutor_questions}}
+            <p><span class="label">Supplementary Tutor Questions:</span></p>
+            <ul>
+                {{#each this.value.supplementary_tutor_questions}}
+                <li>{{this}}</li>
+                {{/each}}
+            </ul>
+        {{/if}}
+
+        {{#if this.value.key_individual_question_insights_from_object29}}
+            <p><span class="label">Key Individual Question Insights:</span></p>
+            <ul>
+                {{#each this.value.key_individual_question_insights_from_object29}}
+                <li>{{this}}</li>
+                {{/each}}
+            </ul>
+        {{/if}}
+
+        {{#if this.value.historical_summary_scores}}
+            <p class="text-muted">
+                Historical Scores: 
+                {{#each this.value.historical_summary_scores}}
+                    Cycle {{@key}}: {{this}} 
+                {{/each}}
+            </p>
+        {{/if}}
+        
+        {{#if this.value.report_text_for_student}}
+            <p class="text-muted" style="font-style: italic; margin-top:10px; padding-top:10px; border-top: 1px dashed #eee;">Student sees: "{{this.value.report_text_for_student}}"</p>
+        {{/if}}
+      </div>
+      {{/if}}
+      {{/each}}
+
+      {{#if llm_generated_summary_and_suggestions}}
+      <div class="vespa-section">
+        <h2>AI Generated Summary & Suggestions</h2>
+        {{#if llm_generated_summary_and_suggestions.conversation_openers}}
+            <h3>Conversation Openers:</h3>
+            <ul>
+            {{#each llm_generated_summary_and_suggestions.conversation_openers}}
+                <li>{{this}}</li>
+            {{/each}}
+            </ul>
+        {{/if}}
+        {{#if llm_generated_summary_and_suggestions.key_discussion_points}}
+            <h3>Key Discussion Points:</h3>
+            <ul>
+            {{#each llm_generated_summary_and_suggestions.key_discussion_points}}
+                <li>{{this}}</li>
+            {{/each}}
+            </ul>
+        {{/if}}
+        {{#if llm_generated_summary_and_suggestions.suggested_next_steps_for_tutor}}
+            <h3>Suggested Next Steps for Tutor:</h3>
+            <ul>
+            {{#each llm_generated_summary_and_suggestions.suggested_next_steps_for_tutor}}
+                <li>{{this}}</li>
+            {{/each}}
+            </ul>
+        {{/if}}
+      </div>
+      {{/if}}
+
+      {{#if academic_profile_summary.length}}
+      <div class="vespa-section">
+          <h2>Academic Profile Summary</h2>
+          <table style="width:100%; border-collapse: collapse;">
+              <thead>
+                  <tr>
+                      <th style="text-align:left; border-bottom:1px solid #ddd; padding:5px;">Subject</th>
+                      <th style="text-align:left; border-bottom:1px solid #ddd; padding:5px;">Current</th>
+                      <th style="text-align:left; border-bottom:1px solid #ddd; padding:5px;">Target</th>
+                      <th style="text-align:left; border-bottom:1px solid #ddd; padding:5px;">Effort</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {{#each academic_profile_summary}}
+                  <tr>
+                      <td style="border-bottom:1px solid #eee; padding:5px;">{{this.subject}}</td>
+                      <td style="border-bottom:1px solid #eee; padding:5px;">{{this.currentGrade}}</td>
+                      <td style="border-bottom:1px solid #eee; padding:5px;">{{this.targetGrade}}</td>
+                      <td style="border-bottom:1px solid #eee; padding:5px;">{{this.effortGrade}}</td>
+                  </tr>
+                  {{/each}}
+              </tbody>
+          </table>
+      </div>
+      {{/if}}
+
+      {{#if previous_interaction_summary}}
+      <div class="vespa-section">
+        <h2>Previous AI Coaching Summary</h2>
+        <p class="text-muted"><em>{{previous_interaction_summary}}</em></p>
+      </div>
+      {{/if}}
+
+      <p style="text-align:center;">
+        <a href="{{link_to_full_report_in_knack}}" class="button" target="_blank">View Full Report in VESPA Academy</a>
+      </p>
+
+      <p>We hope this AI-powered summary assists you in your coaching conversation.</p>
+      <p>Best regards,<br>The VESPA Academy Team</p>
+    </div>
+
+    <div class="footer">
+      <p>&copy; {{current_year}} VESPA Academy. All rights reserved.</p>
+      <p>This is an automated message from the VESPA AI Coaching system.</p>
+    </div>
+  </div>
+</body>
+</html>

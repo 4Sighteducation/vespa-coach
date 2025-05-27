@@ -1,0 +1,70 @@
+# Environment variables and secrets
+.env
+*.env
+secrets.json
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Data files
+data/raw/*
+data/processed/*
+data/logs/*
+*.csv
+*.json
+*.xlsx
+*.xls
+!subject lists.txt
+!sample_data/*.json
+
+# Scraped documents
+*.pdf
+*.doc
+*.docx
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.vs/
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# WebDriver binaries
+chromedriver*
+geckodriver*
