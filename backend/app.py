@@ -29,7 +29,9 @@ def load_json_file(file_path):
     """Loads a JSON file from the specified path."""
     try:
         # Correct path relative to app.py location
-        full_path = os.path.join(os.path.dirname(__file__), file_path)
+        # Assuming app.py is in 'backend' and knowledge_base is in project root
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        full_path = os.path.join(project_root, file_path) # file_path is like 'knowledge_base/file.json'
         with open(full_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             # If the JSON is structured with a top-level "records" key (like Knack exports)

@@ -12,6 +12,8 @@ if (window.aiCoachLauncherInitialized) {
 
     // --- Configuration ---
     const HEROKU_API_URL = 'https://vespa-coach-c64c795edaa7.herokuapp.com/api/v1/coaching_suggestions';
+    // Knack App ID and API Key are expected in AI_COACH_LAUNCHER_CONFIG if any client-side Knack calls were needed,
+    // but with the new approach, getStudentObject10RecordId will primarily rely on a global variable.
 
     function logAICoach(message, data) {
         // Temporarily log unconditionally for debugging
@@ -260,28 +262,45 @@ if (window.aiCoachLauncherInitialized) {
         logAICoach("Launcher button added to view: " + AI_COACH_LAUNCHER_CONFIG.viewKey);
     }
 
-    function getStudentObject10RecordId() {
-        // TODO: Implement the logic to retrieve the student's Object_10 record ID.
-        // This could be from a global variable, a URL parameter, a DOM element, etc.
-        // Example: return window.currentVespaReportObject10Id;
-        // Example: return new URLSearchParams(window.location.hash.substring(1)).get('object_10_id');
-        logAICoach("Attempting to get student_object10_record_id. IMPLEMENTATION NEEDED.");
-        // For testing purposes, returning a hardcoded ID. Replace with actual logic.
-        // const testStudentId = "5f9b3e54bc87ca06b6c0000"; // REPLACE THIS WITH ACTUAL ID RETRIEVAL
-        // if (testStudentId) {
-        //    logAICoach("Using test student ID: " + testStudentId);
-        //    return testStudentId;
-        // }
-        return prompt("Enter Student Object_10 Record ID (for testing):"); // Temporary for testing
+    async function getStudentObject10RecordId(retryCount = 0) {
+        logAICoach("Attempting to get student_object10_record_id from global variable set by ReportProfiles script...");
+
+        if (window.currentReportObject10Id) {
+            logAICoach("Found student_object10_record_id in window.currentReportObject10Id: " + window.currentReportObject10Id);
+            return window.currentReportObject10Id;
+        } else if (retryCount < 5) { // Retry up to 5 times (e.g., 5 * 500ms = 2.5 seconds)
+            logAICoach(`student_object10_record_id not found. Retrying in 500ms (Attempt ${retryCount + 1}/5)`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return getStudentObject10RecordId(retryCount + 1);
+        } else {
+            logAICoach("Warning: student_object10_record_id not found in window.currentReportObject10Id after multiple retries. AI Coach may not function correctly if ReportProfiles hasn't set this.");
+            // Display a message in the panel if the ID isn't found.
+            const panelContent = document.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-content`);
+            if(panelContent) {
+                // Avoid overwriting a more specific error already shown by a failed Knack API call if we were to reinstate it.
+                if (!panelContent.querySelector('.ai-coach-section p[style*="color:red"], .ai-coach-section p[style*="color:orange"] ')) {
+                    panelContent.innerHTML = '<div class="ai-coach-section"><p style="color:orange;">Could not automatically determine the specific VESPA report ID for this student. Ensure student profile data is fully loaded.</p></div>';
+                }
+            }
+            return null; // Important to return null so fetchAICoachingData isn't called with undefined.
+        }
     }
 
     async function fetchAICoachingData(studentId) {
         const panelContent = document.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-content`);
         if (!panelContent) return;
+        if (!studentId) { // Double check studentId is not null/undefined before fetching
+             logAICoach("fetchAICoachingData called with no studentId. Aborting.");
+             if(panelContent && !panelContent.querySelector('.ai-coach-section p[style*="color:red"], .ai-coach-section p[style*="color:orange"] ')) {
+                panelContent.innerHTML = '<div class="ai-coach-section"><p style="color:orange;">Student ID missing, cannot fetch AI coaching data.</p></div>';
+             }
+             return;
+        }
 
         panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Loading AI Coach insights...</p>';
 
         try {
+            logAICoach("Fetching AI Coaching Data for student_object10_record_id: " + studentId);
             const response = await fetch(HEROKU_API_URL, {
                 method: 'POST',
                 headers: {
@@ -404,7 +423,7 @@ if (window.aiCoachLauncherInitialized) {
         panelContent.innerHTML = html || '<p>No data to display.</p>';
     }
 
-    function toggleAICoachPanel(show) {
+    async function toggleAICoachPanel(show) { 
         const panel = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId);
         const toggleButton = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId);
         const panelContent = panel ? panel.querySelector('.ai-coach-panel-content') : null;
@@ -414,18 +433,21 @@ if (window.aiCoachLauncherInitialized) {
             if (toggleButton) toggleButton.textContent = '🙈 Hide AI Coach';
             logAICoach("AI Coach panel activated.");
             
-            const studentId = getStudentObject10RecordId();
-            if (studentId) {
-                fetchAICoachingData(studentId);
+            if(panelContent) panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Identifying student report...</p>';
+            
+            const studentObject10Id = await getStudentObject10RecordId(); 
+            
+            if (studentObject10Id) {
+                fetchAICoachingData(studentObject10Id); 
             } else {
-                if(panelContent) panelContent.innerHTML = '<div class="ai-coach-section"><p style="color:orange;">Could not determine student ID. Cannot fetch AI Coach data.</p></div>';
-                logAICoach("Student ID not available, cannot fetch data.");
+                // If studentObject10Id is null, getStudentObject10RecordId should have already updated the panelContent with a message.
+                logAICoach("Student Object_10 ID not available after getStudentObject10RecordId. AI data fetch will not proceed.");
             }
 
         } else {
             document.body.classList.remove('ai-coach-active');
             if (toggleButton) toggleButton.textContent = '🚀 Activate AI Coach';
-            if (panelContent) panelContent.innerHTML = '<p>Activate the AI Coach to get insights.</p>'; // Reset content when hiding
+            if (panelContent) panelContent.innerHTML = '<p>Activate the AI Coach to get insights.</p>';
             logAICoach("AI Coach panel deactivated.");
         }
     }
