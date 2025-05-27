@@ -273,52 +273,118 @@ else:
     app.logger.info("Successfully loaded Coaching Questions Knowledge Base.")
 
 
-# --- Function to Generate Student Summary with LLM (Placeholder) ---
+# --- Function to Generate Student Summary with LLM (Now with active LLM call) ---
 def generate_student_summary_with_llm(student_data_dict):
     app.logger.info(f"Attempting to generate LLM summary for student: {student_data_dict.get('student_name', 'N/A')}")
-    # Actual OPENAI_API_KEY check and prompt construction would go here
-    # For now, directly return the placeholder if the key for it is present, or a generic one.
     
-    # This simplified version uses the placeholder logic directly
-    # The more complex prompt construction can be re-introduced when activating the LLM call.
     if not OPENAI_API_KEY:
-        # Log the absence of the API key but still return a placeholder so the frontend structure works.
-        app.logger.warning("OpenAI API key is not configured. Using generic placeholder for LLM summary.")
-        return f"Placeholder LLM Summary for {student_data_dict.get('student_name', 'N/A')}: Strengths and areas for development would be noted here by the AI."
+        app.logger.error("OpenAI API key is not configured. Cannot generate LLM summary.")
+        # Fallback to a more informative placeholder if API key is missing
+        return f"LLM summary for {student_data_dict.get('student_name', 'N/A')} is unavailable (AI key not configured). Key data would be summarized here."
 
-    # Placeholder logic (actual LLM call remains commented out)
-    # Construct a basic prompt (can be expanded later)
+    # Construct a detailed prompt for the LLM
     prompt_parts = []
-    prompt_parts.append(f"Student: {student_data_dict.get('student_name', 'Unknown Student')}")
-    vespa_overall = student_data_dict.get('vespa_profile', {}).get('Overall', {}).get('score_1_to_10', 'N/A')
-    prompt_parts.append(f"Overall VESPA Score: {vespa_overall}")
-    # Add more key data points here for a real prompt later
-    prompt_to_send = "\n".join(prompt_parts) 
-    # app.logger.info(f"Generated LLM Prompt (basic for placeholder): {prompt_to_send}")
+    prompt_parts.append(f"You are an expert AI coaching assistant. Based on the following data for student '{student_data_dict.get('student_name', 'Unknown Student')}' (Level: {student_data_dict.get('student_level', 'N/A')}, Current Cycle: {student_data_dict.get('current_cycle', 'N/A')}):")
+
+    # VESPA Profile
+    prompt_parts.append("\n--- VESPA Profile ---")
+    if student_data_dict.get('vespa_profile'):
+        for element, details in student_data_dict['vespa_profile'].items():
+            prompt_parts.append(f"- {element}: Score {details.get('score_1_to_10', 'N/A')}/10 ({details.get('score_profile_text', 'N/A')})")
+            report_text = details.get('primary_tutor_coaching_comments', '') # Using tutor comments as a concise note
+            if report_text and report_text != "Coaching comments not found.":
+                 prompt_parts.append(f"  Note ({element}): {report_text[:150].replace('\n', ' ')}{( '...' if len(report_text) > 150 else '' )}")
+
+    # Academic Profile
+    prompt_parts.append("\n--- Academic Profile (First 3 Subjects) ---")
+    if student_data_dict.get('academic_profile_summary'):
+        profile_data = student_data_dict['academic_profile_summary']
+        if isinstance(profile_data, list) and profile_data and profile_data[0].get('subject') and not profile_data[0]["subject"].startswith("Academic profile not found") and not profile_data[0]["subject"].startswith("No academic subjects"):
+            for subject_info in profile_data[:3]: # Limit to first 3 subjects for brevity
+                prompt_parts.append(f"- Subject: {subject_info.get('subject', 'N/A')}, Current: {subject_info.get('currentGrade', 'N/A')}, Target: {subject_info.get('targetGrade', 'N/A')}, Effort: {subject_info.get('effortGrade', 'N/A')}")
+        else:
+            prompt_parts.append("  No detailed academic profile summary available.")
+
+    # Reflections and Goals (Current Cycle Focus)
+    prompt_parts.append("\n--- Student Reflections & Goals (Current Cycle Focus) ---")
+    reflections_goals_found = False
+    if student_data_dict.get('student_reflections_and_goals'):
+        reflections = student_data_dict['student_reflections_and_goals']
+        current_cycle = student_data_dict.get('current_cycle')
+        # Define a mapping for which reflection/goal fields correspond to which cycle
+        # This needs to align with how your data is structured (e.g. rrc1 for cycle 1, goal1 for cycle 1 etc)
+        # Assuming simple mapping for now: rrcX for cycle X, goalX for cycle X
+        current_rrc_key = f"rrc{current_cycle}_comment"
+        current_goal_key = f"goal{current_cycle}"
+
+        if reflections.get(current_rrc_key) and reflections[current_rrc_key] != "Not specified":
+            prompt_parts.append(f"- Current Reflection (RRC{current_cycle}): {str(reflections[current_rrc_key])[:200].replace('\n', ' ')}...")
+            reflections_goals_found = True
+        if reflections.get(current_goal_key) and reflections[current_goal_key] != "Not specified":
+            prompt_parts.append(f"- Current Goal ({current_goal_key.replace('_',' ').upper()}): {str(reflections[current_goal_key])[:200].replace('\n', ' ')}...")
+            reflections_goals_found = True
+        
+        if not reflections_goals_found:
+             # Fallback to RRC1/Goal1 if current cycle specific ones are not found or not applicable (e.g. cycle 0)
+            if reflections.get('rrc1_comment') and reflections['rrc1_comment'] != "Not specified":
+                prompt_parts.append(f"- RRC1 Reflection: {str(reflections['rrc1_comment'])[:200].replace('\n', ' ')}...")
+                reflections_goals_found = True
+            if reflections.get('goal1') and reflections['goal1'] != "Not specified":
+                prompt_parts.append(f"- Goal1: {str(reflections['goal1'])[:200].replace('\n', ' ')}...")
+                reflections_goals_found = True
+
+    if not reflections_goals_found:
+        prompt_parts.append("  No specific current reflections or goals provided.")
+
+    # Key Insights from Questionnaire (Object_29) - pick a few flagged ones if available
+    prompt_parts.append("\n--- Key Questionnaire Insights (Flagged Low Scores) ---")
+    flagged_insights = []
+    if student_data_dict.get('vespa_profile'):
+        for element_details in student_data_dict['vespa_profile'].values():
+            insights = element_details.get('key_individual_question_insights_from_object29', [])
+            for insight in insights:
+                if isinstance(insight, str) and insight.startswith("FLAG:"):
+                    flagged_insights.append(insight.replace('\n', ' '))
+    
+    if flagged_insights:
+        for i, fi_insight in enumerate(flagged_insights[:2]): # Max 2 flagged insights
+            prompt_parts.append(f"  - {fi_insight}")
+    else:
+        prompt_parts.append("  No specific low-score questionnaire insights flagged.")
+        
+    # Previous Interaction Summary
+    prev_summary = student_data_dict.get('previous_interaction_summary')
+    if prev_summary and prev_summary != "No previous AI coaching summary found.":
+        prompt_parts.append("\n--- Previous AI Interaction Summary (Context) ---")
+        prompt_parts.append(f"  {str(prev_summary)[:300].replace('\n', ' ')}...")
+
+    prompt_parts.append("\n--- TASK ---")
+    prompt_parts.append("Provide a concise (2-3 sentences, max 100 words) overview summary of this student's current situation for their tutor. Highlight 1-2 key strengths and 1-2 primary areas for development or discussion based ONLY on the data provided above. The tone should be objective, analytical, and supportive, aimed at helping the tutor quickly grasp the student's profile for a coaching conversation. Do not ask questions. Do not give advice.")
+    
+    prompt_to_send = "\n".join(prompt_parts)
+    app.logger.info(f"Generated LLM Prompt (first 500 chars): {prompt_to_send[:500]}")
+    app.logger.info(f"Generated LLM Prompt (last 500 chars): {prompt_to_send[-500:]}")
+    app.logger.info(f"Total LLM Prompt length: {len(prompt_to_send)} characters")
 
     try:
-        # --- PLACEHOLDER FOR ACTUAL OPENAI API CALL ---
-        # response = openai.ChatCompletion.create(
-        # model="gpt-3.5-turbo", 
-        # messages=[
-        # {"role": "system", "content": "You are an expert educational coaching assistant."},
-        # {"role": "user", "content": prompt_to_send}
-        # ],
-        # max_tokens=150, 
-        # temperature=0.7 
-        # )
-        # summary = response.choices[0].message.content.strip()
-        # app.logger.info(f"LLM generated summary: {summary}")
-        # return summary
-        # --- END OF PLACEHOLDER ---
-
-        placeholder_summary = f"Placeholder LLM Summary: Student {student_data_dict.get('student_name', 'N/A')} shows [strength based on data from prompt: {prompt_to_send[:100]}...] and could focus on [area for development based on data]."
-        app.logger.info(f"Using placeholder LLM summary logic: {placeholder_summary}")
-        return placeholder_summary
+        response = openai.chat.completions.create( # Updated API call for openai >= 1.0
+            model="gpt-3.5-turbo", # Or your preferred model like "gpt-4-turbo-preview"
+            messages=[
+                {"role": "system", "content": "You are an expert educational coaching assistant providing a summary for a tutor based on student data."},
+                {"role": "user", "content": prompt_to_send}
+            ],
+            max_tokens=120, # Adjust as needed for 2-3 sentences
+            temperature=0.6, # Slightly more deterministic for summaries
+            n=1,
+            stop=None
+        )
+        summary = response.choices[0].message.content.strip()
+        app.logger.info(f"LLM generated summary: {summary}")
+        return summary
 
     except Exception as e:
-        app.logger.error(f"Error during (placeholder) LLM summary generation: {e}")
-        return "Error generating placeholder summary."
+        app.logger.error(f"Error calling OpenAI API: {e}")
+        return f"Error generating summary from LLM for {student_data_dict.get('student_name', 'N/A')}. Please check API key and logs. (Details: {str(e)[:100]}...)"
 
 
 @app.route('/api/v1/coaching_suggestions', methods=['POST'])
