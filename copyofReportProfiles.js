@@ -428,6 +428,8 @@ if (window.reportProfilesInitialized) {
     if (currentStudentId !== null && currentStudentId !== potentialStudentId) {
       debugLog(`Student ID changed from ${currentStudentId} to ${potentialStudentId}. Cancelling old requests.`);
       cancelActiveRequests(currentStudentId); 
+      window.currentReportObject10Id = null; // Explicitly clear for new student context
+      debugLog("[ReportProfiles] Cleared window.currentReportObject10Id due to new student navigation.");
     }
     
     currentStudentId = potentialStudentId; // This is the Object_6 ID

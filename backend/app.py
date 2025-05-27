@@ -28,10 +28,13 @@ KNACK_BASE_URL = f"https://api.knack.com/v1/objects"
 def load_json_file(file_path):
     """Loads a JSON file from the specified path."""
     try:
-        # Correct path relative to app.py location
-        # Assuming app.py is in 'backend' and knowledge_base is in project root
-        project_root = os.path.dirname(os.path.dirname(__file__))
-        full_path = os.path.join(project_root, file_path) # file_path is like 'knowledge_base/file.json'
+        # app.py is in 'backend' and file_path is 'knowledge_base/file.json'
+        # and knowledge_base is also a subdirectory of 'backend'.
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        full_path = os.path.join(current_dir, file_path) # e.g. /app/backend/knowledge_base/file.json
+        full_path = os.path.normpath(full_path)
+
+        app.logger.info(f"Attempting to load JSON file from calculated path: {full_path}")
         with open(full_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
             # If the JSON is structured with a top-level "records" key (like Knack exports)

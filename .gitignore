@@ -30,11 +30,9 @@ data/raw/*
 data/processed/*
 data/logs/*
 *.csv
-*.json
 *.xlsx
 *.xls
 !subject lists.txt
-!sample_data/*.json
 
 # Scraped documents
 *.pdf
