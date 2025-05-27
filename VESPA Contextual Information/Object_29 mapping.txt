@@ -1,0 +1,161 @@
+q1 (VISION) - "I've worked out the next steps..." (currentCycleFieldId: "field_794")
+c1_Q1v: field_1953
+c2_Q1v: field_1955
+c3_Q1v: field_1956
+q2 (SYSTEMS) - "I plan and organise my time..." (currentCycleFieldId: "field_795")
+c1_Q2s: field_1954
+c2_Q2s: field_1957
+c3_Q2s: field_1958
+
+q3 (VISION) - "I give a lot of attention to my career planning" (currentCycleFieldId: "field_796")
+c1_Q3v: field_1959
+c2_Q3v: field_1960
+c3_Q3v: field_1961
+
+q4 (SYSTEMS) - "I complete all my homework on time" (currentCycleFieldId: "field_797")
+c1_Q4s: field_1962
+c2_Q4s: field_1963
+c3_Q4s: field_1964
+
+q5 (ATTITUDE) - "No matter who you are, you can change your intelligence a lot" (currentCycleFieldId: "field_798")
+c1_Q5a: field_1965
+c2_Q5a: field_1966
+c3_Q5a: field_1967
+
+q6 (EFFORT) - "I use all my independent study time effectively" (currentCycleFieldId: "field_799")
+c1_Q6e: field_1968
+c2_Q6e: field_1969
+c3_Q6e: field_1970
+
+q7 (PRACTICE) - "I test myself on important topics until I remember them" (currentCycleFieldId: "field_800")
+c1_Q7p: field_1971
+c2_Q7p: field_1972
+c3_Q7p: field_1973
+
+q8 (ATTITUDE) - "I have a positive view of myself" (currentCycleFieldId: "field_801")
+c1_Q8a: field_1974
+c2_Q8a: field_1975
+c3_Q8a: field_1976
+
+q9 (EFFORT) - "I am a hard working student" (currentCycleFieldId: "field_802")
+c1_Q9e: field_1977
+c2_Q9e: field_1978
+c3_Q9e: field_1979
+
+q10 (ATTITUDE) - "I am confident in my academic ability" (currentCycleFieldId: "field_803")
+c1_Q10a: field_1980
+c2_Q10a: field_1981
+c3_Q10a: field_1982
+
+q11 (SYSTEMS) - "I always meet deadlines" (currentCycleFieldId: "field_804")
+c1_Q11s: field_1983
+c2_Q11s: field_1984
+c3_Q11s: field_1985
+
+q12 (PRACTICE) - "I spread out my revision, rather than cramming at the last minute." (currentCycleFieldId: "field_805")
+c1_Q12p: field_1986
+c2_Q12p: field_1987
+c3_Q12p: field_1988
+
+q13 (ATTITUDE) - "I don\'t let a poor test/assessment result get me down for too long" (currentCycleFieldId: "field_806")
+c1_Q13a: field_1989
+c2_Q13a: field_1990
+c3_Q13a: field_1991
+
+q14 (VISION) - "I strive to achieve the goals I set for myself" (currentCycleFieldId: "field_807")
+c1_Q14v: field_1992
+c2_Q14v: field_1993
+c3_Q14v: field_1994
+
+q15 (PRACTICE) - "I summarise important information in diagrams, tables or lists" (currentCycleFieldId: "field_808")
+c1_Q15p: field_1995
+c2_Q15p: field_1996
+c3_Q15p: field_1997
+
+q16 (VISION) - "I enjoy learning new things" (currentCycleFieldId: "field_809")
+c1_Q16v: field_1998
+c2_Q16v: field_1999
+c3_Q16v: field_2000
+
+q17 (EFFORT) - "I\'m not happy unless my work is the best it can be" (currentCycleFieldId: "field_810")
+c1_Q17e: field_2001
+c2_Q17e: field_2002
+c3_Q17e: field_2003
+
+q18 (SYSTEMS) - "I take good notes in class which are useful for revision" (currentCycleFieldId: "field_811")
+c1_Q18s: field_2004
+c2_Q18s: field_2005
+c3_Q18s: field_2006
+
+q19 (PRACTICE) - "When revising I mix different kinds of topics/subjects in one study session" (currentCycleFieldId: "field_812")
+c1_Q19p: field_2007
+c2_Q19p: field_2008
+c3_Q19p: field_2009
+
+q20 (ATTITUDE) - "I feel I can cope with the pressure at school/college/University" (currentCycleFieldId: "field_813")
+c1_Q20a: field_2010
+c2_Q20a: field_2011
+c3_Q20a: field_2012
+
+q21 (EFFORT) - "I work as hard as I can in most classes" (currentCycleFieldId: "field_814")
+c1_Q21e: field_2013
+c2_Q21e: field_2014
+c3_Q21e: field_2015
+
+q22 (SYSTEMS) - "My books/files are organised" (currentCycleFieldId: "field_815")
+c1_Q22s: field_2016
+c2_Q22s: field_2017
+c3_Q22s: field_2018
+
+q23 (PRACTICE) - "When preparing for a test/exam I teach someone else the material. (Suggested revision - I study by explaining difficult topics out loud)" (currentCycleFieldId: "field_816")
+c1_Q23p: field_2019
+c2_Q23p: field_2020
+c3_Q23p: field_2021
+
+q24 (ATTITUDE) - "I\'m happy to ask questions in front of a group." (currentCycleFieldId: "field_817")
+c1_Q24a: field_2022
+c2_Q24a: field_2023
+c3_Q24a: field_2024
+
+q25 (PRACTICE) - "I use highlighting/colour coding for revision / When revising, I work under timed conditions answering exam-style questions" (currentCycleFieldId: "field_818")
+c1_Q25p: field_2025
+c2_Q25p: field_2026
+c3_Q25p: field_2027
+
+q26 (ATTITUDE) - "Your intelligence is something about you that you can change very much" (currentCycleFieldId: "field_819")
+c1_Q26a: field_2028
+c2_Q26a: field_2029
+c3_Q26a: field_2030
+
+q27 (ATTITUDE) - "I like hearing feedback about how I can improve" (currentCycleFieldId: "field_820")
+c1_Q27a: field_2031
+c2_Q27a: field_2032
+c3_Q27a: field_2033
+
+q28 (ATTITUDE) - "I can control my nerves in tests/practical assessments." (currentCycleFieldId: "field_821")
+c1_Q28a: field_2034
+c2_Q28a: field_2035
+c3_Q28a: field_2036
+
+q29 (NA) - "I know what grades I want to achieve" (currentCycleFieldId: "field_2317")
+c1_Q29v: field_2927
+c2_Q29v: field_2928
+c3_Q29v: field_2929
+
+
+Outcome Questions - Asked and relevant but do not impact the VESPA Scores#
+
+q31 (NA) - "I have the support I need to achieve this year? outcome question (not part of VESPA Score)" (currentCycleFieldId: "field_1816")
+c1_sup: field_2037
+c2_sup: field_2038
+c3_sup: field_2039
+
+q31 (NA) - "I feel equipped to face the study and revision challenges of my this year? outcome question (not part of VESPA Score)" (currentCycleFieldId: "field_1817")
+c1_prep: field_2040 
+c2_prep: field_2042
+c3_prep: field_2042
+
+q32 (NA) - "I am confident I will achieve my potential in my final exams? outcome question (not part of VESPA Score)" (currentCycleFieldId: "field_1818")
+c1_conf: field_2043
+c2_conf: field_2044
+c3_conf: field_2045

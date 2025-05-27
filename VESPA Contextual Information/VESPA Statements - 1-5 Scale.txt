@@ -1,0 +1,35 @@
+VESPA Statements - 1-5 Scale
+q1	I've worked out the next steps in my life	VISION
+q2	I plan and organise my time to get my work done	SYSTEMS
+q3	I give a lot of attention to my career planning	VISION
+q4	I complete all my homework on time	SYSTEMS
+q5	No matter who you are, you can change your intelligence a lot	ATTITUDE
+q6	I use all my independent study time effectively	EFFORT
+q7	I test myself on important topics until I remember them	PRACTICE
+q8	I have a positive view of myself	ATTITUDE
+q9	I am a hard working student	EFFORT
+q10	I am confident in my academic ability	ATTITUDE
+q11	I always meet deadlines	SYSTEMS
+q12	I spread out my revision, rather than cramming at the last minute.	PRACTICE
+q13	I don't let a poor test/assessment result get me down for too long	ATTITUDE
+q14	I strive to achieve the goals I set for myself	VISION
+q15	I summarise important information in diagrams, tables or lists	PRACTICE
+q16	I enjoy learning new things	VISION
+q17	I'm not happy unless my work is the best it can be	EFFORT
+q18	I take good notes in class which are useful for revision	SYSTEMS
+q19	When revising I mix different kinds of topics/subjects in one study session	PRACTICE
+q20	I feel I can cope with the pressure at school/college/University	ATTITUDE
+q21	I work as hard as I can in most classes	EFFORT
+q22	My books/files are organised	SYSTEMS
+q23	When preparing for a test/exam I teach someone else the material. (Suggested revision - I study by explaining difficult topics out loud)	PRACTICE
+q24	I'm happy to ask questions in front of a group.	ATTITUDE
+q25	I use highlighting/colour coding for revision / When revising, I work under timed conditions answering exam-style questions	PRACTICE
+q26	Your intelligence is something about you that you can change very much	ATTITUDE
+q27	I like hearing feedback about how I can improve	ATTITUDE
+q28	I can control my nerves in tests/practical assessments.	ATTITUDE
+q29	I have the support I need to achieve this year? - outcome question (not part of VESPA Score)	NA
+q30	I feel equipped to face the study and revision challenges of my this year? outcome question (not part of VESPA Score)	NA
+q31	I am confident I will achieve my potential in my final exams? outcome question (not part of VESPA Score)	NA
+	Potential new VISION questions	
+	I know what grades I want to achieve	VISION
+	I understand why education is important for my future	VISION
