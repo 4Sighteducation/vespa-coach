@@ -130,23 +130,21 @@ def coaching_suggestions():
         app.logger.error("Missing 'student_object10_record_id' in request.")
         return jsonify({"error": "Missing 'student_object10_record_id'"}), 400
 
-    student_object10_record_id = data['student_object10_record_id']
-    app.logger.info(f"Processing request for student_object10_record_id: {student_object10_record_id}")
+    student_obj10_id_from_request = data['student_object10_record_id']
+    app.logger.info(f"Processing request for student_object10_record_id: {student_obj10_id_from_request}")
 
     # --- Phase 1: Data Gathering ---
     # Fetch Object_10 record (VESPA Results)
-    student_vespa_data = get_knack_record("object_10", record_id=student_object10_record_id)
+    student_vespa_data = get_knack_record("object_10", record_id=student_obj10_id_from_request)
 
     if not student_vespa_data:
-        app.logger.error(f"Could not retrieve data for student_object10_record_id: {student_object10_record_id} from Knack Object_10.")
-        return jsonify({"error": f"Could not retrieve data for student {student_object10_record_id}"}), 404
+        app.logger.error(f"Could not retrieve data for student_object10_record_id: {student_obj10_id_from_request} from Knack Object_10.")
+        return jsonify({"error": f"Could not retrieve data for student {student_obj10_id_from_request}"}), 404
     
-    app.logger.info(f"Successfully fetched Object_10 data: {student_vespa_data}")
+    app.logger.info(f"Successfully fetched Object_10 data for ID {student_obj10_id_from_request}")
 
-    # Extract key fields from student_vespa_data (Object_10)
-    # Ensure to use .get() with defaults to avoid KeyError if fields are missing
     student_name = student_vespa_data.get("field_187_raw", {}).get("full", "N/A")
-    student_level = student_vespa_data.get("field_568_raw", "N/A") # e.g. "Level 3"
+    student_level = student_vespa_data.get("field_568_raw", "N/A")
     current_m_cycle_str = student_vespa_data.get("field_146_raw", "0")
     try:
         current_m_cycle = int(current_m_cycle_str) if current_m_cycle_str else 0
@@ -155,29 +153,50 @@ def coaching_suggestions():
         current_m_cycle = 0
     
     previous_interaction_summary = student_vespa_data.get("field_3271", "No previous summary found.")
-    
-    # VESPA scores - use field names directly from your README Object_10 mapping
-    # Current cycle scores are field_147 to field_152
     vespa_scores = {
-        "Vision": student_vespa_data.get("field_147"),
-        "Effort": student_vespa_data.get("field_148"),
-        "Systems": student_vespa_data.get("field_149"),
-        "Practice": student_vespa_data.get("field_150"),
-        "Attitude": student_vespa_data.get("field_151"),
-        "Overall": student_vespa_data.get("field_152"),
+        "Vision": student_vespa_data.get("field_147"), "Effort": student_vespa_data.get("field_148"),
+        "Systems": student_vespa_data.get("field_149"), "Practice": student_vespa_data.get("field_150"),
+        "Attitude": student_vespa_data.get("field_151"), "Overall": student_vespa_data.get("field_152"),
     }
 
+    # Fetch Object_29 (Questionnaire Qs) data
+    object29_records = []
+    key_individual_question_insights = ["No Object_29 data processed yet (Placeholder)"] # Default placeholder
+
+    if student_vespa_data.get('id') and current_m_cycle > 0: # Knack record ID from Object_10 is student_vespa_data['id']
+        app.logger.info(f"Fetching Object_29 for Object_10 ID: {student_vespa_data['id']} and Cycle: {current_m_cycle}")
+        filters_object29 = [
+            {'field': 'field_792', 'operator': 'is', 'value': student_vespa_data['id']},
+            {'field': 'field_863_raw', 'operator': 'is', 'value': str(current_m_cycle)} # field_863_raw stores cycle number
+        ]
+        fetched_o29_data = get_knack_record("object_29", filters=filters_object29)
+        
+        if fetched_o29_data: # This will be a list of records
+            object29_records = fetched_o29_data
+            app.logger.info(f"Successfully fetched {len(object29_records)} record(s) from Object_29.")
+            # Basic processing - replace placeholder
+            if object29_records: 
+                 key_individual_question_insights = [f"Fetched {len(object29_records)} questionnaire record(s) for cycle {current_m_cycle}."]
+                 # TODO: Deeper processing of object29_records using psychometric_question_details.json
+            else:
+                 key_individual_question_insights = [f"No questionnaire records found for cycle {current_m_cycle}."]
+        else:
+            app.logger.warning(f"No data returned from Object_29 for student {student_vespa_data['id']} and cycle {current_m_cycle}.")
+            key_individual_question_insights = [f"Failed to fetch questionnaire data for cycle {current_m_cycle}."]
+    else:
+        app.logger.warning("Missing Object_10 ID or current_m_cycle is 0, skipping Object_29 fetch.")
+        key_individual_question_insights = ["Skipped fetching questionnaire data (missing ID or cycle is 0)."]
+
+
     # --- Phase 2: Knowledge Base Lookup & LLM Prompt Construction (Initial Steps) ---
-    
-    # Helper to determine score profile (Very Low, Low, Medium, High)
     def get_score_profile_text(score_value):
         if score_value is None: return "N/A"
         try:
-            score = float(score_value) # Knack scores can sometimes be strings
+            score = float(score_value)
             if score >= 8: return "High"
             if score >= 6: return "Medium"
             if score >= 4: return "Low"
-            if score >= 0: return "Very Low" # Assuming 0 is the lowest possible score
+            if score >= 0: return "Very Low"
             return "N/A"
         except (ValueError, TypeError):
             app.logger.warning(f"Could not convert score '{score_value}' to float for profile text.")
@@ -185,14 +204,8 @@ def coaching_suggestions():
 
     vespa_profile_details = {}
     for element, score_value in vespa_scores.items():
-        if element == "Overall": continue # Handle Overall separately as per README structure
-        
+        if element == "Overall": continue
         score_profile_text = get_score_profile_text(score_value)
-        
-        # Find matching entry in report_text_data (from reporttext.json)
-        # field_848: Level, field_844: Category (VESPA element), field_842: ShowForScore
-        # Knack raw fields often end with _raw, but the values from JSON might be direct.
-        # The reporttext.json you provided has direct values for field_848, field_844, field_842
         matching_report_text = None
         if report_text_data:
             for record in report_text_data:
@@ -209,12 +222,11 @@ def coaching_suggestions():
             "report_questions_for_student": matching_report_text.get('field_846', "Questions not found.") if matching_report_text else "Questions not found.",
             "report_suggested_tools_for_student": matching_report_text.get('field_847', "Tools not found.") if matching_report_text else "Tools not found.",
             "primary_tutor_coaching_comments": matching_report_text.get('field_853', "Coaching comments not found.") if matching_report_text else "Coaching comments not found.",
-            "supplementary_tutor_questions": ["Placeholder supplementary Q1"], # TODO: Implement logic
-            "key_individual_question_insights_from_object29": ["Placeholder insights from Object_29"], # TODO: Implement logic
-            "historical_summary_scores": {"cycle1": "N/A (Placeholder)"} # TODO: Implement logic
+            "supplementary_tutor_questions": ["Placeholder supplementary Q1"], 
+            "key_individual_question_insights_from_object29": key_individual_question_insights if element == "Vision" else ["See Vision for O29 summary"], # Temp display
+            "historical_summary_scores": {"cycle1": "N/A (Placeholder)"} 
         }
 
-    # Handle Overall VESPA profile separately
     overall_score_value = vespa_scores.get("Overall")
     overall_score_profile_text = get_score_profile_text(overall_score_value)
     matching_overall_report_text = None
@@ -231,10 +243,9 @@ def coaching_suggestions():
         "score_profile_text": overall_score_profile_text,
         "report_text_for_student": matching_overall_report_text.get('field_845', "Content not found.") if matching_overall_report_text else "Content not found.",
         "primary_tutor_coaching_comments": matching_overall_report_text.get('field_853', "Coaching comments not found.") if matching_overall_report_text else "Coaching comments not found.",
-        "historical_summary_scores": {"cycle1": "N/A (Placeholder)"} # TODO: Implement logic
+        "historical_summary_scores": {"cycle1": "N/A (Placeholder)"} 
     }
     
-    # TODO: Fetch Object_29 (Questionnaire Qs) based on student_object10_record_id and current_m_cycle
     # TODO: Fetch Object_112 (Academic Profile) - requires linkage
     # TODO: Logic for "supplementary_tutor_questions"
     # TODO: Logic for "key_individual_question_insights_from_object29"
@@ -267,7 +278,7 @@ def coaching_suggestions():
         "previous_interaction_summary": previous_interaction_summary
     }
 
-    app.logger.info(f"Successfully prepared response for student_object10_record_id: {student_object10_record_id}")
+    app.logger.info(f"Successfully prepared response for student_object10_record_id: {student_obj10_id_from_request}")
     return jsonify(response_data)
 
 if __name__ == '__main__':
