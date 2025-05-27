@@ -159,30 +159,72 @@ def coaching_suggestions():
         "Attitude": student_vespa_data.get("field_151"), "Overall": student_vespa_data.get("field_152"),
     }
 
-    # Fetch Object_29 (Questionnaire Qs) data
-    object29_records = []
-    key_individual_question_insights = ["No Object_29 data processed yet (Placeholder)"] # Default placeholder
+    # Fetch and Process Object_29 (Questionnaire Qs) data
+    key_individual_question_insights = ["No questionnaire data processed."] # Default
+    processed_object29_data_for_llm = {} # To store structured Q&A for LLM
 
-    if student_vespa_data.get('id') and current_m_cycle > 0: # Knack record ID from Object_10 is student_vespa_data['id']
+    if student_vespa_data.get('id') and current_m_cycle > 0:
         app.logger.info(f"Fetching Object_29 for Object_10 ID: {student_vespa_data['id']} and Cycle: {current_m_cycle}")
         filters_object29 = [
             {'field': 'field_792', 'operator': 'is', 'value': student_vespa_data['id']},
-            {'field': 'field_863_raw', 'operator': 'is', 'value': str(current_m_cycle)} # field_863_raw stores cycle number
+            {'field': 'field_863_raw', 'operator': 'is', 'value': str(current_m_cycle)}
         ]
-        fetched_o29_data = get_knack_record("object_29", filters=filters_object29)
+        fetched_o29_data_list = get_knack_record("object_29", filters=filters_object29)
         
-        if fetched_o29_data: # This will be a list of records
-            object29_records = fetched_o29_data
-            app.logger.info(f"Successfully fetched {len(object29_records)} record(s) from Object_29.")
-            # Basic processing - replace placeholder
-            if object29_records: 
-                 key_individual_question_insights = [f"Fetched {len(object29_records)} questionnaire record(s) for cycle {current_m_cycle}."]
-                 # TODO: Deeper processing of object29_records using psychometric_question_details.json
+        if fetched_o29_data_list: # This will be a list of records
+            object29_record = fetched_o29_data_list[0] # Assuming one record per student per cycle
+            app.logger.info(f"Successfully fetched Object_29 record: {object29_record.get('id')}")
+            
+            parsed_insights = []
+            if psychometric_question_details:
+                for q_detail in psychometric_question_details:
+                    field_id = q_detail.get('currentCycleFieldId')
+                    question_text = q_detail.get('questionText', 'Unknown Question')
+                    vespa_category = q_detail.get('vespaCategory', 'N/A')
+                    
+                    if not field_id:
+                        continue
+
+                    # Knack API often returns scores as strings; try to get numerical value.
+                    # Check for field_id directly, then field_id_raw for Knack objects.
+                    raw_score_value = object29_record.get(field_id)
+                    if raw_score_value is None and field_id.startswith("field_"):
+                         # For fields like "field_794", Knack API might return "field_794_raw" for the simple value.
+                         # However, our psychometric_question_details.json currentCycleFieldId already points to the specific field.
+                         # Let's assume the direct field_id contains the score or its object.
+                         # If it's an object like {"value": "3"} or {"value": 3}, we need to extract it.
+                         # If it's directly a string "3" or number 3, that's fine too.
+                         score_obj = object29_record.get(field_id + '_raw') # Check _raw if direct access failed
+                         if isinstance(score_obj, dict):
+                             raw_score_value = score_obj.get('value', 'N/A')
+                         elif score_obj is not None: # If _raw gives a direct value
+                             raw_score_value = score_obj
+                    
+                    score_display = "N/A"
+                    numeric_score = None
+                    if raw_score_value is not None and raw_score_value != 'N/A':
+                        try:
+                            numeric_score = int(raw_score_value) # Scores are 1-5
+                            score_display = str(numeric_score)
+                        except (ValueError, TypeError):
+                            score_display = str(raw_score_value) # Keep as string if not convertible
+                            app.logger.warning(f"Could not parse score '{raw_score_value}' for {field_id} to int.")
+
+                    insight_text = f"{vespa_category} - '{question_text}': Score {score_display}/5"
+                    if numeric_score is not None and numeric_score <= 2: # Flag low scores (1 or 2)
+                        insight_text = f"FLAG: {insight_text}"
+                    parsed_insights.append(insight_text)
+                    processed_object29_data_for_llm[question_text] = score_display
+                
+                if parsed_insights:
+                    key_individual_question_insights = parsed_insights
+                else:
+                    key_individual_question_insights = ["Could not parse any question details from Object_29 data."]
             else:
-                 key_individual_question_insights = [f"No questionnaire records found for cycle {current_m_cycle}."]
+                key_individual_question_insights = ["Psychometric question details mapping not loaded. Cannot process Object_29 data."]
         else:
             app.logger.warning(f"No data returned from Object_29 for student {student_vespa_data['id']} and cycle {current_m_cycle}.")
-            key_individual_question_insights = [f"Failed to fetch questionnaire data for cycle {current_m_cycle}."]
+            key_individual_question_insights = [f"No questionnaire data found for cycle {current_m_cycle}."]
     else:
         app.logger.warning("Missing Object_10 ID or current_m_cycle is 0, skipping Object_29 fetch.")
         key_individual_question_insights = ["Skipped fetching questionnaire data (missing ID or cycle is 0)."]
@@ -223,7 +265,7 @@ def coaching_suggestions():
             "report_suggested_tools_for_student": matching_report_text.get('field_847', "Tools not found.") if matching_report_text else "Tools not found.",
             "primary_tutor_coaching_comments": matching_report_text.get('field_853', "Coaching comments not found.") if matching_report_text else "Coaching comments not found.",
             "supplementary_tutor_questions": ["Placeholder supplementary Q1"], 
-            "key_individual_question_insights_from_object29": key_individual_question_insights if element == "Vision" else ["See Vision for O29 summary"], # Temp display
+            "key_individual_question_insights_from_object29": key_individual_question_insights, # Assign the processed insights
             "historical_summary_scores": {"cycle1": "N/A (Placeholder)"} 
         }
 
