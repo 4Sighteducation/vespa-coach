@@ -1,4 +1,3 @@
-
 # VESPA AI Coaching Assistant
 
 ## 1. Project Aim
@@ -49,6 +48,13 @@ This assistant will interact directly with students after they complete their VE
 *   **Historical Cycle 3 Scores (1-10 scale):**
     *   `field_167` - `field_172` (V3, E3, S3, P3, A3, O3)
 *   `field_3271`: AI Coaching Summary (Write-back field for AI "memory").
+*   **Student Reflections & Goals (Current Cycle - if available):**
+    *   `field_2302`: RRC1 (Report Response Comment 1)
+    *   `field_2303`: RRC2 (Report Response Comment 2)
+    *   `field_2304`: RRC3 (Report Response Comment 3)
+    *   `field_2499`: GOAL1 (Student Goal 1)
+    *   `field_2493`: GOAL2 (Student Goal 2)
+    *   `field_2494`: GOAL3 (Student Goal 3)
 
 **Object_29: Questionnaire Qs** (Individual psychometric question responses)
 *   `field_792`: Connection to `Object_10` (VESPA_RESULT).
@@ -148,6 +154,14 @@ This assistant will interact directly with students after they complete their VE
         {"subject": "Physics", "currentGrade": "B", "targetGrade": "A", "effortGrade": "C"}
         // ... other subjects if data exists
       ],
+      "student_reflections_and_goals": {
+        "rrc1_comment": "Student's comment for RRC1...",
+        "rrc2_comment": "Student's comment for RRC2...",
+        "rrc3_comment": "Student's comment for RRC3...",
+        "goal1": "Student's goal 1...",
+        "goal2": "Student's goal 2...",
+        "goal3": "Student's goal 3..."
+      },
       "overall_framing_statement_for_tutor": {
         "id": "default_response",
         "statement": "Framing statement text..."
@@ -174,9 +188,12 @@ This assistant will interact directly with students after they complete their VE
 5.  Fetch `Object_112` (Academic Profile): Link via `Object_10` email -> `Object_3.field_70` -> `Object_112.field_3070`. Parse subject JSONs if available.
 
 **(Phase 2: Knowledge Base Lookup & LLM Prompt Construction)**
-6.  Load static JSON knowledge bases (`coaching_questions_knowledge_base.json`, `question_id_to_text_mapping.json` - although `psychometric_question_details.json` now largely covers the latter for analysis).
+6.  Load static JSON knowledge bases (`coaching_questions_knowledge_base.json`, `psychometric_question_details.json` - although `psychometric_question_details.json` now largely covers the latter for analysis).
 7.  From `coaching_questions_knowledge_base.json`: Retrieve general intro questions, evaluate/select conditional framing statement, get supplementary VESPA-specific questions.
-8.  Construct rich prompt for LLM: Include all gathered data (student context, current/historical summary scores, trends, `Object_29` insights, `Object_33` content, academic profile, framing statement, intro questions, supplementary questions, previous AI summary) and a clear directive for the LLM.
+8.  Construct rich prompt for LLM: 
+    *   Include all gathered data (student context, current/historical summary scores, trends, `Object_29` insights, `Object_33` content, academic profile, framing statement, intro questions, supplementary questions, previous AI summary).
+    *   **Important for Reflections/Goals:** When including student-written comments (RRC1-3 from `field_2302`-`field_2304`) and goals (GOAL1-3 from `field_2499`, `field_2493`, `field_2494`) from `Object_10`, the backend should use the `current_cycle` (from `Object_10.field_146_raw`) to *give primary emphasis or highlight* the comment and goal corresponding to that `current_cycle` in the LLM prompt. Historical comments/goals should be treated as secondary context.
+    *   Include a clear directive for the LLM.
 
 **(Phase 3: LLM Interaction & Response Formatting)**
 9.  Call external LLM API.

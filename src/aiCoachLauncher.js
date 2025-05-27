@@ -6,9 +6,11 @@ if (window.aiCoachLauncherInitialized) {
 } else {
     window.aiCoachLauncherInitialized = true;
 
-    let AI_COACH_LAUNCHER_CONFIG = null; 
+    let AI_COACH_LAUNCHER_CONFIG = null;
     let coachObserver = null;
     let coachUIInitialized = false;
+    let debouncedObserverCallback = null; // For debouncing mutation observer
+    let eventListenersAttached = false; // ADDED: Module-scoped flag for event listeners
 
     // --- Configuration ---
     const HEROKU_API_URL = 'https://vespa-coach-c64c795edaa7.herokuapp.com/api/v1/coaching_suggestions';
@@ -43,7 +45,12 @@ if (window.aiCoachLauncherInitialized) {
 
     // Function to initialize the UI elements (button and panel)
     function initializeCoachUI() {
-        if (coachUIInitialized) return;
+        if (coachUIInitialized && document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId)) {
+            logAICoach("Coach UI appears to be already initialized with a button. Skipping full re-initialization.");
+            // If UI is marked initialized and button exists, critical parts are likely fine.
+            // Data refresh is handled by observer logic or toggleAICoachPanel.
+            return;
+        }
 
         logAICoach("Conditions met. Initializing AI Coach UI (button and panel).");
         addAICoachStyles();
@@ -94,16 +101,24 @@ if (window.aiCoachLauncherInitialized) {
             return;
         }
 
+        // Debounce utility
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
         const observerCallback = function(mutationsList, observer) {
-            logAICoach("MutationObserver detected DOM change.");
+            logAICoach("MutationObserver detected DOM change (raw event).");
             if (isIndividualReportView()) {
                 const panelIsActive = document.body.classList.contains('ai-coach-active');
-                if (!coachUIInitialized) { // First time UI init for a student view
+                if (!coachUIInitialized) { 
                     initializeCoachUI();
-                } else if (panelIsActive) { // UI already initialized AND panel is active, potentially new student
-                    logAICoach("Individual report view, panel active. Re-fetching data for potentially new student.");
-                    // Directly trigger the data fetching part of toggleAICoachPanel(true)
-                    // without toggling visibility, as it's already visible.
+                } else if (panelIsActive) { 
+                    logAICoach("Individual report view, panel active. Re-fetching data for potentially new student (debounced).");
                     refreshAICoachData(); 
                 }
             } else {
@@ -111,7 +126,23 @@ if (window.aiCoachLauncherInitialized) {
             }
         };
 
-        coachObserver = new MutationObserver(observerCallback);
+        // Use a debounced version of the observer callback
+        debouncedObserverCallback = debounce(function() {
+            logAICoach("MutationObserver processing (debounced).");
+            if (isIndividualReportView()) {
+                const panelIsActive = document.body.classList.contains('ai-coach-active');
+                if (!coachUIInitialized) { 
+                    initializeCoachUI();
+                } else if (panelIsActive) { 
+                    logAICoach("Individual report view, panel active. Re-fetching data for potentially new student (debounced).");
+                    refreshAICoachData(); 
+                }
+            } else {
+                clearCoachUI();
+            }
+        }, 750); // Debounce for 750ms
+
+        coachObserver = new MutationObserver(debouncedObserverCallback); // Use the debounced version
         coachObserver.observe(targetNode, { childList: true, subtree: true });
 
         // Initial check in case the page loads directly on an individual report
@@ -253,18 +284,33 @@ if (window.aiCoachLauncherInitialized) {
             console.error(`[AICoachLauncher] Launcher button target element '${AI_COACH_LAUNCHER_CONFIG.elementSelector}' not found.`);
             return;
         }
-        if (document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId)) {
-            logAICoach("AI Coach launcher button already exists.");
-            return;
+
+        let buttonContainer = document.getElementById('aiCoachLauncherButtonContainer');
+        
+        // If the main button container div doesn't exist within the targetElement, create it.
+        if (!buttonContainer) {
+            buttonContainer = document.createElement('div');
+            buttonContainer.id = 'aiCoachLauncherButtonContainer';
+            // Clear targetElement before appending to ensure it only contains our button container.
+            // This assumes targetElement is designated EXCLUSIVELY for the AI Coach button.
+            // If targetElement can have other dynamic content, this approach needs refinement.
+            targetElement.innerHTML = ''; // Clear previous content from target
+            targetElement.appendChild(buttonContainer);
+            logAICoach("Launcher button container DIV created in target: " + AI_COACH_LAUNCHER_CONFIG.elementSelector);
         }
-        const buttonContainerHTML = `
-            <div id="aiCoachLauncherButtonContainer">
-              <p>Get AI-powered insights and suggestions to enhance your coaching conversation.</p>
-              <button id="${AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId}" class="p-button p-component">🚀 Activate AI Coach</button>
-            </div>
-        `;
-        targetElement.innerHTML = buttonContainerHTML;
-        logAICoach("Launcher button added to view: " + AI_COACH_LAUNCHER_CONFIG.viewKey);
+
+        // Now, populate/repopulate the buttonContainer if the button itself is missing.
+        // clearCoachUI empties buttonContainer.innerHTML.
+        if (!buttonContainer.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId}`)) {
+            const buttonContentHTML = `
+                <p>Get AI-powered insights and suggestions to enhance your coaching conversation.</p>
+                <button id="${AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId}" class="p-button p-component">🚀 Activate AI Coach</button>
+            `;
+            buttonContainer.innerHTML = buttonContentHTML;
+            logAICoach("Launcher button content added/re-added to container.");
+        } else {
+            logAICoach("Launcher button content already present in container.");
+        }
     }
 
     async function getStudentObject10RecordId(retryCount = 0) {
@@ -330,8 +376,27 @@ if (window.aiCoachLauncherInitialized) {
     }
 
     function renderAICoachData(data) {
+        logAICoach("renderAICoachData CALLED. Data received:", JSON.parse(JSON.stringify(data))); // Log a deep copy
+        if (data && data.student_name) {
+            logAICoach(`renderAICoachData: Preparing to render for student: ${data.student_name} (Cycle: ${data.current_cycle})`);
+        } else {
+            logAICoach("renderAICoachData: data received is missing student_name or is undefined. Rendering basic message.");
+            // Render a basic message if critical data is missing
+            const panelContent = document.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-content`);
+            if (panelContent) {
+                panelContent.innerHTML = '<div class="ai-coach-section"><p>No detailed coaching data available. Ensure the student report is fully loaded and the AI Coach is active.</p></div>';
+            }
+            return;
+        }
+
         const panelContent = document.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-content`);
-        if (!panelContent) return;
+        if (!panelContent) {
+            logAICoach("renderAICoachData: panelContent element not found. Cannot render.");
+            return;
+        }
+
+        // Explicitly clear previous content before rendering new data
+        panelContent.innerHTML = ''; 
 
         let html = '';
 
@@ -341,22 +406,27 @@ if (window.aiCoachLauncherInitialized) {
                 <h4>Student Overview</h4>
                 <p><strong>Name:</strong> ${data.student_name || 'N/A'}</p>
                 <p><strong>Level:</strong> ${data.student_level || 'N/A'}</p>
-                <p><strong>Current Cycle:</strong> ${data.current_cycle || 'N/A'}</p>
+                <p><strong>Current VESPA Cycle:</strong> ${data.current_cycle || 'N/A'}</p>
             </div>
         `;
 
-        // VESPA Profile
+        // VESPA Profile - Enhanced to include historical scores and individual insights
         if (data.vespa_profile) {
             html += '<div class="ai-coach-section"><h4>VESPA Profile</h4>';
             for (const [element, details] of Object.entries(data.vespa_profile)) {
                 html += `
                     <div>
                         <h5>${element} (Score: ${details.score_1_to_10 !== undefined ? details.score_1_to_10 : 'N/A'}) - <em>${details.score_profile_text || 'N/A'}</em></h5>
-                        ${details.primary_tutor_coaching_comments ? `<p><strong>Coaching Comments:</strong> ${details.primary_tutor_coaching_comments}</p>` : ''}
-                        ${details.report_text_for_student ? `<p><em>Report Text:</em> ${details.report_text_for_student}</p>` : ''}
-                        ${details.report_questions_for_student ? `<p><em>Student Questions:</em> ${details.report_questions_for_student}</p>` : ''}
-                        ${details.report_suggested_tools_for_student ? `<p><em>Suggested Tools:</em> ${details.report_suggested_tools_for_student}</p>` : ''}
-                        <!-- TODO: Display historical scores, supplementary questions, individual insights -->
+                        ${details.primary_tutor_coaching_comments ? `<p><strong>Tutor Coaching Comments (Report Gen):</strong> ${details.primary_tutor_coaching_comments}</p>` : ''}
+                        ${details.report_text_for_student ? `<p><em>Student Report Text:</em> ${details.report_text_for_student}</p>` : ''}
+                        ${details.report_questions_for_student ? `<p><em>Student Report Questions:</em> ${details.report_questions_for_student}</p>` : ''}
+                        ${details.report_suggested_tools_for_student ? `<p><em>Student Report Tools:</em> ${details.report_suggested_tools_for_student}</p>` : ''}
+                        ${details.supplementary_tutor_questions && details.supplementary_tutor_questions.length > 0 ? 
+                            `<div><strong>Supplementary Tutor Questions (KB):</strong><ul>${details.supplementary_tutor_questions.map(q => `<li>${q}</li>`).join('')}</ul></div>` : ''}
+                        ${details.key_individual_question_insights_from_object29 && details.key_individual_question_insights_from_object29.length > 0 ? 
+                            `<div><strong>Key Psychometric Insights (Object_29):</strong><ul>${details.key_individual_question_insights_from_object29.map(insight => `<li>${insight}</li>`).join('')}</ul></div>` : ''}
+                        ${details.historical_summary_scores ? 
+                            `<div><strong>Historical Scores:</strong> ${Object.entries(details.historical_summary_scores).map(([cycle, score]) => `Cycle ${cycle.replace('cycle','')}: ${score}`).join(', ') || 'N/A'}</div>` : ''}
                     </div>
                 `;
                  if (element !== "Overall" && Object.keys(data.vespa_profile).indexOf(element) < Object.keys(data.vespa_profile).length - (Object.keys(data.vespa_profile).includes("Overall") ? 2:1) ){
@@ -375,23 +445,64 @@ if (window.aiCoachLauncherInitialized) {
             html += '</ul></div>';
         }
         
-        // Overall Framing Statement
+        // Overall Framing Statement for Tutor
         if(data.overall_framing_statement_for_tutor && data.overall_framing_statement_for_tutor.statement){
             html += `
             <div class="ai-coach-section">
-                <h4>Overall Framing Statement</h4>
+                <h4>Overall Framing Statement (KB)</h4>
                 <p>${data.overall_framing_statement_for_tutor.statement}</p>
             </div>
         `;
         }
 
-        // General Introductory Questions
+        // General Introductory Questions for Tutor
         if(data.general_introductory_questions_for_tutor && data.general_introductory_questions_for_tutor.length > 0){
-            html += '<div class="ai-coach-section"><h4>General Introductory Questions</h4><ul>';
+            html += '<div class="ai-coach-section"><h4>General Introductory Questions (KB)</h4><ul>';
             data.general_introductory_questions_for_tutor.forEach(q => {
                 html += `<li>${q}</li>`;
             });
             html += '</ul></div>';
+        }
+
+        // Student Reflections & Goals (from Object_10)
+        if (data.student_reflections_and_goals) {
+            const reflections = data.student_reflections_and_goals;
+            const currentCycle = data.current_cycle ? parseInt(data.current_cycle) : null;
+            let reflectionsHTML = '';
+
+            const reflectionsMap = [
+                { key: 'rrc1_comment', label: 'RRC1', cycle: 1 },
+                { key: 'rrc2_comment', label: 'RRC2', cycle: 2 },
+                { key: 'rrc3_comment', label: 'RRC3', cycle: 3 },
+                { key: 'goal1', label: 'Goal 1', cycle: 1 },
+                { key: 'goal2', label: 'Goal 2', cycle: 2 },
+                { key: 'goal3', label: 'Goal 3', cycle: 3 },
+            ];
+
+            reflectionsMap.forEach(item => {
+                if (reflections[item.key] && reflections[item.key].trim() !== '') {
+                    const isCurrentCycleComment = currentCycle === item.cycle;
+                    const style = isCurrentCycleComment ? 'font-weight: bold; color: #0056b3;' : ''; // Example style for current cycle
+                    const cycleLabel = isCurrentCycleComment ? ' (Current Cycle)' : ` (Cycle ${item.cycle})`;
+                    reflectionsHTML += `<p style="${style}"><strong>${item.label}${cycleLabel}:</strong> ${reflections[item.key]}</p>`;
+                }
+            });
+
+            if (reflectionsHTML.trim() !== '') {
+                html += `
+                    <div class="ai-coach-section">
+                        <h4>Student Reflections & Goals (Object_10)</h4>
+                        ${reflectionsHTML}
+                    </div>
+                `;
+            } else {
+                 html += `
+                    <div class="ai-coach-section">
+                        <h4>Student Reflections & Goals (Object_10)</h4>
+                        <p>No specific comments or goals recorded by the student in Object_10 for the current cycle.</p>
+                    </div>
+                `;
+            }
         }
 
         // LLM Generated Summary & Suggestions
@@ -415,17 +526,24 @@ if (window.aiCoachLauncherInitialized) {
             html += '</div>';
         }
         
-        // Previous Interaction Summary
-        if(data.previous_interaction_summary){
+        // Previous Interaction Summary (from Object_10.field_3271)
+        if(data.previous_interaction_summary && data.previous_interaction_summary.trim() !== ''){
              html += `
             <div class="ai-coach-section">
-                <h4>Previous Interaction Summary</h4>
+                <h4>Previous AI Coach Interaction Summary</h4>
                 <p>${data.previous_interaction_summary}</p>
+            </div>
+        `;
+        } else {
+            html += `
+            <div class="ai-coach-section">
+                <h4>Previous AI Coach Interaction Summary</h4>
+                <p>No previous interaction summary recorded.</p>
             </div>
         `;
         }
 
-        panelContent.innerHTML = html || '<p>No data to display.</p>';
+        panelContent.innerHTML = html || '<p>No coaching data components to display. Check API response.</p>';
     }
 
     // New function to specifically refresh data if panel is already open
@@ -477,20 +595,35 @@ if (window.aiCoachLauncherInitialized) {
     }
 
     function setupEventListeners() {
+        if (eventListenersAttached) {
+            logAICoach("Global AI Coach event listeners already attached. Skipping setup.");
+            return;
+        }
+
         document.body.addEventListener('click', function(event) {
-            const toggleButton = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId);
-            const panel = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId);
+            if (!AI_COACH_LAUNCHER_CONFIG || 
+                !AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId || 
+                !AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId) {
+                // Config might not be ready if an event fires too early, or if script reloaded weirdly.
+                // console.warn("[AICoachLauncher] Event listener fired, but essential config is missing.");
+                return; 
+            }
+
+            const toggleButtonId = AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId;
+            const panelId = AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId;
             
-            if (event.target && event.target.id === AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId) {
+            if (event.target && event.target.id === toggleButtonId) {
                 const isActive = document.body.classList.contains('ai-coach-active');
                 toggleAICoachPanel(!isActive);
             }
             
+            const panel = document.getElementById(panelId);
             if (panel && event.target && event.target.classList.contains('ai-coach-close-btn') && panel.contains(event.target)) {
                 toggleAICoachPanel(false);
             }
         });
-        logAICoach("Event listeners set up.");
+        eventListenersAttached = true;
+        logAICoach("Global AI Coach event listeners set up ONCE.");
     }
 
     window.initializeAICoachLauncher = initializeAICoachLauncher;

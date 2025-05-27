@@ -468,10 +468,19 @@ def coaching_suggestions():
         # Populate supplementary_tutor_questions from coaching_kb
         supplementary_questions = []
         if coaching_kb and coaching_kb.get('vespaSpecificCoachingQuestions'):
-            element_questions = coaching_kb['vespaSpecificCoachingQuestions'].get(element, {})
-            # score_profile_text is "High", "Medium", "Low", "Very Low"
-            profile_questions = element_questions.get(score_profile_text, [])
-            supplementary_questions.extend(profile_questions)
+            element_data = coaching_kb['vespaSpecificCoachingQuestions'].get(element, {})
+            if element_data: # Check if the element itself exists
+                level_specific_questions = element_data.get(student_level, {}) # Get questions for student's level
+                if not level_specific_questions and student_level == "Level 3": # Fallback for Level 3 if specific L3 not found but L2 might exist
+                    app.logger.info(f"No Level 3 specific questions for {element}, trying Level 2 as fallback.")
+                    level_specific_questions = element_data.get("Level 2", {})
+                elif not level_specific_questions and student_level == "Level 2": # Fallback for Level 2 if specific L2 not found but L3 might exist
+                    app.logger.info(f"No Level 2 specific questions for {element}, trying Level 3 as fallback.")
+                    level_specific_questions = element_data.get("Level 3", {})
+                
+                # score_profile_text is "High", "Medium", "Low", "Very Low"
+                profile_questions = level_specific_questions.get(score_profile_text, [])
+                supplementary_questions.extend(profile_questions)
         
         vespa_profile_details[element]["supplementary_tutor_questions"] = supplementary_questions if supplementary_questions else ["No supplementary questions found for this profile."]
 
