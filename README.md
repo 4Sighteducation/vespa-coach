@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # VESPA AI Coaching Assistant
 
 ## 1. Project Aim
@@ -228,3 +229,6 @@ This assistant will interact directly with students after they complete their VE
 ---
 
 This README should serve as a comprehensive guide for the project. 
+=======
+# vespa-coach
+>>>>>>> 7fdd7d68719deb32db6eacf2adf77590f4b19a8f

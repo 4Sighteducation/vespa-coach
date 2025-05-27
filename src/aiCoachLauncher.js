@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // AI Coach Launcher Script (aiCoachLauncher.js)
 
 // Guard to prevent re-initialization
@@ -189,3 +190,6 @@ if (window.aiCoachLauncherInitialized) {
 
     window.initializeAICoachLauncher = initializeAICoachLauncher;
 } 
+=======
+
+>>>>>>> 7fdd7d68719deb32db6eacf2adf77590f4b19a8f
