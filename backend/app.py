@@ -358,6 +358,26 @@ def generate_student_summary_with_llm(student_data_dict):
     else:
         prompt_parts.append("  No specific low-score questionnaire insights flagged from Object_29 data.")
         
+    # NEW: Top and Bottom 3 questions from Object_29
+    prompt_parts.append("\n--- Top & Bottom Scoring Questionnaire Questions (Object_29) ---")
+    obj29_highlights = student_data_dict.get("object29_question_highlights")
+    if obj29_highlights:
+        if obj29_highlights.get("top_3"):
+            prompt_parts.append("  Top Scoring Questions (1-5 scale):")
+            for q_data in obj29_highlights["top_3"]:
+                prompt_parts.append(f"    - Score {q_data['score']}/5 ({q_data['category']}): \"{q_data['text']}\"")
+        else:
+            prompt_parts.append("  No top scoring questions data available.")
+        
+        if obj29_highlights.get("bottom_3"):
+            prompt_parts.append("  Bottom Scoring Questions (1-5 scale):")
+            for q_data in obj29_highlights["bottom_3"]:
+                prompt_parts.append(f"    - Score {q_data['score']}/5 ({q_data['category']}): \"{q_data['text']}\"")
+        else:
+            prompt_parts.append("  No bottom scoring questions data available.")
+    else:
+        prompt_parts.append("  No top/bottom question highlight data processed for Object_29.")
+        
     # Previous Interaction Summary
     prev_summary = student_data_dict.get('previous_interaction_summary')
     if prev_summary and prev_summary != "No previous AI coaching summary found.":
@@ -368,6 +388,7 @@ def generate_student_summary_with_llm(student_data_dict):
     prompt_parts.append("\n--- TASK FOR THE AI ACADEMIC MENTOR ---")
     prompt_parts.append("Based ONLY on the data provided above, provide a concise (2-3 sentences, max 100-120 words) 'AI Student Snapshot' for the student's TUTOR.")
     prompt_parts.append("This snapshot should highlight 1-2 key strengths and 1-2 primary areas for development or discussion, strongly rooted in the VESPA principles (Vision, Effort, Systems, Practice, Attitude).")
+    prompt_parts.append("Pay close attention to any explicit 'Reflections' (RRC comments) or 'Goals' provided by the student for the current cycle, as these are direct insights into their thinking.") # Emphasized RRC/Goals
     prompt_parts.append("The tone should be objective, analytical, and supportive, aimed at helping the tutor quickly grasp the student's profile to effectively prepare for a coaching conversation focused on student ownership.")
     prompt_parts.append("Frame your insights to help the tutor ask open-ended questions (inspired by the style in the `coaching_questions_knowledge_base.json`) and guide the student towards self-assessment and finding their own solutions (e.g., how they compare to the `100 statements - 2023.txt`).")
     prompt_parts.append("The ultimate aim of the tutor's conversation is to co-create an action plan with the student and use techniques like the 1-10 commitment scale ('How likely are you to stick to these goals?' -> 'What could move that score to an 8 or 9?').")
@@ -511,7 +532,12 @@ def coaching_suggestions():
 
     # Fetch and Process Object_29 (Questionnaire Qs) data
     key_individual_question_insights = ["No questionnaire data processed."] # Default
-    processed_object29_data_for_llm = {} # To store structured Q&A for LLM
+    # NEW: To store top/bottom 3 questions from Object 29
+    object29_top_bottom_questions = {
+        "top_3": [],
+        "bottom_3": []
+    }
+    all_scored_questions_from_object29 = [] # To collect all questions with numeric scores
 
     if student_vespa_data.get('id') and current_m_cycle > 0:
         app.logger.info(f"Fetching Object_29 for Object_10 ID: {student_vespa_data['id']} and Cycle: {current_m_cycle}")
@@ -560,16 +586,44 @@ def coaching_suggestions():
                             score_display = str(raw_score_value) # Keep as string if not convertible
                             app.logger.warning(f"Could not parse score '{raw_score_value}' for {field_id} to int.")
 
+                    # Populate for insights (FLAG: logic)
                     insight_text = f"{vespa_category} - '{question_text}': Score {score_display}/5"
                     if numeric_score is not None and numeric_score <= 2: # Flag low scores (1 or 2)
                         insight_text = f"FLAG: {insight_text}"
                     parsed_insights.append(insight_text)
-                    processed_object29_data_for_llm[question_text] = score_display
+                    
+                    # NEW: Populate for top/bottom scoring
+                    if numeric_score is not None:
+                        all_scored_questions_from_object29.append({
+                            "question_text": question_text,
+                            "score": numeric_score,
+                            "vespa_category": vespa_category
+                        })
                 
                 if parsed_insights:
                     key_individual_question_insights = parsed_insights
                 else:
                     key_individual_question_insights = ["Could not parse any question details from Object_29 data."]
+                
+                # NEW: Process for top/bottom 3
+                if all_scored_questions_from_object29:
+                    # Sort by score: ascending for bottom, descending for top
+                    all_scored_questions_from_object29.sort(key=lambda x: x["score"])
+                    object29_top_bottom_questions["bottom_3"] = [
+                        {"text": q["question_text"], "score": q["score"], "category": q["vespa_category"]} 
+                        for q in all_scored_questions_from_object29[:3]
+                    ]
+                    
+                    all_scored_questions_from_object29.sort(key=lambda x: x["score"], reverse=True)
+                    object29_top_bottom_questions["top_3"] = [
+                        {"text": q["question_text"], "score": q["score"], "category": q["vespa_category"]}
+                        for q in all_scored_questions_from_object29[:3]
+                    ]
+                    app.logger.info(f"Object_29 Top 3 questions: {object29_top_bottom_questions['top_3']}")
+                    app.logger.info(f"Object_29 Bottom 3 questions: {object29_top_bottom_questions['bottom_3']}")
+                else:
+                    app.logger.info("No numerically scored questions found in Object_29 to determine top/bottom.")
+
             else:
                 key_individual_question_insights = ["Psychometric question details mapping not loaded. Cannot process Object_29 data."]
         else:
@@ -717,6 +771,7 @@ def coaching_suggestions():
         "vespa_profile": vespa_profile_details,
         "academic_profile_summary": academic_profile_summary_data, # Use fetched data
         "student_reflections_and_goals": student_reflections_and_goals,
+        "object29_question_highlights": object29_top_bottom_questions, # NEWLY ADDED
         "overall_framing_statement_for_tutor": overall_framing_statement, # Use populated statement
         "general_introductory_questions_for_tutor": general_intro_questions, # Use populated questions
         "llm_generated_summary_and_suggestions": {
