@@ -929,42 +929,52 @@ def get_all_knack_records(object_key, filters=None, max_pages=20):
     """Fetches all records from a Knack object using pagination."""
     all_records = []
     current_page = 1
-    total_pages = 1 # Initialize total_pages to 1 to start the loop
+    # Initialize total_pages to a value that allows the loop to start.
+    # It will be updated from the first actual response.
+    total_pages = 1 
 
     app.logger.info(f"Starting paginated fetch for {object_key} with filters: {filters}")
 
     while current_page <= total_pages and current_page <= max_pages:
         app.logger.info(f"Fetching page {current_page} for {object_key}...")
+        # get_knack_record now returns the full response dictionary from Knack API
         response_data = get_knack_record(object_key, filters=filters, page=current_page, rows_per_page=1000)
         
-        if response_data and isinstance(response_data, dict) and 'records' in response_data:
-            records_on_page = response_data.get('records', []) # Get the list of records, default to empty list
+        if response_data and isinstance(response_data, dict):
+            # Extract the list of records from the response_data dictionary
+            records_on_page = response_data.get('records', []) 
+            
             if isinstance(records_on_page, list):
-                all_records.extend(records_on_page)
+                all_records.extend(records_on_page) # Add records from current page to the main list
                 app.logger.info(f"Fetched {len(records_on_page)} records from page {current_page} for {object_key}. Total so far: {len(all_records)}.")
             else:
-                app.logger.warning(f"'records' key in response_data for {object_key} page {current_page} is not a list. Type: {type(records_on_page)}")
-                break # Stop if the records format is incorrect
+                app.logger.warning(f"'records' key in response_data for {object_key} page {current_page} is not a list as expected. Type: {type(records_on_page)}. Stopping pagination.")
+                break 
             
             # Update total_pages from the first successful response that contains it
+            # This ensures we only set it once and use the value from the API if available
             if current_page == 1 and 'total_pages' in response_data:
                 try:
                     total_pages = int(response_data['total_pages'])
                     app.logger.info(f"Total pages for {object_key} identified: {total_pages}")
                 except (ValueError, TypeError):
-                    app.logger.warning(f"Could not parse 'total_pages' from response for {object_key}: {response_data.get('total_pages')}. Assuming 1 page.")
-                    total_pages = 1 # Fallback if total_pages is not a valid number
+                    app.logger.warning(f"Could not parse 'total_pages' from response for {object_key}: {response_data.get('total_pages')}. Assuming 1 page if not already set higher.")
+                    # If total_pages couldn't be parsed, and it's still the initial 1, keep it as 1 or decide on a fallback.
+                    # If we already got a valid total_pages, this won't override it.
+                    if total_pages == 1: # only if it was not updated by a previous valid response
+                         total_pages = 1 # Or consider current_page if records_on_page < rows_per_page implies it's the last one
             
-            if not records_on_page or len(records_on_page) < 1000: 
-                app.logger.info(f"Last page reached for {object_key} on page {current_page} (fetched {len(records_on_page)} records).")
+            # Check if this was the last page based on records fetched or if total_pages is reached
+            if not records_on_page or len(records_on_page) < 1000 or current_page == total_pages:
+                app.logger.info(f"Last page likely reached for {object_key} on page {current_page} (fetched {len(records_on_page)} records, total_pages: {total_pages}).")
                 break
             current_page += 1
         else:
-            app.logger.warning(f"No records found or error/unexpected response format on page {current_page} for {object_key}. Response: {str(response_data)[:200]}. Stopping pagination.")
+            app.logger.warning(f"No response_data or unexpected format on page {current_page} for {object_key}. Response: {str(response_data)[:200]}. Stopping pagination.")
             break
             
     app.logger.info(f"Completed paginated fetch for {object_key}. Total records retrieved: {len(all_records)}.")
-    return all_records
+    return all_records # This should NOW be a flat list of record dictionaries
 
 if __name__ == '__main__':
     # Ensure the FLASK_ENV is set to development for debug mode if not using `flask run`
