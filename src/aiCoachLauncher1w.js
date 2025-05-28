@@ -16,9 +16,12 @@ if (window.aiCoachLauncherInitialized) {
     let observerLastProcessedStudentId = null; // ADD THIS: Tracks ID processed by observer
     let currentlyFetchingStudentId = null; // ADD THIS
     let vespaChartInstance = null; // To keep track of the chart instance for updates/destruction
+    let currentLLMInsightsForChat = null; // ADDED: To store insights for chat context
 
     // --- Configuration ---
-    const HEROKU_API_URL = 'https://vespa-coach-c64c795edaa7.herokuapp.com/api/v1/coaching_suggestions';
+    const HEROKU_API_BASE_URL = 'https://vespa-coach-c64c795edaa7.herokuapp.com/api/v1'; // MODIFIED for base path
+    const COACHING_SUGGESTIONS_ENDPOINT = `${HEROKU_API_BASE_URL}/coaching_suggestions`;
+    const CHAT_TURN_ENDPOINT = `${HEROKU_API_BASE_URL}/chat_turn`;
     // Knack App ID and API Key are expected in AI_COACH_LAUNCHER_CONFIG if any client-side Knack calls were needed,
     // but with the new approach, getStudentObject10RecordId will primarily rely on a global variable.
 
@@ -512,7 +515,7 @@ if (window.aiCoachLauncherInitialized) {
         panel.className = 'ai-coach-panel';
         panel.innerHTML = `
             <div class="ai-coach-panel-header">
-                <h3>AI Coaching Assistant</h3>
+                <h3>VESPA AI Coaching Assistant</h3>
                 <button class="ai-coach-close-btn" aria-label="Close AI Coach Panel">&times;</button>
             </div>
             <div class="ai-coach-panel-content">
@@ -617,7 +620,7 @@ if (window.aiCoachLauncherInitialized) {
 
         try {
             logAICoach("Fetching AI Coaching Data for student_object10_record_id: " + studentId);
-            const response = await fetch(HEROKU_API_URL, {
+            const response = await fetch(COACHING_SUGGESTIONS_ENDPOINT, { // MODIFIED to use constant
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -635,6 +638,11 @@ if (window.aiCoachLauncherInitialized) {
             logAICoach("AI Coaching data received:", data);
             lastFetchedStudentId = studentId; 
             renderAICoachData(data);
+            if (data && data.llm_generated_insights) { // Store insights for chat
+                currentLLMInsightsForChat = data.llm_generated_insights;
+            } else {
+                currentLLMInsightsForChat = null;
+            }
 
         } catch (error) {
             if (error.name === 'AbortError') {
@@ -1292,16 +1300,27 @@ if (window.aiCoachLauncherInitialized) {
             logAICoach("Current tutor message for API:", originalInput);
 
             try {
-                const response = await fetch(`${HEROKU_API_URL}/chat_turn`, {
+                const payload = {
+                    student_object10_record_id: currentStudentId,
+                    chat_history: chatHistory, 
+                    current_tutor_message: originalInput
+                };
+
+                if (currentLLMInsightsForChat) {
+                    payload.initial_ai_context = {
+                        student_overview_summary: currentLLMInsightsForChat.student_overview_summary,
+                        academic_benchmark_analysis: currentLLMInsightsForChat.academic_benchmark_analysis,
+                        questionnaire_interpretation_and_reflection_summary: currentLLMInsightsForChat.questionnaire_interpretation_and_reflection_summary
+                    };
+                    logAICoach("Sending chat with initial_ai_context:", payload.initial_ai_context);
+                }
+
+                const response = await fetch(CHAT_TURN_ENDPOINT, { 
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        student_object10_record_id: currentStudentId,
-                        chat_history: chatHistory, // Send previously displayed messages
-                        current_tutor_message: originalInput // Send the new message
-                    }),
+                    body: JSON.stringify(payload),
                 });
 
                 thinkingIndicator.style.display = 'none';

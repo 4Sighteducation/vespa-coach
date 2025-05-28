@@ -1533,11 +1533,12 @@ def get_all_knack_records(object_key, filters=None, max_pages=20):
 @app.route('/api/v1/chat_turn', methods=['POST'])
 def chat_turn():
     data = request.get_json()
-    app.logger.info(f"Received request for /api/v1/chat_turn with data: {str(data)[:200]}...") # Log snippet of data
+    app.logger.info(f"Received request for /api/v1/chat_turn with data: {str(data)[:500]}...") # Log more data
 
     student_object10_id = data.get('student_object10_record_id')
-    chat_history = data.get('chat_history', []) # List of dicts: {"role": "user/assistant", "content": "..."}
+    chat_history = data.get('chat_history', []) 
     current_tutor_message = data.get('current_tutor_message')
+    initial_ai_context = data.get('initial_ai_context') # Get the new context
 
     if not student_object10_id or not current_tutor_message:
         app.logger.error("chat_turn: Missing student_object10_record_id or current_tutor_message.")
@@ -1563,6 +1564,21 @@ def chat_turn():
     messages_for_llm = [
         {"role": "system", "content": "You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. The tutor will ask you questions based on the student's data. Keep your responses concise and focused on the student being discussed."}
     ]
+
+    # Prepend initial AI context if available
+    if initial_ai_context:
+        context_preamble = "Key previously generated insights for this student (use this as context for the current chat):\n"
+        if initial_ai_context.get('student_overview_summary'):
+            context_preamble += f"- Overall Student Snapshot: {initial_ai_context['student_overview_summary']}\n"
+        if initial_ai_context.get('academic_benchmark_analysis'):
+            context_preamble += f"- Academic Benchmark Analysis: {initial_ai_context['academic_benchmark_analysis']}\n"
+        if initial_ai_context.get('questionnaire_interpretation_and_reflection_summary'):
+            context_preamble += f"- Questionnaire Interpretation: {initial_ai_context['questionnaire_interpretation_and_reflection_summary']}\n"
+        context_preamble += "\nGiven this context, and the chat history below, please respond to the tutor's latest message."
+        # Add this preamble as a system-like message before the chat history, or augment the system prompt
+        messages_for_llm.insert(1, {"role": "system", "content": context_preamble}) # Insert after initial system role
+        app.logger.info(f"chat_turn: Added initial_ai_context to LLM prompt: {context_preamble}")
+
     # Add existing chat history
     for message in chat_history:
         messages_for_llm.append(message)
