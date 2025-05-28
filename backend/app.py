@@ -871,23 +871,24 @@ def get_school_vespa_averages(school_id):
             app.logger.info(f"Cache expired for school_id: {school_id}")
             del SCHOOL_AVERAGES_CACHE[school_id]
 
-    app.logger.info(f"Calculating school VESPA averages for school_id: {school_id}")
+    app.logger.info(f"Calculating school VESPA averages for school_id: {school_id} by fetching all student records.")
     
-    filters_school_students_alt = [{'field': 'field_133', 'operator': 'is', 'value': school_id}]
+    filters_primary = [{'field': 'field_133', 'operator': 'is', 'value': school_id}]
+    app.logger.info(f"Attempting to fetch all records for object_10 with primary filter: {filters_primary}")
+    all_student_records_for_school = get_all_knack_records("object_10", filters=filters_primary)
 
-    school_student_records = get_knack_record("object_10", filters=filters_school_students_alt)
-
-    if not school_student_records:
-        app.logger.warning(f"No student records found for school_id {school_id} using field_133 direct filter. Trying field_133_raw contains filter.")
-        # Fallback to a 'contains' filter on field_133_raw which might be a string representation or part of a text field.
-        # This is less precise and depends on how school IDs might be stored in field_133_raw if it's not a direct connection id.
-        school_student_records = get_knack_record("object_10", filters=[{'field': 'field_133_raw', 'operator': 'contains', 'value': school_id}])
-        if not school_student_records:
-            app.logger.error(f"Could not retrieve any student records for school_id: {school_id} using multiple filter attempts. Cannot calculate averages.")
+    if not all_student_records_for_school:
+        app.logger.warning(f"No student records found for school_id {school_id} using primary filter (field_133). Trying fallback filter (field_133_raw).")
+        filters_fallback = [{'field': 'field_133_raw', 'operator': 'contains', 'value': school_id}]
+        app.logger.info(f"Attempting to fetch all records for object_10 with fallback filter: {filters_fallback}")
+        all_student_records_for_school = get_all_knack_records("object_10", filters=filters_fallback)
+        
+        if not all_student_records_for_school:
+            app.logger.error(f"Could not retrieve any student records for school_id: {school_id} using primary or fallback filters. Cannot calculate averages.")
             return None
-        app.logger.info(f"Retrieved {len(school_student_records)} student records for school_id {school_id} using fallback filter on field_133_raw.")
+        app.logger.info(f"Retrieved {len(all_student_records_for_school)} student records for school_id {school_id} using fallback filter (field_133_raw).")
     else:
-        app.logger.info(f"Retrieved {len(school_student_records)} student records for school_id {school_id} using direct field_133 filter.")
+        app.logger.info(f"Retrieved {len(all_student_records_for_school)} student records for school_id {school_id} using primary filter (field_133).")
 
     vespa_elements = {
         "Vision": "field_147", "Effort": "field_148",
@@ -897,10 +898,11 @@ def get_school_vespa_averages(school_id):
     sums = {key: 0 for key in vespa_elements}
     counts = {key: 0 for key in vespa_elements}
 
-    for record in school_student_records:
+    # Now all_student_records_for_school is a flat list of student record dictionaries
+    for record in all_student_records_for_school:
         # Ensure record is a dictionary before trying to .get() from it
         if not isinstance(record, dict):
-            app.logger.warning(f"Skipping a record in school_student_records because it is not a dictionary: {type(record)} - Content: {str(record)[:100]}...")
+            app.logger.warning(f"Skipping an item in all_student_records_for_school because it is not a dictionary: {type(record)} - Content: {str(record)[:100]}...")
             continue # Skip this iteration if record is not a dict
 
         for element_name, field_key in vespa_elements.items():

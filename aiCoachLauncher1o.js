@@ -558,14 +558,14 @@ if (window.aiCoachLauncherInitialized) {
         // Toggle Buttons part
         // We add buttons even if student_name is N/A, they just might show empty sections
         htmlShell += `
-            <div class="ai-coach-section-toggles" style="margin: 10px 0 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                <button id="aiCoachToggleVespaButton" class="p-button p-component" style="width: 100%; padding: 10px; font-size: 0.9em;" aria-expanded="false" aria-controls="aiCoachVespaProfileContainer">
+            <div class="ai-coach-section-toggles" style="margin: 10px 0 15px 0; display: flex; gap: 10px;">
+                <button id="aiCoachToggleVespaButton" class="p-button p-component" style="padding: 10px; font-size: 0.9em;" aria-expanded="false" aria-controls="aiCoachVespaProfileContainer">
                     View VESPA Profile Insights
                 </button>
-                <button id="aiCoachToggleAcademicButton" class="p-button p-component" style="width: 100%; padding: 10px; font-size: 0.9em;" aria-expanded="false" aria-controls="aiCoachAcademicProfileContainer">
+                <button id="aiCoachToggleAcademicButton" class="p-button p-component" style="padding: 10px; font-size: 0.9em;" aria-expanded="false" aria-controls="aiCoachAcademicProfileContainer">
                     View Academic Profile Insights
                 </button>
-                <button id="aiCoachToggleQuestionButton" class="p-button p-component" style="width: 100%; padding: 10px; font-size: 0.9em;" aria-expanded="false" aria-controls="aiCoachQuestionAnalysisContainer">
+                <button id="aiCoachToggleQuestionButton" class="p-button p-component" style="padding: 10px; font-size: 0.9em;" aria-expanded="false" aria-controls="aiCoachQuestionAnalysisContainer">
                     View Questionnaire Analysis
                 </button>
             </div>
