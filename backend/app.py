@@ -566,106 +566,109 @@ def coaching_suggestions():
 
     # Fetch and Process Object_29 (Questionnaire Qs) data
     key_individual_question_insights = ["No questionnaire data processed."] # Default
-    # NEW: To store top/bottom 3 questions from Object 29
     object29_top_bottom_questions = {
         "top_3": [],
         "bottom_3": []
     }
-    all_scored_questions_from_object29 = [] # To collect all questions with numeric scores
+    all_scored_questions_from_object29 = []
 
-    if student_vespa_data.get('id') and current_m_cycle > 0:
-        app.logger.info(f"Fetching Object_29 for Object_10 ID: {student_vespa_data['id']} and Cycle: {current_m_cycle}")
+    # Ensure student_vespa_data['id'] and current_m_cycle are valid before proceeding
+    obj10_id_for_o29 = student_vespa_data.get('id')
+    if obj10_id_for_o29 and current_m_cycle > 0:
+        app.logger.info(f"Fetching Object_29 for Object_10 ID: {obj10_id_for_o29} and Cycle: {current_m_cycle}")
         filters_object29 = [
-            {'field': 'field_792', 'operator': 'is', 'value': student_vespa_data['id']},
+            {'field': 'field_792', 'operator': 'is', 'value': obj10_id_for_o29},
             {'field': 'field_863_raw', 'operator': 'is', 'value': str(current_m_cycle)}
         ]
-        fetched_o29_data_list = get_knack_record("object_29", filters=filters_object29)
+        object29_response = get_knack_record("object_29", filters=filters_object29)
         
-        if fetched_o29_data_list: # This will be a list of records
-            object29_record = fetched_o29_data_list[0] # Assuming one record per student per cycle
-            app.logger.info(f"Successfully fetched Object_29 record: {object29_record.get('id')}")
-            
-            parsed_insights = []
-            if psychometric_question_details:
-                for q_detail in psychometric_question_details:
-                    field_id = q_detail.get('currentCycleFieldId')
-                    question_text = q_detail.get('questionText', 'Unknown Question')
-                    vespa_category = q_detail.get('vespaCategory', 'N/A')
-                    
-                    if not field_id:
-                        continue
-
-                    # Knack API often returns scores as strings; try to get numerical value.
-                    # Check for field_id directly, then field_id_raw for Knack objects.
-                    raw_score_value = object29_record.get(field_id)
-                    if raw_score_value is None and field_id.startswith("field_"):
-                         # For fields like "field_794", Knack API might return "field_794_raw" for the simple value.
-                         # However, our psychometric_question_details.json currentCycleFieldId already points to the specific field.
-                         # Let's assume the direct field_id contains the score or its object.
-                         # If it's an object like {"value": "3"} or {"value": 3}, we need to extract it.
-                         # If it's directly a string "3" or number 3, that's fine too.
-                         score_obj = object29_record.get(field_id + '_raw') # Check _raw if direct access failed
-                         if isinstance(score_obj, dict):
-                             raw_score_value = score_obj.get('value', 'N/A')
-                         elif score_obj is not None: # If _raw gives a direct value
-                             raw_score_value = score_obj
-                    
-                    score_display = "N/A"
-                    numeric_score = None
-                    if raw_score_value is not None and raw_score_value != 'N/A':
-                        try:
-                            numeric_score = int(raw_score_value) # Scores are 1-5
-                            score_display = str(numeric_score)
-                        except (ValueError, TypeError):
-                            score_display = str(raw_score_value) # Keep as string if not convertible
-                            app.logger.warning(f"Could not parse score '{raw_score_value}' for {field_id} to int.")
-
-                    # Populate for insights (FLAG: logic)
-                    insight_text = f"{vespa_category} - '{question_text}': Score {score_display}/5"
-                    if numeric_score is not None and numeric_score <= 2: # Flag low scores (1 or 2)
-                        insight_text = f"FLAG: {insight_text}"
-                    parsed_insights.append(insight_text)
-                    
-                    # NEW: Populate for top/bottom scoring
-                    if numeric_score is not None:
-                        all_scored_questions_from_object29.append({
-                            "question_text": question_text,
-                            "score": numeric_score,
-                            "vespa_category": vespa_category
-                        })
-                
-                if parsed_insights:
-                    key_individual_question_insights = parsed_insights
-                else:
-                    key_individual_question_insights = ["Could not parse any question details from Object_29 data."]
-                
-                # NEW: Process for top/bottom 3
-                if all_scored_questions_from_object29:
-                    # Sort by score: ascending for bottom, descending for top
-                    all_scored_questions_from_object29.sort(key=lambda x: x["score"])
-                    object29_top_bottom_questions["bottom_3"] = [
-                        {"text": q["question_text"], "score": q["score"], "category": q["vespa_category"]} 
-                        for q in all_scored_questions_from_object29[:3]
-                    ]
-                    
-                    all_scored_questions_from_object29.sort(key=lambda x: x["score"], reverse=True)
-                    object29_top_bottom_questions["top_3"] = [
-                        {"text": q["question_text"], "score": q["score"], "category": q["vespa_category"]}
-                        for q in all_scored_questions_from_object29[:3]
-                    ]
-                    app.logger.info(f"Object_29 Top 3 questions: {object29_top_bottom_questions['top_3']}")
-                    app.logger.info(f"Object_29 Bottom 3 questions: {object29_top_bottom_questions['bottom_3']}")
-                else:
-                    app.logger.info("No numerically scored questions found in Object_29 to determine top/bottom.")
-
-            else:
-                key_individual_question_insights = ["Psychometric question details mapping not loaded. Cannot process Object_29 data."]
+        temp_o29_list = [] # Use a temporary list variable
+        if object29_response and isinstance(object29_response, dict) and 'records' in object29_response and isinstance(object29_response['records'], list):
+            temp_o29_list = object29_response['records']
+            app.logger.info(f"Found {len(temp_o29_list)} records in Object_29 for student {obj10_id_for_o29} and cycle {current_m_cycle}.")
         else:
-            app.logger.warning(f"No data returned from Object_29 for student {student_vespa_data['id']} and cycle {current_m_cycle}.")
+            app.logger.warning(f"Object_29 response for student {obj10_id_for_o29} cycle {current_m_cycle} not in expected format or 'records' missing. Response: {str(object29_response)[:200]}")
+
+        if temp_o29_list: # Check if the list is not empty
+            # Ensure the first item is a dictionary before calling methods on it or accessing by index for safety
+            if isinstance(temp_o29_list[0], dict):
+                object29_record = temp_o29_list[0] # Assuming one record per student per cycle
+                app.logger.info(f"Successfully fetched Object_29 record: {object29_record.get('id')}")
+                
+                parsed_insights = []
+                if psychometric_question_details:
+                    for q_detail in psychometric_question_details:
+                        field_id = q_detail.get('currentCycleFieldId')
+                        question_text = q_detail.get('questionText', 'Unknown Question')
+                        vespa_category = q_detail.get('vespaCategory', 'N/A')
+                        
+                        if not field_id:
+                            continue
+
+                        raw_score_value = object29_record.get(field_id)
+                        if raw_score_value is None and field_id.startswith("field_"):
+                             score_obj = object29_record.get(field_id + '_raw')
+                             if isinstance(score_obj, dict):
+                                 raw_score_value = score_obj.get('value', 'N/A')
+                             elif score_obj is not None:
+                                 raw_score_value = score_obj
+                        
+                        score_display = "N/A"
+                        numeric_score = None
+                        if raw_score_value is not None and raw_score_value != 'N/A':
+                            try:
+                                numeric_score = int(raw_score_value)
+                                score_display = str(numeric_score)
+                            except (ValueError, TypeError):
+                                score_display = str(raw_score_value)
+                                app.logger.warning(f"Could not parse score '{raw_score_value}' for {field_id} to int.")
+
+                        insight_text = f"{vespa_category} - '{question_text}': Score {score_display}/5"
+                        if numeric_score is not None and numeric_score <= 2:
+                            insight_text = f"FLAG: {insight_text}"
+                        parsed_insights.append(insight_text)
+                        
+                        if numeric_score is not None:
+                            all_scored_questions_from_object29.append({
+                                "question_text": question_text,
+                                "score": numeric_score,
+                                "vespa_category": vespa_category
+                            })
+                    
+                    if parsed_insights:
+                        key_individual_question_insights = parsed_insights
+                    else:
+                        key_individual_question_insights = ["Could not parse any question details from Object_29 data."]
+                    
+                    if all_scored_questions_from_object29:
+                        all_scored_questions_from_object29.sort(key=lambda x: x["score"])
+                        object29_top_bottom_questions["bottom_3"] = [
+                            {"text": q["question_text"], "score": q["score"], "category": q["vespa_category"]} 
+                            for q in all_scored_questions_from_object29[:3]
+                        ]
+                        
+                        all_scored_questions_from_object29.sort(key=lambda x: x["score"], reverse=True)
+                        object29_top_bottom_questions["top_3"] = [
+                            {"text": q["question_text"], "score": q["score"], "category": q["vespa_category"]}
+                            for q in all_scored_questions_from_object29[:3]
+                        ]
+                        app.logger.info(f"Object_29 Top 3 questions: {object29_top_bottom_questions['top_3']}")
+                        app.logger.info(f"Object_29 Bottom 3 questions: {object29_top_bottom_questions['bottom_3']}")
+                    else:
+                        app.logger.info("No numerically scored questions found in Object_29 to determine top/bottom.")
+                else:
+                    key_individual_question_insights = ["Psychometric question details mapping not loaded. Cannot process Object_29 data."]
+            else:
+                app.logger.warning(f"First item in fetched_o29_data_list for student {obj10_id_for_o29} cycle {current_m_cycle} is not a dictionary: {type(temp_o29_list[0])} - {str(temp_o29_list[0])[:100]}")
+                key_individual_question_insights = [f"Object_29 data for cycle {current_m_cycle} is not in the expected dictionary format."]
+        else:
+            app.logger.warning(f"No data found in Object_29 for student {obj10_id_for_o29} and cycle {current_m_cycle}.")
             key_individual_question_insights = [f"No questionnaire data found for cycle {current_m_cycle}."]
+            # Ensure object29_top_bottom_questions remains initialized with empty lists
     else:
         app.logger.warning("Missing Object_10 ID or current_m_cycle is 0, skipping Object_29 fetch.")
         key_individual_question_insights = ["Skipped fetching questionnaire data (missing ID or cycle is 0)."]
+        # Ensure object29_top_bottom_questions remains initialized with empty lists
 
 
     # --- Phase 2: Knowledge Base Lookup & LLM Prompt Construction (Initial Steps) ---
