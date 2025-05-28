@@ -141,67 +141,93 @@ def get_academic_profile(actual_student_obj3_id, student_name_for_fallback, stud
     # Attempt 1: Fetch Object_112 using actual_student_obj3_id against Object_112.field_3064 (UserId - Short Text field)
     if actual_student_obj3_id:
         app.logger.info(f"Attempt 1: Fetching Object_112 where field_3064 (UserId Text) is '{actual_student_obj3_id}'.")
-        # field_3064 is a text field, so we query it directly (not _raw typically needed for text exact match)
         filters_obj112_via_field3064 = [{'field': 'field_3064', 'operator': 'is', 'value': actual_student_obj3_id}]
-        profiles_via_field3064 = get_knack_record("object_112", filters=filters_obj112_via_field3064)
+        obj112_response_attempt1 = get_knack_record("object_112", filters=filters_obj112_via_field3064)
 
-        if profiles_via_field3064:
-            academic_profile_record = profiles_via_field3064[0]
-            app.logger.info(f"Attempt 1 SUCCESS: Found Object_112 record ID {academic_profile_record.get('id')} using field_3064 with Obj3 ID '{actual_student_obj3_id}'. Profile Name: {academic_profile_record.get('field_3066')}")
-            subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
-            if not subjects_summary or (len(subjects_summary) == 1 and subjects_summary[0]["subject"].startswith("No academic subjects")):
-                app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3064) yielded no valid subjects. Will try other methods.")
-                academic_profile_record = None # Clear to allow next attempts
-            else:
-                app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3064) has valid subjects. Using this profile.")
-                return subjects_summary
+        temp_profiles_list_attempt1 = []
+        if obj112_response_attempt1 and isinstance(obj112_response_attempt1, dict) and \
+           'records' in obj112_response_attempt1 and isinstance(obj112_response_attempt1['records'], list):
+            temp_profiles_list_attempt1 = obj112_response_attempt1['records']
+            app.logger.info(f"Attempt 1: Found {len(temp_profiles_list_attempt1)} candidate profiles via field_3064.")
         else:
-            app.logger.info(f"Attempt 1 FAILED: No Object_112 profile found where field_3064 (UserId Text) is '{actual_student_obj3_id}'.")
+            app.logger.info(f"Attempt 1: Knack response for field_3064 query was not in expected format or no records. Response: {str(obj112_response_attempt1)[:200]}")
+
+        if temp_profiles_list_attempt1: # Check if list is not empty
+            if isinstance(temp_profiles_list_attempt1[0], dict):
+                academic_profile_record = temp_profiles_list_attempt1[0]
+                app.logger.info(f"Attempt 1 SUCCESS: Found Object_112 record ID {academic_profile_record.get('id')} using field_3064 with Obj3 ID '{actual_student_obj3_id}'. Profile Name: {academic_profile_record.get('field_3066')}")
+                subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
+                if not subjects_summary or (len(subjects_summary) == 1 and subjects_summary[0]["subject"].startswith("No academic subjects")):
+                    app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3064) yielded no valid subjects. Will try other methods.")
+                    academic_profile_record = None 
+                else:
+                    app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3064) has valid subjects. Using this profile.")
+                    return subjects_summary
+            else:
+                app.logger.warning(f"Attempt 1: First item in profiles_via_field3064 is not a dict: {type(temp_profiles_list_attempt1[0])}")
+        else:
+            app.logger.info(f"Attempt 1 FAILED (empty list): No Object_112 profile found where field_3064 (UserId Text) is '{actual_student_obj3_id}'.")
 
     # Attempt 2: Fetch Object_112 using actual_student_obj3_id against Object_112.field_3070 (Account Connection field)
-    if not academic_profile_record and actual_student_obj3_id: # Only if Attempt 1 failed or yielded no subjects
+    if not academic_profile_record and actual_student_obj3_id: 
         app.logger.info(f"Attempt 2: Fetching Object_112 where field_3070 (Account Connection) is '{actual_student_obj3_id}'.")
         filters_obj112_via_field3070 = [{'field': 'field_3070_raw', 'operator': 'is', 'value': actual_student_obj3_id}]
-        profiles_via_field3070 = get_knack_record("object_112", filters=filters_obj112_via_field3070)
+        obj112_response_attempt2 = get_knack_record("object_112", filters=filters_obj112_via_field3070)
         
-        if not profiles_via_field3070:
-            app.logger.info(f"Attempt 2: No Object_112 profile found with field_3070_raw for Obj3 ID {actual_student_obj3_id}. Trying 'field_3070' (non-raw)." )
+        temp_profiles_list_attempt2 = []
+        if not (obj112_response_attempt2 and isinstance(obj112_response_attempt2, dict) and 'records' in obj112_response_attempt2 and isinstance(obj112_response_attempt2['records'], list) and obj112_response_attempt2['records']):
+            app.logger.info(f"Attempt 2 (field_3070_raw): No records or unexpected format. Trying 'field_3070' (non-raw). Response: {str(obj112_response_attempt2)[:200]}" )
             filters_obj112_via_field3070_alt = [{'field': 'field_3070', 'operator': 'is', 'value': actual_student_obj3_id}]
-            profiles_via_field3070 = get_knack_record("object_112", filters=filters_obj112_via_field3070_alt)
+            obj112_response_attempt2 = get_knack_record("object_112", filters=filters_obj112_via_field3070_alt)
 
-        if profiles_via_field3070:
-            academic_profile_record = profiles_via_field3070[0]
-            app.logger.info(f"Attempt 2 SUCCESS: Found Object_112 record ID {academic_profile_record.get('id')} using field_3070 (Account Connection) with Obj3 ID '{actual_student_obj3_id}'. Profile Name: {academic_profile_record.get('field_3066')}")
-            subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
-            if not subjects_summary or (len(subjects_summary) == 1 and subjects_summary[0]["subject"].startswith("No academic subjects")):
-                app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3070) yielded no valid subjects. Will try name fallback.")
-                academic_profile_record = None # Clear to allow name fallback
+        if obj112_response_attempt2 and isinstance(obj112_response_attempt2, dict) and \
+           'records' in obj112_response_attempt2 and isinstance(obj112_response_attempt2['records'], list):
+            temp_profiles_list_attempt2 = obj112_response_attempt2['records']
+            app.logger.info(f"Attempt 2: Found {len(temp_profiles_list_attempt2)} candidate profiles via field_3070 logic.")
+
+        if temp_profiles_list_attempt2: # Check if list is not empty
+            if isinstance(temp_profiles_list_attempt2[0], dict):
+                academic_profile_record = temp_profiles_list_attempt2[0]
+                app.logger.info(f"Attempt 2 SUCCESS: Found Object_112 record ID {academic_profile_record.get('id')} using field_3070 (Account Connection) with Obj3 ID '{actual_student_obj3_id}'. Profile Name: {academic_profile_record.get('field_3066')}")
+                subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
+                if not subjects_summary or (len(subjects_summary) == 1 and subjects_summary[0]["subject"].startswith("No academic subjects")):
+                    app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3070) yielded no valid subjects. Will try name fallback.")
+                    academic_profile_record = None 
+                else:
+                    app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3070) has valid subjects. Using this profile.")
+                    return subjects_summary
             else:
-                app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3070) has valid subjects. Using this profile.")
-                return subjects_summary
+                app.logger.warning(f"Attempt 2: First item in profiles_via_field3070 is not a dict: {type(temp_profiles_list_attempt2[0])}")
         else:
-            app.logger.info(f"Attempt 2 FAILED: No Object_112 profile found where field_3070 (Account Connection) is '{actual_student_obj3_id}'.")
+            app.logger.info(f"Attempt 2 FAILED (empty list): No Object_112 profile found where field_3070 (Account Connection) is '{actual_student_obj3_id}'.")
 
     # Attempt 3: Fallback to fetch by student name
     if not academic_profile_record and student_name_for_fallback and student_name_for_fallback != "N/A":
         app.logger.info(f"Attempt 3: Fallback search for Object_112 by student name ('{student_name_for_fallback}') via field_3066.")
         filters_object112_name = [{'field': 'field_3066', 'operator': 'is', 'value': student_name_for_fallback}]
-        homepage_profiles_name_search = get_knack_record("object_112", filters=filters_object112_name)
+        obj112_response_attempt3 = get_knack_record("object_112", filters=filters_object112_name)
         
-        if homepage_profiles_name_search:
-            academic_profile_record = homepage_profiles_name_search[0]
-            app.logger.info(f"Attempt 3 SUCCESS: Found Object_112 record ID {academic_profile_record.get('id')} via NAME fallback ('{student_name_for_fallback}'). Profile Name: {academic_profile_record.get('field_3066')}")
-            subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
-            if not subjects_summary or (len(subjects_summary) == 1 and subjects_summary[0]["subject"].startswith("No academic subjects")):
-                app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via name fallback) yielded no valid subjects.")
-                # Fall through to the final default return
+        temp_profiles_list_attempt3 = []
+        if obj112_response_attempt3 and isinstance(obj112_response_attempt3, dict) and \
+           'records' in obj112_response_attempt3 and isinstance(obj112_response_attempt3['records'], list):
+            temp_profiles_list_attempt3 = obj112_response_attempt3['records']
+            app.logger.info(f"Attempt 3: Found {len(temp_profiles_list_attempt3)} candidate profiles via name fallback.")
+
+        if temp_profiles_list_attempt3: # Check if list is not empty
+            if isinstance(temp_profiles_list_attempt3[0], dict):
+                academic_profile_record = temp_profiles_list_attempt3[0]
+                app.logger.info(f"Attempt 3 SUCCESS: Found Object_112 record ID {academic_profile_record.get('id')} via NAME fallback ('{student_name_for_fallback}'). Profile Name: {academic_profile_record.get('field_3066')}")
+                subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
+                if not subjects_summary or (len(subjects_summary) == 1 and subjects_summary[0]["subject"].startswith("No academic subjects")):
+                    app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via name fallback) yielded no valid subjects.")
+                else:
+                    app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via name fallback) has valid subjects. Using this profile.")
+                    return subjects_summary
             else:
-                app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via name fallback) has valid subjects. Using this profile.")
-                return subjects_summary
+                app.logger.warning(f"Attempt 3: First item in homepage_profiles_name_search is not a dict: {type(temp_profiles_list_attempt3[0])}")
         else:
-            app.logger.warning(f"Attempt 3 FAILED: Fallback search: No Object_112 found for student name: '{student_name_for_fallback}'.")
+            app.logger.warning(f"Attempt 3 FAILED (empty list): Fallback search: No Object_112 found for student name: '{student_name_for_fallback}'.")
     
-    # Final fallback if all else fails
     app.logger.warning(f"All attempts to fetch Object_112 failed (Student's Obj3 ID: '{actual_student_obj3_id}', Fallback name: '{student_name_for_fallback}').")
     return [{"subject": "Academic profile not found by any method.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}]
 
