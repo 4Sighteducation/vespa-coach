@@ -433,7 +433,7 @@ def parse_subjects_from_profile_record(academic_profile_record):
 
 
 # --- Function to Generate Student Summary with LLM (Now with active LLM call) ---
-def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, student_goals_statements_text):
+def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, student_goals_statements_text, all_scored_questionnaire_statements=None): # Added all_scored_questionnaire_statements
     app.logger.info(f"Attempting to generate LLM summary for student: {student_data_dict.get('student_name', 'N/A')}")
     
     if not OPENAI_API_KEY:
@@ -443,7 +443,9 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
             "chart_comparative_insights": "Insights unavailable (AI key not configured).",
             "most_important_coaching_questions": ["Coaching questions unavailable (AI key not configured)."],
             "student_comment_analysis": "Comment analysis unavailable (AI key not configured).",
-            "suggested_student_goals": ["Goal suggestions unavailable (AI key not configured)."]
+            "suggested_student_goals": ["Goal suggestions unavailable (AI key not configured)."],
+            # ADDED: Default for new key
+            "questionnaire_interpretation_and_reflection_summary": "Questionnaire interpretation unavailable (AI key not configured)."
         }
 
     student_level = student_data_dict.get('student_level', 'N/A')
@@ -565,6 +567,22 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
     else:
         prompt_parts.append("  No top/bottom question highlight data processed for Object_29.")
         
+    # ADDED: Overall Questionnaire Statement Response Distribution
+    prompt_parts.append("\n--- Overall Questionnaire Statement Response Distribution (Object_29 from 'all_scored_questionnaire_statements') ---")
+    if all_scored_questionnaire_statements and isinstance(all_scored_questionnaire_statements, list):
+        response_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        for q_data in all_scored_questionnaire_statements:
+            score = q_data.get("score")
+            if score in response_counts:
+                response_counts[score] += 1
+        prompt_parts.append(f"  - Response '1' (e.g., Strongly Disagree): {response_counts[1]} statements")
+        prompt_parts.append(f"  - Response '2': {response_counts[2]} statements")
+        prompt_parts.append(f"  - Response '3': {response_counts[3]} statements")
+        prompt_parts.append(f"  - Response '4': {response_counts[4]} statements")
+        prompt_parts.append(f"  - Response '5' (e.g., Strongly Agree): {response_counts[5]} statements")
+    else:
+        prompt_parts.append("  Detailed questionnaire response distribution data (all_scored_questionnaire_statements) is not available or not in the expected list format.")
+
     # Previous Interaction Summary
     prev_summary = student_data_dict.get('previous_interaction_summary')
     if prev_summary and prev_summary != "No previous AI coaching summary found.":
@@ -576,7 +594,7 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
     prompt_parts.append("Based ONLY on the data provided above for the student, and the knowledge base excerpts below, provide the following insights for the student's TUTOR. ")
     prompt_parts.append("The tone should be objective, analytical, and supportive, aimed at helping the tutor quickly grasp the student's profile to effectively prepare for a coaching conversation focused on student ownership.")
     prompt_parts.append("IMPORTANT: Do NOT directly ask questions TO THE STUDENT or give direct advice TO THE STUDENT in your outputs. Instead, provide insights and talking points that will help the TUTOR facilitate these conversations effectively. Do not use conversational filler like 'Okay, let's look at...'.")
-    prompt_parts.append("Format your entire response as a single JSON object with the following EXACT keys: \"student_overview_summary\", \"chart_comparative_insights\", \"most_important_coaching_questions\", \"student_comment_analysis\", \"suggested_student_goals\", \"academic_benchmark_analysis\".")
+    prompt_parts.append("Format your entire response as a single JSON object with the following EXACT keys: \"student_overview_summary\", \"chart_comparative_insights\", \"most_important_coaching_questions\", \"student_comment_analysis\", \"suggested_student_goals\", \"academic_benchmark_analysis\", \"questionnaire_interpretation_and_reflection_summary\".") # ADDED new key
     prompt_parts.append("Ensure all string values within the JSON are properly escaped.")
 
     prompt_parts.append("\n\n--- Knowledge Base: Coaching Questions (Excerpt) ---")
@@ -615,7 +633,8 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
     prompt_parts.append("  \"most_important_coaching_questions\": [\"Based on the student\\'s profile (scores, level, comments, academic performance vs MEGs), list 3-5 most impactful coaching questions selected from the provided Coaching Questions Knowledge Base.\", \"Question 2...\"],")
     prompt_parts.append("  \"student_comment_analysis\": \"Analyze the student\\'s RRC/Goal comments (text provided: RRC='{RRC_COMMENT_PLACEHOLDER}', Goal='{GOAL_COMMENT_PLACEHOLDER}'). What insights can be gained? Specifically look for language indicating locus of control (e.g., 'receive a grade' vs 'achieve a grade'). Max 100 words.\",")
     prompt_parts.append("  \"suggested_student_goals\": [\"Based on the analysis, and inspired by the 100 Statements KB, suggest 2-3 S.M.A.R.T. goals for the student, reframed to their context.\", \"Goal 2...\"]," )
-    prompt_parts.append("  \"academic_benchmark_analysis\": \"Provide a supportive and encouraging analysis (approx. 150-180 words) of the student's academic performance. Start by looking at their current grades in relation to their Subject Target Grades (STGs) and their 75th percentile Minimum Expected Grades (MEGs). Explain to the tutor that MEGs are derived from national data for students with similar prior GCSE attainment, representing what the top 25% achieve and are thus aspirational. Note that MEGs are a baseline and don't account for subject-specific difficulty, individual student factors, or wider context. Then, explain that the STG is a more nuanced target, calculated by applying a subject-specific Value Added (VA) factor to the MEG. This VA factor (e.g., 1.05 for Further Maths, 0.90 for Biology) adjusts for the typical grade distribution and relative difficulty of a subject, aiming for fairer, more realistic targets. Emphasize that the comparison between current grades, MEGs, and STGs should foster a positive discussion about the student's progress, strengths, and potential next steps. Crucially, advise the tutor that while these benchmarks are informative, the most effective targets consider all factors: prior attainment, subject difficulty, individual student needs, and school context. The goal is to use this information to identify areas for support or challenge, always contextualized within a broader understanding of the student.\"")
+    prompt_parts.append("  \"academic_benchmark_analysis\": \"Provide a supportive and encouraging analysis (approx. 150-180 words) of the student's academic performance. Start by looking at their current grades in relation to their Subject Target Grades (STGs) and their 75th percentile Minimum Expected Grades (MEGs). Explain to the tutor that MEGs are derived from national data for students with similar prior GCSE attainment, representing what the top 25% achieve and are thus aspirational. Note that MEGs are a baseline and don't account for subject-specific difficulty, individual student factors, or wider context. Then, explain that the STG is a more nuanced target, calculated by applying a subject-specific Value Added (VA) factor to the MEG. This VA factor (e.g., 1.05 for Further Maths, 0.90 for Biology) adjusts for the typical grade distribution and relative difficulty of a subject, aiming for fairer, more realistic targets. Emphasize that the comparison between current grades, MEGs, and STGs should foster a positive discussion about the student's progress, strengths, and potential next steps. Crucially, advise the tutor that while these benchmarks are informative, the most effective targets consider all factors: prior attainment, subject difficulty, individual student needs, and school context. The goal is to use this information to identify areas for support or challenge, always contextualized within a broader understanding of the student.\",") # Ensure comma if not last
+    prompt_parts.append("  \"questionnaire_interpretation_and_reflection_summary\": \"Provide a concise summary (approx. 100-150 words) interpreting the overall distribution of the student's questionnaire responses (e.g., tendencies towards 'Strongly Disagree' or 'Strongly Agree', as indicated by the counts of 1s, 2s, etc., from 'Overall Questionnaire Statement Response Distribution' provided above). Highlight any notable patterns, such as a concentration of low or high responses in specific VESPA elements (refer to the Top/Bottom scoring statements for VESPA categories from 'Top & Bottom Scoring Questionnaire Questions'). Also, briefly compare and contrast these questionnaire insights with the student's own RRC/Goal comments (text provided: RRC='{RRC_COMMENT_PLACEHOLDER}', Goal='{GOAL_COMMENT_PLACEHOLDER}'), noting any consistencies or discrepancies that could be valuable for the tutor to explore.\",") # ADDED new key & description
     prompt_parts.append("}")
     prompt_parts.append("'''")
     # Prepare cleaned versions of current_rrc_text and current_goal_text for the prompt placeholder replacement
@@ -668,7 +687,7 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
             parsed_llm_outputs = json.loads(raw_response_content)
             
             # Validate that all expected keys are in the parsed dictionary
-            expected_keys = ["student_overview_summary", "chart_comparative_insights", "most_important_coaching_questions", "student_comment_analysis", "suggested_student_goals", "academic_benchmark_analysis"]
+            expected_keys = ["student_overview_summary", "chart_comparative_insights", "most_important_coaching_questions", "student_comment_analysis", "suggested_student_goals", "academic_benchmark_analysis", "questionnaire_interpretation_and_reflection_summary"] # ADDED new key
             if not all(key in parsed_llm_outputs for key in expected_keys):
                 app.logger.error(f"LLM response missing one or more expected keys. Response: {raw_response_content}")
                 # If keys are missing, construct a default error structure for those keys
@@ -679,7 +698,8 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
                     "most_important_coaching_questions": ["Error: LLM did not provide valid questions."],
                     "student_comment_analysis": "Error: LLM did not provide valid comment analysis.",
                     "suggested_student_goals": ["Error: LLM did not provide valid goal suggestions."],
-                    "academic_benchmark_analysis": "Error: LLM did not provide valid academic benchmark analysis."
+                    "academic_benchmark_analysis": "Error: LLM did not provide valid academic benchmark analysis.",
+                    "questionnaire_interpretation_and_reflection_summary": "Error: LLM did not provide questionnaire interpretation." # ADDED new key error
                 }
                 # Update with any valid parts from the LLM, then fill missing with errors
                 for key in expected_keys:
@@ -700,7 +720,8 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
                     "most_important_coaching_questions": ["Error parsing LLM response."],
                     "student_comment_analysis": "Error parsing LLM response.",
                     "suggested_student_goals": ["Error parsing LLM response."],
-                    "academic_benchmark_analysis": "Error parsing LLM response."
+                    "academic_benchmark_analysis": "Error parsing LLM response.",
+                    "questionnaire_interpretation_and_reflection_summary": "Error parsing LLM response." # ADDED
                 }
         except Exception as e:
             app.logger.error(f"Error calling OpenAI API or processing response (Attempt {attempt + 1}/{max_retries}): {e}")
@@ -711,7 +732,8 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
                     "most_important_coaching_questions": ["Error generating questions from LLM."],
                     "student_comment_analysis": "Error generating analysis from LLM.",
                     "suggested_student_goals": ["Error generating goals from LLM."],
-                    "academic_benchmark_analysis": "Error generating academic benchmark analysis from LLM."
+                    "academic_benchmark_analysis": "Error generating academic benchmark analysis from LLM.",
+                    "questionnaire_interpretation_and_reflection_summary": "Error generating questionnaire interpretation from LLM." # ADDED
                 }
         time.sleep(1) # Wait a second before retrying if an error occurred
 
@@ -722,7 +744,8 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
         "most_important_coaching_questions": ["Critical error."],
         "student_comment_analysis": "Critical error.",
         "suggested_student_goals": ["Critical error."],
-        "academic_benchmark_analysis": "Critical error."
+        "academic_benchmark_analysis": "Critical error.",
+        "questionnaire_interpretation_and_reflection_summary": "Critical error." # ADDED
     }
 
 
@@ -1285,7 +1308,7 @@ def coaching_suggestions():
 
     # Call LLM to get structured insights
     # The coaching_kb (dict) and student_goals_statements_content (string) are passed here
-    llm_structured_output = generate_student_summary_with_llm(student_data_for_llm, coaching_kb, student_goals_statements_content)
+    llm_structured_output = generate_student_summary_with_llm(student_data_for_llm, coaching_kb, student_goals_statements_content, all_scored_questions_from_object29) # Pass all_scored_questions
     
     # --- Prepare Final API Response ---
     # The vespa_profile_details for the API response needs more than what LLM got (report_text etc.)
@@ -1369,7 +1392,8 @@ def coaching_suggestions():
         "llm_generated_insights": llm_structured_output, # This now holds the structured data
         "previous_interaction_summary": previous_interaction_summary,
         "school_vespa_averages": school_wide_vespa_averages,
-        "academic_megs": academic_megs_data # Add MEGs to API response
+        "academic_megs": academic_megs_data, # Add MEGs to API response
+        "all_scored_questionnaire_statements": all_scored_questions_from_object29 # ADDED for frontend chart
     }
     
     # For backward compatibility with old frontend's "llm_generated_summary_and_suggestions.student_overview_summary"

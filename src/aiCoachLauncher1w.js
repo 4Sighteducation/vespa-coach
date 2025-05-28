@@ -861,56 +861,53 @@ if (window.aiCoachLauncherInitialized) {
             let questionHtml = '';
             const questionContainer = document.getElementById('aiCoachQuestionAnalysisContainer');
             if (questionContainer) {
-                questionHtml += '<div class="ai-coach-section"><h4>Questionnaire Analysis (Object_29)</h4>';
+                questionHtml += '<div class="ai-coach-section"><h4>Questionnaire Statement Analysis (Object_29)</h4>';
+                questionHtml += '<p style="font-size:0.8em; margin-bottom:10px;">(Scale: 1=Strongly Disagree, 2=Disagree, 3=Neutral, 4=Agree, 5=Strongly Agree)</p>';
+
                 if (data.object29_question_highlights && (data.object29_question_highlights.top_3 || data.object29_question_highlights.bottom_3)) {
                     const highlights = data.object29_question_highlights;
                     if (highlights.top_3 && highlights.top_3.length > 0) {
-                        questionHtml += '<h5>Top Scoring Questions:</h5><ul>';
+                        questionHtml += '<h5>Highest Scoring Responses:</h5><ul>';
                         highlights.top_3.forEach(q => {
-                            questionHtml += `<li>Score ${q.score}/5 (${q.category}): "${q.text}"</li>`;
+                            questionHtml += `<li>"${q.text}" (${q.category}): Response ${q.score}/5</li>`;
                         });
                         questionHtml += '</ul>';
                     }
                     if (highlights.bottom_3 && highlights.bottom_3.length > 0) {
-                        questionHtml += '<h5>Bottom Scoring Questions:</h5><ul>';
+                        questionHtml += '<h5 style="margin-top:15px;">Lowest Scoring Responses:</h5><ul>';
                         highlights.bottom_3.forEach(q => {
-                            questionHtml += `<li>Score ${q.score}/5 (${q.category}): "${q.text}"</li>`;
+                            questionHtml += `<li>"${q.text}" (${q.category}): Response ${q.score}/5</li>`;
                         });
                         questionHtml += '</ul>';
                     }
-                    questionHtml += '<div id="questionScoresChartContainer" style="height: 300px; margin-top:15px; background: #eee; display:flex; align-items:center; justify-content:center;"><p>Question Scores Chart Area</p></div>';
                 } else {
-                    questionHtml += "<p>No specific top/bottom question highlights processed from Object_29.</p>";
+                    questionHtml += "<p>No specific top/bottom statement response highlights processed from Object_29.</p>";
                 }
-                if (data.student_reflections_and_goals) {
-                    const reflections = data.student_reflections_and_goals;
-                    const currentCycle = data.current_cycle ? parseInt(data.current_cycle) : null;
-                    let reflectionsContent = '';
-                    const reflectionsMap = [
-                        { key: 'rrc1_comment', label: 'RRC1', cycle: 1 },
-                        { key: 'rrc2_comment', label: 'RRC2', cycle: 2 },
-                        { key: 'rrc3_comment', label: 'RRC3', cycle: 3 },
-                        { key: 'goal1', label: 'Goal 1', cycle: 1 },
-                        { key: 'goal2', label: 'Goal 2', cycle: 2 },
-                        { key: 'goal3', label: 'Goal 3', cycle: 3 },
-                    ];
-                    reflectionsMap.forEach(item => {
-                        if (reflections[item.key] && reflections[item.key].trim() !== '' && reflections[item.key].trim() !== 'Not specified') {
-                            const isCurrentCycleComment = currentCycle === item.cycle;
-                            const style = isCurrentCycleComment ? 'font-weight: bold; color: #0056b3;' : '';
-                            const cycleLabel = isCurrentCycleComment ? ' (Current Cycle)' : ` (Cycle ${item.cycle})`;
-                            reflectionsContent += `<p style="${style}"><strong>${item.label}${cycleLabel}:</strong> ${reflections[item.key]}</p>`;
-                        }
-                    });
-                    if (reflectionsContent.trim() !== '') {
-                        questionHtml += `<div style="margin-top:15px;"><h5>Student Reflections & Goals (Object_10)</h5>${reflectionsContent}</div>`;
-                    } else {
-                        questionHtml += "<div style='margin-top:15px;'><h5>Student Reflections & Goals (Object_10)</h5><p>No specific comments or goals recorded.</p></div>";
-                    }
+
+                // Placeholder for the new Pie Chart
+                questionHtml += '<div id="questionnaireResponseDistributionChartContainer" style="height: 300px; margin-top:20px; margin-bottom: 20px; background: #f9f9f9; display:flex; align-items:center; justify-content:center;"><p>Questionnaire Response Distribution Chart Area</p></div>';
+
+                // New AI summary section
+                if (data.llm_generated_insights && data.llm_generated_insights.questionnaire_interpretation_and_reflection_summary) {
+                    questionHtml += `<div style='margin-top:15px;'><h5>AI Interpretation of Questionnaire Responses & Reflections</h5><p>${data.llm_generated_insights.questionnaire_interpretation_and_reflection_summary}</p></div>`;
+                } else {
+                    questionHtml += "<div style='margin-top:15px;'><h5>AI Interpretation of Questionnaire Responses & Reflections</h5><p><em>AI analysis of questionnaire responses and reflections is currently unavailable.</em></p></div>";
                 }
-                questionHtml += "<div style='margin-top:15px;'><h5>General AI Interpretation of Questionnaire</h5><p><em>(AI will provide an overall summary of what the questionnaire responses suggest about the student here)</em></p></div>";
                 questionHtml += '</div>';
                 questionContainer.innerHTML = questionHtml;
+
+                // Call to render the new chart if data is available
+                if (data.all_scored_questionnaire_statements && typeof Chart !== 'undefined') {
+                    ensureChartJsLoaded(() => {
+                        renderQuestionnaireDistributionChart(data.all_scored_questionnaire_statements);
+                    });
+                } else if (typeof Chart === 'undefined') {
+                    const chartDiv = document.getElementById('questionnaireResponseDistributionChartContainer');
+                    if (chartDiv) chartDiv.innerHTML = '<p style="color:red; text-align:center;">Chart library not loaded.</p>';
+                } else {
+                    const chartDiv = document.getElementById('questionnaireResponseDistributionChartContainer');
+                    if (chartDiv) chartDiv.innerHTML = '<p style="text-align:center;">Questionnaire statement data not available for chart.</p>';
+                }
             }
         } else {
             // If data.student_name was N/A or missing, the main content sections remain empty or show a message.
@@ -1381,4 +1378,280 @@ if (window.aiCoachLauncherInitialized) {
     }
 
     window.initializeAICoachLauncher = initializeAICoachLauncher;
+
+    // --- NEW FUNCTION to render Questionnaire Response Distribution Pie Chart ---
+    let questionnairePieChartInstance = null; // Module scope for this chart instance
+
+    function renderQuestionnaireDistributionChart(allStatements) {
+        logAICoach("renderQuestionnaireDistributionChart called with statements:", allStatements);
+        const chartContainer = document.getElementById('questionnaireResponseDistributionChartContainer');
+        if (!chartContainer) {
+            logAICoach("Questionnaire response distribution chart container not found.");
+            return;
+        }
+
+        if (typeof Chart === 'undefined') {
+            logAICoach("Chart.js is not loaded. Cannot render questionnaire distribution chart.");
+            chartContainer.innerHTML = '<p style="color:red; text-align:center;">Chart library not loaded.</p>';
+            return;
+        }
+
+        if (questionnairePieChartInstance) {
+            questionnairePieChartInstance.destroy();
+            questionnairePieChartInstance = null;
+            logAICoach("Previous questionnaire pie chart instance destroyed.");
+        }
+
+        chartContainer.innerHTML = '<canvas id="questionnaireDistributionPieChartCanvas"></canvas>';
+        const ctx = document.getElementById('questionnaireDistributionPieChartCanvas').getContext('2d');
+
+        if (!allStatements || allStatements.length === 0) {
+            logAICoach("No statements data for questionnaire pie chart.");
+            chartContainer.innerHTML = '<p style="text-align:center;">No questionnaire statement data available for chart.</p>';
+            return;
+        }
+
+        const responseCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        const responseDetailsByScore = { 
+            1: {}, 2: {}, 3: {}, 4: {}, 5: {}
+        };
+        const vespaCategories = ['VISION', 'EFFORT', 'SYSTEMS', 'PRACTICE', 'ATTITUDE'];
+        vespaCategories.forEach(cat => {
+            for (let score = 1; score <= 5; score++) {
+                responseDetailsByScore[score][cat.toUpperCase()] = { count: 0, statements: [] };
+            }
+        });
+
+        allStatements.forEach(stmt => {
+            const score = stmt.score;
+            const category = stmt.vespa_category ? stmt.vespa_category.toUpperCase() : 'UNKNOWN';
+            if (score >= 1 && score <= 5) {
+                responseCounts[score]++;
+                if (responseDetailsByScore[score][category]) {
+                    responseDetailsByScore[score][category].count++;
+                    responseDetailsByScore[score][category].statements.push(stmt.question_text);
+                } else if (category === 'UNKNOWN') {
+                     if (!responseDetailsByScore[score]['UNKNOWN']) responseDetailsByScore[score]['UNKNOWN'] = { count: 0, statements: [] };
+                     responseDetailsByScore[score]['UNKNOWN'].count++;
+                     responseDetailsByScore[score]['UNKNOWN'].statements.push(stmt.question_text);
+                }
+            }
+        });
+
+        const chartData = {
+            labels: [
+                'Response 1 (Strongly Disagree)',
+                'Response 2 (Disagree)',
+                'Response 3 (Neutral)',
+                'Response 4 (Agree)',
+                'Response 5 (Strongly Agree)'
+            ],
+            datasets: [{
+                label: 'Questionnaire Response Distribution',
+                data: Object.values(responseCounts),
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)', // Score 1
+                    'rgba(255, 159, 64, 0.7)', // Score 2
+                    'rgba(255, 205, 86, 0.7)', // Score 3
+                    'rgba(75, 192, 192, 0.7)', // Score 4
+                    'rgba(54, 162, 235, 0.7)'  // Score 5
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(255, 205, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(54, 162, 235, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        const vespaColors = {
+            VISION: '#ff8f00',
+            EFFORT: '#86b4f0',
+            SYSTEMS: '#72cb44',
+            PRACTICE: '#7f31a4',
+            ATTITUDE: '#f032e6',
+            UNKNOWN: '#808080' // Grey for unknown
+        };
+
+        questionnairePieChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Distribution of Questionnaire Statement Responses',
+                        font: { size: 14, weight: 'bold' },
+                        padding: { top: 10, bottom: 15 }
+                    },
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                const scoreValue = context.parsed;
+                                if (scoreValue !== null) {
+                                    label += scoreValue + ' statement(s)';
+                                }
+                                return label;
+                            },
+                            afterLabel: function(context) {
+                                const scoreIndex = context.dataIndex; // 0 for score 1, 1 for score 2, etc.
+                                const score = scoreIndex + 1;
+                                const detailsForThisScore = responseDetailsByScore[score];
+                                let tooltipLines = [];
+
+                                let totalInScore = 0;
+                                vespaCategories.forEach(cat => {
+                                   if(detailsForThisScore[cat]) totalInScore += detailsForThisScore[cat].count;
+                                });
+                                if (detailsForThisScore['UNKNOWN'] && detailsForThisScore['UNKNOWN'].count > 0) totalInScore += detailsForThisScore['UNKNOWN'].count;
+
+
+                                if (totalInScore > 0) {
+                                    tooltipLines.push('\nBreakdown by VESPA Element:');
+                                    vespaCategories.forEach(cat => {
+                                        if (detailsForThisScore[cat] && detailsForThisScore[cat].count > 0) {
+                                            const percentage = ((detailsForThisScore[cat].count / totalInScore) * 100).toFixed(1);
+                                            tooltipLines.push(`  ${cat}: ${percentage}% (${detailsForThisScore[cat].count} statement(s))`);
+                                        }
+                                    });
+                                    if (detailsForThisScore['UNKNOWN'] && detailsForThisScore['UNKNOWN'].count > 0){
+                                        const percentage = ((detailsForThisScore['UNKNOWN'].count / totalInScore) * 100).toFixed(1);
+                                        tooltipLines.push(`  UNKNOWN: ${percentage}% (${detailsForThisScore['UNKNOWN'].count} statement(s))`);
+                                    }
+                                }
+                                return tooltipLines;
+                            }
+                        },
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 12 },
+                        footerFont: { size: 10 },
+                        padding: 10
+                    }
+                }
+            }
+        });
+        logAICoach("Questionnaire response distribution pie chart rendered.");
+    }
+
+    function renderVespaComparisonChart(studentVespaProfile, schoolVespaAverages) {
+        const chartContainer = document.getElementById('vespaComparisonChartContainer');
+        if (!chartContainer) {
+            logAICoach("VESPA comparison chart container not found.");
+            return;
+        }
+
+        if (typeof Chart === 'undefined') {
+            logAICoach("Chart.js is not loaded. Cannot render VESPA comparison chart.");
+            chartContainer.innerHTML = '<p style="color:red; text-align:center;">Chart library not loaded.</p>';
+            return;
+        }
+
+        // Destroy previous chart instance if it exists
+        if (vespaChartInstance) {
+            vespaChartInstance.destroy();
+            vespaChartInstance = null;
+            logAICoach("Previous VESPA chart instance destroyed.");
+        }
+        
+        // Ensure chartContainer is empty before creating a new canvas
+        chartContainer.innerHTML = '<canvas id="vespaStudentVsSchoolChart"></canvas>';
+        const ctx = document.getElementById('vespaStudentVsSchoolChart').getContext('2d');
+
+        if (!studentVespaProfile) {
+            logAICoach("Student VESPA profile data is missing. Cannot render chart.");
+            chartContainer.innerHTML = '<p style="text-align:center;">Student VESPA data not available for chart.</p>';
+            return;
+        }
+
+        const labels = ['Vision', 'Effort', 'Systems', 'Practice', 'Attitude'];
+        const studentScores = labels.map(label => {
+            const elementData = studentVespaProfile[label];
+            return elementData && elementData.score_1_to_10 !== undefined && elementData.score_1_to_10 !== "N/A" ? parseFloat(elementData.score_1_to_10) : 0;
+        });
+
+        const datasets = [
+            {
+                label: 'Student Scores',
+                data: studentScores,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }
+        ];
+
+        let chartTitle = 'Student VESPA Scores';
+
+        if (schoolVespaAverages) {
+            const schoolScores = labels.map(label => {
+                return schoolVespaAverages[label] !== undefined && schoolVespaAverages[label] !== "N/A" ? parseFloat(schoolVespaAverages[label]) : 0;
+            });
+            datasets.push({
+                label: 'School Average',
+                data: schoolScores,
+                backgroundColor: 'rgba(255, 159, 64, 0.6)', // Orange
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1
+            });
+            chartTitle = 'Student VESPA Scores vs. School Average';
+            logAICoach("School averages available, adding to chart.", {studentScores, schoolScores});
+        } else {
+            logAICoach("School averages not available for chart.");
+        }
+
+        try {
+            vespaChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: chartTitle,
+                            font: { size: 16, weight: 'bold' },
+                            padding: { top: 10, bottom: 20 }
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: {
+                                display: true,
+                                text: 'Score (1-10)'
+                            }
+                        }
+                    }
+                }
+            });
+            logAICoach("VESPA comparison chart rendered successfully.");
+        } catch (error) {
+            console.error("[AICoachLauncher] Error rendering Chart.js chart:", error);
+            chartContainer.innerHTML = '<p style="color:red; text-align:center;">Error rendering chart.</p>';
+        }
+    }
 } 
