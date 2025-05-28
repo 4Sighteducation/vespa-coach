@@ -1690,6 +1690,7 @@ def chat_turn():
             if COACHING_INSIGHTS_DATA and keywords:
                 app.logger.info(f"chat_turn RAG: Searching COACHING_INSIGHTS_DATA ({len(COACHING_INSIGHTS_DATA)} items) for keywords: {keywords}")
                 found_insights_count = 0
+                found_insights = [] # Initialize list here
                 for insight in COACHING_INSIGHTS_DATA:
                     insight_text_to_search = (str(insight.get('keywords', [])).lower() + 
                                               str(insight.get('name', '')).lower() + 
