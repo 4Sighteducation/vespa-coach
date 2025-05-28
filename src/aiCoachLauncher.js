@@ -247,6 +247,90 @@ if (window.aiCoachLauncherInitialized) {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
             }
+            /* Styles for Benchmark Scales */
+            .subject-benchmark-item {
+                padding: 10px 0; /* Adjusted padding */
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .subject-benchmark-item:last-child {
+                border-bottom: none;
+            }
+            .subject-benchmark-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+            .subject-benchmark-header h5 { /* For subject name */
+                margin: 0;
+                font-size: 1em;
+                font-weight: bold;
+                color: #224466; /* Dark blue for subject names */
+            }
+            .subject-grades-info {
+                font-size: 0.85em;
+                color: #555;
+                margin-bottom: 10px; /* Space before the scale */
+            }
+            .subject-benchmark-scale-container {
+                margin-top: 5px;
+                margin-bottom: 20px; /* Space below each scale */
+                padding: 0 5px; /* Padding to ensure labels aren't cut off */
+            }
+            .scale-labels {
+                display: flex;
+                justify-content: space-between;
+                font-size: 0.75em;
+                color: #777;
+                margin-bottom: 4px;
+            }
+            .scale-bar-wrapper {
+                width: 100%;
+                height: 10px; /* Height of the main bar */
+                background-color: #e9ecef; /* Light grey background for the bar */
+                border-radius: 5px;
+                position: relative;
+            }
+            .scale-bar { 
+                height: 100%;
+                position: relative; 
+            }
+            .scale-marker {
+                width: 8px; 
+                height: 16px; 
+                border-radius: 2px; 
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%) translateX(-50%); /* Center the marker on its left percentage */
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10; /* Ensure markers are above the bar */
+            }
+            .scale-marker .marker-label {
+                position: absolute;
+                bottom: -20px; /* Position label below marker */
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 0.7em;
+                color: #333;
+                white-space: nowrap;
+                background-color: rgba(255, 255, 255, 0.85);
+                padding: 1px 3px;
+                border-radius: 3px;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                z-index: 11;
+            }
+
+            .current-grade-marker { background-color: #28a745; /* Green */ }
+            .standard-meg-marker { background-color: #ffc107; /* Yellow */ }
+            .a-level-meg-marker { background-color: #17a2b8; /* Teal - default for P60, P90, P100 if not distinct */ }
+            
+            /* More specific A-Level Percentile Markers for visual distinction if desired */
+            .p60-marker .marker-label { color: #17a2b8; } /* Teal */
+            .p90-marker .marker-label { color: #fd7e14; } /* Orange */
+            .p100-marker .marker-label { color: #dc3545; } /* Red */
         `;
         const styleElement = document.createElement('style');
         styleElement.id = styleId;
@@ -375,6 +459,113 @@ if (window.aiCoachLauncherInitialized) {
         }
     }
 
+    // --- Helper function to determine max points for visual scale ---
+    function getMaxPointsForScale(subject) {
+        const normalizedType = subject.normalized_qualification_type;
+        // Default max points for typical A-Level/AS-Level sized qualifications
+        let maxPoints = 140; 
+
+        const allPoints = [
+            typeof subject.currentGradePoints === 'number' ? subject.currentGradePoints : 0,
+            typeof subject.standardMegPoints === 'number' ? subject.standardMegPoints : 0
+        ];
+
+        if (normalizedType === "A Level") {
+            if (typeof subject.megPoints60 === 'number') allPoints.push(subject.megPoints60);
+            // subject.megPoints75 is standardMegPoints for A-Level
+            if (typeof subject.megPoints90 === 'number') allPoints.push(subject.megPoints90);
+            if (typeof subject.megPoints100 === 'number') allPoints.push(subject.megPoints100);
+            maxPoints = 140; // Standard A-Level scale goes up to A*
+        } else if (normalizedType === "AS Level") {
+            maxPoints = 70; // Max for AS is A grade (60 points), so 70 gives headroom
+        } else if (normalizedType === "IB HL") {
+            maxPoints = 140; // IB HL Grade 7 is 140 points
+        } else if (normalizedType === "IB SL") {
+            maxPoints = 70;  // IB SL Grade 7 is 60 points
+        } else if (normalizedType === "Pre-U Principal Subject") {
+            maxPoints = 150; // Pre-U D1 is 145 points
+        } else if (normalizedType === "Pre-U Short Course") {
+            maxPoints = 75;  // Pre-U D1 Short Course is 72 points
+        } else if (normalizedType && normalizedType.includes("BTEC")) {
+            if (normalizedType === "BTEC Level 3 Extended Diploma") maxPoints = 420;
+            else if (normalizedType === "BTEC Level 3 Diploma") maxPoints = 280;
+            else if (normalizedType === "BTEC Level 3 Subsidiary Diploma") maxPoints = 140;
+            else if (normalizedType === "BTEC Level 3 Extended Certificate") maxPoints = 140;
+            else maxPoints = 140; // Default for other BTECs to A-level equivalent size
+        } else if (normalizedType && normalizedType.includes("UAL")) {
+            if (normalizedType === "UAL Level 3 Extended Diploma") maxPoints = 170; // Max D is 168
+            else if (normalizedType === "UAL Level 3 Diploma") maxPoints = 90; // Max D is 84
+            else maxPoints = 90;
+        } else if (normalizedType && normalizedType.includes("CACHE")) {
+            if (normalizedType === "CACHE Level 3 Extended Diploma") maxPoints = 210;
+            else if (normalizedType === "CACHE Level 3 Diploma") maxPoints = 140;
+            else if (normalizedType === "CACHE Level 3 Certificate") maxPoints = 70;
+            else if (normalizedType === "CACHE Level 3 Award") maxPoints = 35;
+            else maxPoints = 70;
+        }
+        // Ensure the scale can at least show all actual points provided for the subject, plus some headroom.
+        const highestSubjectPoint = Math.max(0, ...allPoints.filter(p => typeof p === 'number'));
+        // If highestSubjectPoint is significant, use it to define scale, otherwise stick to type-based maxPoints.
+        // Add 20 points headroom or 10% whichever is larger, if highestSubjectPoint dictates the scale.
+        if (highestSubjectPoint > maxPoints) {
+            return highestSubjectPoint + Math.max(20, Math.floor(highestSubjectPoint * 0.1));
+        }
+        return maxPoints;
+    }
+
+    // --- Helper function to create a single subject's benchmark scale ---
+    function createSubjectBenchmarkScale(subject, subjectIndex) {
+        if (!subject || typeof subject.currentGradePoints !== 'number' || typeof subject.standardMegPoints !== 'number') {
+            // logAICoach(`Skipping scale for ${subject ? subject.subject : 'unknown subject'} due to missing point data.`);
+            return '<p style="font-size:0.8em; color: #777;">Benchmark scale cannot be displayed due to missing point data for this subject.</p>';
+        }
+
+        const maxScalePoints = getMaxPointsForScale(subject);
+        if (maxScalePoints === 0) return '<pstyle="font-size:0.8em; color: #777;">Max scale points is zero, cannot render scale.</p>'; // Avoid division by zero
+
+        let scaleHtml = `<div class="subject-benchmark-scale-container" id="scale-container-${subjectIndex}">
+            <div class="scale-labels">
+                <span>0 pts</span>
+                <span>${maxScalePoints} pts</span>
+            </div>
+            <div class="scale-bar-wrapper">
+                <div class="scale-bar">`; // Removed style from scale-bar, wrapper controls width perception
+
+        // Helper to generate a marker
+        const createMarker = (points, grade, type, label, percentile = null) => {
+            if (typeof points !== 'number') return ''; // Don't render if points are not a number
+            const percentage = (points / maxScalePoints) * 100;
+            let titleText = `${type}: ${grade || 'N/A'} (${points} pts)`;
+            if (percentile) titleText += ` - ${percentile}`;
+
+            // Prevent markers going beyond 100% or below 0% visually
+            const leftPosition = Math.max(0, Math.min(percentage, 100));
+
+            return `<div class="scale-marker ${type.toLowerCase().replace(/ /g, '-')}-marker" style="left: ${leftPosition}%;" title="${titleText}">
+                        <span class="marker-label">${label}</span>
+                    </div>`;
+        };
+        
+        scaleHtml += createMarker(subject.currentGradePoints, subject.currentGrade, "Current Grade", "CG");
+        scaleHtml += createMarker(subject.standardMegPoints, subject.standard_meg, "Standard MEG", "MEG");
+
+        if (subject.normalized_qualification_type === "A Level") {
+            if (typeof subject.megPoints60 === 'number') { // Check if points exist
+                scaleHtml += createMarker(subject.megPoints60, null, "A-Level MEG", "P60", "60th Pct");
+            }
+            // 75th is standardMegPoints, already marked as "MEG"
+            if (typeof subject.megPoints90 === 'number') {
+                scaleHtml += createMarker(subject.megPoints90, null, "A-Level MEG", "P90", "90th Pct");
+            }
+            if (typeof subject.megPoints100 === 'number') {
+                scaleHtml += createMarker(subject.megPoints100, null, "A-Level MEG", "P100", "100th Pct");
+            }
+        }
+
+        scaleHtml += `</div></div></div>`; // Close scale-bar, scale-bar-wrapper, subject-benchmark-scale-container
+        return scaleHtml;
+    }
+
     function renderAICoachData(data) {
         logAICoach("renderAICoachData CALLED. Data received:", JSON.parse(JSON.stringify(data))); // Log a deep copy
         if (data && data.student_name) {
@@ -436,13 +627,56 @@ if (window.aiCoachLauncherInitialized) {
             html += '</div>';
         }
 
-        // Academic Profile Summary
-        if (data.academic_profile_summary && data.academic_profile_summary.length > 0) {
-            html += '<div class="ai-coach-section"><h4>Academic Profile</h4><ul>';
-            data.academic_profile_summary.forEach(subject => {
-                html += `<li><strong>${subject.subject || 'N/A'}:</strong> Grade ${subject.currentGrade || 'N/A'} (Target: ${subject.targetGrade || 'N/A'}, Effort: ${subject.effortGrade || 'N/A'})</li>`;
+        // Overall Academic Benchmarks
+        if (data.academic_megs) {
+            html += `<div class="ai-coach-section" id="aiCoachOverallBenchmarksContainer">
+                        <h4>Overall Academic Benchmarks</h4>
+                        <p><strong>GCSE Prior Attainment Score:</strong> ${data.academic_megs.prior_attainment_score !== undefined && data.academic_megs.prior_attainment_score !== null ? data.academic_megs.prior_attainment_score : 'N/A'}</p>`;
+            
+            // Check if any A-Level MEG grade is present and not 'N/A' before showing the A-Level MEGs list
+            const hasRelevantALevelMegs = ['aLevel_meg_grade_60th', 'aLevel_meg_grade_75th', 'aLevel_meg_grade_90th', 'aLevel_meg_grade_100th']
+                                        .some(key => data.academic_megs[key] && data.academic_megs[key] !== 'N/A');
+
+            if (hasRelevantALevelMegs) {
+                html += `<h5>A-Level Percentile MEGs (where applicable):</h5>
+                         <ul>
+                             <li><strong>60th Percentile:</strong> ${data.academic_megs.aLevel_meg_grade_60th || 'N/A'} (${data.academic_megs.aLevel_meg_points_60th !== undefined ? data.academic_megs.aLevel_meg_points_60th : 0} pts)</li>
+                             <li><strong>75th Percentile (Standard):</strong> ${data.academic_megs.aLevel_meg_grade_75th || 'N/A'} (${data.academic_megs.aLevel_meg_points_75th !== undefined ? data.academic_megs.aLevel_meg_points_75th : 0} pts)</li>
+                             <li><strong>90th Percentile:</strong> ${data.academic_megs.aLevel_meg_grade_90th || 'N/A'} (${data.academic_megs.aLevel_meg_points_90th !== undefined ? data.academic_megs.aLevel_meg_points_90th : 0} pts)</li>
+                             <li><strong>100th Percentile:</strong> ${data.academic_megs.aLevel_meg_grade_100th || 'N/A'} (${data.academic_megs.aLevel_meg_points_100th !== undefined ? data.academic_megs.aLevel_meg_points_100th : 0} pts)</li>
+                         </ul>`;
+            }
+            html += `</div>`;
+        }
+
+        // Academic Profile with Benchmark Scales (replaces old Academic Profile section)
+        if (data.academic_profile_summary && data.academic_profile_summary.length > 0 && 
+            (!data.academic_profile_summary[0] || (data.academic_profile_summary[0].subject !== "Academic profile not found by any method." && data.academic_profile_summary[0].subject !== "No academic subjects parsed from profile."))) {
+            
+            html += '<div class="ai-coach-section" id="aiCoachAcademicProfileContainer"><h4>Academic Profile & Benchmarks</h4>';
+            let validSubjectsFound = 0;
+            data.academic_profile_summary.forEach((subject, index) => {
+                // Ensure subject is valid and not a placeholder message
+                if (subject && subject.subject && subject.subject !== "Academic profile not found by any method." && subject.subject !== "No academic subjects parsed from profile." && subject.subject !== "No academic subjects parsed from profile. ect...") {
+                    validSubjectsFound++;
+                    html += `<div class="subject-benchmark-item">
+                                <div class="subject-benchmark-header">
+                                    <h5>${subject.subject || 'N/A'} (${subject.normalized_qualification_type || 'Qual Type N/A'})</h5>
+                                </div>
+                                <p class="subject-grades-info">
+                                    Current: <strong>${subject.currentGrade || 'N/A'}</strong> (${subject.currentGradePoints !== undefined ? subject.currentGradePoints : 'N/A'} pts) | 
+                                    Standard MEG: <strong>${subject.standard_meg || 'N/A'}</strong> (${subject.standardMegPoints !== undefined ? subject.standardMegPoints : 'N/A'} pts)
+                                </p>`;
+                    html += createSubjectBenchmarkScale(subject, index); // Call the new function
+                    html += `</div>`; // Close subject-benchmark-item
+                }
             });
-            html += '</ul></div>';
+             if (validSubjectsFound === 0) {
+                 html += '<p>No detailed academic subjects found in the profile to display benchmarks.</p>';
+            }
+            html += '</div>'; // Close aiCoachAcademicProfileContainer
+        } else {
+             html += '<div class="ai-coach-section" id="aiCoachAcademicProfileContainer"><p>No detailed academic subjects found in the profile to display benchmarks.</p></div>';
         }
         
         // Overall Framing Statement for Tutor

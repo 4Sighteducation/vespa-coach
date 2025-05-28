@@ -49,21 +49,42 @@ if OPENAI_API_KEY:
 else:
     app.logger.warning("OPENAI_API_KEY not found in environment variables. LLM features will be disabled.")
 
-# --- Load Knowledge Bases (before helper functions that might use them indirectly, or ensure app context) ---
-# These paths are relative to the 'backend' directory where app.py is located.
+# --- Helper Functions (Defining load_json_file first) ---
+
+def load_json_file(file_path):
+    """Loads a JSON file from the specified path."""
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        full_path = os.path.join(current_dir, file_path)
+        full_path = os.path.normpath(full_path)
+        app.logger.info(f"Attempting to load JSON file from calculated path: {full_path}")
+        with open(full_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            if isinstance(data, dict) and 'records' in data and isinstance(data['records'], list):
+                app.logger.info(f"Extracted {len(data['records'])} records from JSON file: {full_path}")
+                return data['records']
+            app.logger.info(f"Loaded JSON file (not in Knack 'records' format): {full_path}")
+            return data
+    except FileNotFoundError:
+        app.logger.error(f"Knowledge base file not found: {full_path}")
+        return None
+    except json.JSONDecodeError:
+        app.logger.error(f"Error decoding JSON from file: {full_path}")
+        return None
+    except Exception as e:
+        app.logger.error(f"An unexpected error occurred while loading JSON file {full_path}: {e}")
+        return None
+
+# --- Load Knowledge Bases (now after load_json_file is defined) ---
 psychometric_question_details = load_json_file('knowledge_base/psychometric_question_details.json')
 question_id_to_text_mapping = load_json_file('knowledge_base/question_id_to_text_mapping.json')
-report_text_data = load_json_file('knowledge_base/reporttext.json') # Object_33 content
+report_text_data = load_json_file('knowledge_base/reporttext.json')
 coaching_kb = load_json_file('knowledge_base/coaching_questions_knowledge_base.json')
 grade_points_mapping_data = load_json_file('knowledge_base/grade_to_points_mapping.json')
-
-# Load Academic Benchmark Data (ALPS Bands for A-Levels)
 alps_bands_aLevel_60 = load_json_file('knowledge_base/alpsBands_aLevel_60.json')
 alps_bands_aLevel_75 = load_json_file('knowledge_base/alpsBands_aLevel_75.json')
 alps_bands_aLevel_90 = load_json_file('knowledge_base/alpsBands_aLevel_90.json')
 alps_bands_aLevel_100 = load_json_file('knowledge_base/alpsBands_aLevel_100.json')
-
-# Load Academic Benchmark Data for other qualifications
 alps_bands_btec2010 = load_json_file('knowledge_base/alpsBands_btec2010_main.json')
 alps_bands_btec2016 = load_json_file('knowledge_base/alpsBands_btec2016_main.json')
 alps_bands_cache = load_json_file('knowledge_base/alpsBands_cache.json')
@@ -77,16 +98,13 @@ if not psychometric_question_details:
 if not question_id_to_text_mapping:
     app.logger.warning("Question ID to text mapping KB is empty or failed to load.")
 if not report_text_data:
-    # This will now be a list of records if loaded correctly, or None/empty if not.
     app.logger.warning("Report text data (Object_33 from reporttext.json) is empty or failed to load.")
 else:
     app.logger.info(f"Loaded {len(report_text_data)} records from reporttext.json")
-
 if not coaching_kb:
     app.logger.warning("Coaching Questions Knowledge Base (coaching_questions_knowledge_base.json) is empty or failed to load.")
 else:
     app.logger.info("Successfully loaded Coaching Questions Knowledge Base.")
-
 if not grade_points_mapping_data:
     app.logger.error("CRITICAL: Grade to Points Mapping (grade_to_points_mapping.json) failed to load. Point calculations will be incorrect.")
 else:
@@ -97,208 +115,122 @@ else:
 
 def normalize_qualification_type(exam_type_str):
     if not exam_type_str:
-        return "A Level" # Default if empty
-    
+        return "A Level" 
     lower_exam_type = exam_type_str.lower()
-
-    # A-Level variations
     if "a level" in lower_exam_type or "alevel" in lower_exam_type:
         return "A Level"
     if "as level" in lower_exam_type or "aslevel" in lower_exam_type:
         return "AS Level"
-
-    # BTEC (with default to Extended Certificate)
     if "btec" in lower_exam_type:
         if "extended diploma" in lower_exam_type or "ext dip" in lower_exam_type:
             return "BTEC Level 3 Extended Diploma"
-        if "diploma" in lower_exam_type and "subsidiary" not in lower_exam_type and "found" not in lower_exam_type and "extended" not in lower_exam_type: # Avoid matching subsidiary/foundation/extended
+        if "diploma" in lower_exam_type and "subsidiary" not in lower_exam_type and "found" not in lower_exam_type and "extended" not in lower_exam_type: 
             return "BTEC Level 3 Diploma"
         if "subsidiary diploma" in lower_exam_type or "sub dip" in lower_exam_type:
             return "BTEC Level 3 Subsidiary Diploma"
-        # Default BTEC to Extended Certificate if specific size not clearly identified by diploma type keywords
         return "BTEC Level 3 Extended Certificate" 
-
-    # WJEC (default to Certificate)
     if "wjec" in lower_exam_type:
         if "diploma" in lower_exam_type or "dip" in lower_exam_type:
             return "WJEC Level 3 Diploma"
         return "WJEC Level 3 Certificate"
-
-    # CACHE (default to Certificate)
     if "cache" in lower_exam_type:
         if "extended diploma" in lower_exam_type or "ext dip" in lower_exam_type:
             return "CACHE Level 3 Extended Diploma"
-        if "diploma" in lower_exam_type: # Check before award/cert
+        if "diploma" in lower_exam_type: 
             return "CACHE Level 3 Diploma"
         if "award" in lower_exam_type:
             return "CACHE Level 3 Award"
         return "CACHE Level 3 Certificate"
-
-    # UAL (default to Diploma)
     if "ual" in lower_exam_type:
         if "extended diploma" in lower_exam_type or "ext dip" in lower_exam_type:
             return "UAL Level 3 Extended Diploma"
         return "UAL Level 3 Diploma"
-    
-    # IB - needs HL/SL distinction if possible from original string
     if "ib" in lower_exam_type:
         if "hl" in lower_exam_type or "higher" in lower_exam_type: return "IB HL"
         if "sl" in lower_exam_type or "standard" in lower_exam_type: return "IB SL"
         app.logger.warning(f"IB qualification type '{exam_type_str}' did not specify HL/SL. Defaulting to 'IB HL'.")
-        return "IB HL" # Default IB to HL if not specified
-
-    # Pre-U
+        return "IB HL" 
     if "pre-u" in lower_exam_type or "preu" in lower_exam_type:
         if "short course" in lower_exam_type or "sc" in lower_exam_type:
              return "Pre-U Short Course"
         return "Pre-U Principal Subject"
-
-    # Fallback if no specific type identified after checking all known patterns
-    # Ensure app context is available for logger, or pass logger as an argument
-    # For now, using a print statement if app.logger might not be available in this scope during definition
-    # Depending on how Flask app is structured, app.logger might require app context.
-    # Consider passing logger: def normalize_qualification_type(exam_type_str, logger):
     try:
         app.logger.warning(f"Could not normalize qualification type: '{exam_type_str}', defaulting to 'A Level'.")
-    except RuntimeError: # Outside of application context
+    except RuntimeError: 
         print(f"WARNING (normalize_qualification_type): Could not normalize qualification type: '{exam_type_str}', defaulting to 'A Level'. Logger unavailable.")
-    return "A Level" # Fallback default
+    return "A Level"
 
 def extract_qual_details(exam_type_str, normalized_qual_type, app_logger):
-    """
-    Extracts specific details (like BTEC year/size, IB level) from the raw exam_type_str
-    based on the normalized_qual_type.
-    Returns a dictionary with details or None.
-    """
     if not exam_type_str or not normalized_qual_type:
         return None
-
     lower_exam_type = exam_type_str.lower()
     details = {}
-
     if normalized_qual_type == "IB HL":
         details['ib_level'] = "HL"
         return details
     if normalized_qual_type == "IB SL":
         details['ib_level'] = "SL"
         return details
-
     if "BTEC" in normalized_qual_type:
-        # Determine Year
         if "2010" in lower_exam_type: details['year'] = "2010"
         elif "2016" in lower_exam_type: details['year'] = "2016"
         else:
-            details['year'] = "2016" # Default BTEC year if not specified
+            details['year'] = "2016" 
             app_logger.info(f"BTEC year not specified in '{exam_type_str}', defaulting to {details['year']} for MEG lookup.")
-
-        # Determine Size for MEG key mapping (should align with get_meg_for_prior_attainment keys)
         if normalized_qual_type == "BTEC Level 3 Extended Diploma": details['size'] = "EXTDIP"
         elif normalized_qual_type == "BTEC Level 3 Diploma": details['size'] = "DIP"
         elif normalized_qual_type == "BTEC Level 3 Subsidiary Diploma": details['size'] = "SUBDIP"
         elif normalized_qual_type == "BTEC Level 3 Extended Certificate":
-            # BTEC 2016 "Extended Certificate" (360 GLH) might use 'EXTCERT' or 'CERT' in ALPS tables.
-            # BTEC 2010 "Certificate" (180 GLH / 30 credits) uses 'CERT'.
-            # Assuming 'EXTCERT' for 2016 default and 'CERT' for 2010 if it's an Extended Certificate normalized type.
             if details['year'] == "2010":
-                details['size'] = "CERT" # 2010 Certificate (smallest BTEC L3)
-            else: # Default to 2016 Extended Certificate if year is 2016 or not specified
+                details['size'] = "CERT"
+            else: 
                 details['size'] = "EXTCERT"
-        # Add more specific BTEC size mappings if needed, e.g. for "Foundation Diploma", "90 Credit Diploma"
-        elif "foundation diploma" in lower_exam_type : details['size'] = "FOUNDDIP" # typically 2016
-        elif "90 credit diploma" in lower_exam_type or "90cr" in lower_exam_type : details['size'] = "NINETY_CR" # typically 2010
-        
+        elif "foundation diploma" in lower_exam_type : details['size'] = "FOUNDDIP"
+        elif "90 credit diploma" in lower_exam_type or "90cr" in lower_exam_type : details['size'] = "NINETY_CR"
         if not details.get('size'):
              app_logger.warning(f"Could not determine BTEC size for MEG key from '{exam_type_str}' (Normalized: '{normalized_qual_type}'). MEG lookup might fail.")
         return details
-
     if normalized_qual_type == "Pre-U Principal Subject":
         details['pre_u_type'] = "FULL"
         return details
     if normalized_qual_type == "Pre-U Short Course":
         details['pre_u_type'] = "SC"
         return details
-
     if "WJEC" in normalized_qual_type:
         if normalized_qual_type == "WJEC Level 3 Diploma": details['wjec_size'] = "DIP"
         elif normalized_qual_type == "WJEC Level 3 Certificate": details['wjec_size'] = "CERT"
         else:
-            details['wjec_size'] = "CERT" # Default for WJEC
+            details['wjec_size'] = "CERT" 
             app_logger.info(f"WJEC size not clearly diploma/certificate from '{normalized_qual_type}', defaulting to CERT for MEG lookup.")
         return details
-    
-    # No specific details needed for A Level, AS Level, UAL, CACHE for get_meg_for_prior_attainment beyond normalized type
     return None
 
 def get_points(normalized_qual_type, grade_str, grade_points_map_data, app_logger):
-    """
-    Safely converts a grade string to points using the grade_points_mapping_data.
-    Logs warnings if mappings are missing.
-    Returns 0 if points cannot be determined.
-    """
     if not grade_points_map_data:
         app_logger.error("get_points: grade_points_mapping_data is not loaded.")
         return 0
     if not normalized_qual_type:
         app_logger.warning("get_points: normalized_qual_type is missing.")
         return 0
-    if grade_str is None: # Allow empty string for 'U' or similar if that's how data comes
+    if grade_str is None: 
         app_logger.warning(f"get_points: grade_str is None for qualification '{normalized_qual_type}'.")
-        grade_str = "U" # Attempt to map None as 'U' or a zero-point grade
-
+        grade_str = "U" 
     qual_map = grade_points_map_data.get(normalized_qual_type)
     if not qual_map:
         app_logger.warning(f"get_points: No grade point mapping found for qualification type: '{normalized_qual_type}'.")
         return 0
-    
-    # Handle potential variations in grade string, e.g. "A*" vs "A* "
     grade_str_cleaned = str(grade_str).strip()
-
     points = qual_map.get(grade_str_cleaned)
-    
     if points is None:
-        # Attempt common fallbacks like 'Dist*' for 'D*' or 'Pass' for 'P' if not directly found
-        # This could be expanded based on observed data variations
         if grade_str_cleaned == "Dist*": points = qual_map.get("D*")
         elif grade_str_cleaned == "Dist": points = qual_map.get("D")
         elif grade_str_cleaned == "Merit": points = qual_map.get("M")
         elif grade_str_cleaned == "Pass": points = qual_map.get("P")
-
-        if points is None: # If still not found after fallbacks
+        if points is None: 
             app_logger.warning(f"get_points: No points found for grade '{grade_str_cleaned}' (original: '{grade_str}') in qualification '{normalized_qual_type}'. Available grades: {list(qual_map.keys())}. Returning 0 points.")
             return 0
-            
     return int(points)
 
-
-def load_json_file(file_path):
-    """Loads a JSON file from the specified path."""
-    try:
-        # app.py is in 'backend' and file_path is 'knowledge_base/file.json'
-        # and knowledge_base is also a subdirectory of 'backend'.
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        full_path = os.path.join(current_dir, file_path) # e.g. /app/backend/knowledge_base/file.json
-        full_path = os.path.normpath(full_path)
-
-        app.logger.info(f"Attempting to load JSON file from calculated path: {full_path}")
-        with open(full_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            # If the JSON is structured with a top-level "records" key (like Knack exports)
-            if isinstance(data, dict) and 'records' in data and isinstance(data['records'], list):
-                app.logger.info(f"Extracted {len(data['records'])} records from JSON file: {full_path}")
-                return data['records'] # Return the list of records directly
-            app.logger.info(f"Loaded JSON file (not in Knack 'records' format): {full_path}")
-            return data # Return the loaded data as is (e.g. for psychometric_question_details)
-    except FileNotFoundError:
-        app.logger.error(f"Knowledge base file not found: {full_path}")
-        return None
-    except json.JSONDecodeError:
-        app.logger.error(f"Error decoding JSON from file: {full_path}")
-        return None
-    except Exception as e:
-        app.logger.error(f"An unexpected error occurred while loading JSON file {full_path}: {e}")
-        return None
-
-# Removed: load_csv_file function as it's no longer needed
 
 def get_knack_record(object_key, record_id=None, filters=None, page=1, rows_per_page=1000):
     """
@@ -496,51 +428,6 @@ def parse_subjects_from_profile_record(academic_profile_record):
     
     app.logger.info(f"Successfully parsed {len(subjects_summary)} subjects from Object_112 record {academic_profile_record.get('id')}.")
     return subjects_summary
-
-
-# --- Load Knowledge Bases ---
-# These paths are relative to the 'backend' directory where app.py is located.
-psychometric_question_details = load_json_file('knowledge_base/psychometric_question_details.json')
-question_id_to_text_mapping = load_json_file('knowledge_base/question_id_to_text_mapping.json')
-# Changed from reporttext.csv to reporttext.json
-report_text_data = load_json_file('knowledge_base/reporttext.json') # Object_33 content
-coaching_kb = load_json_file('knowledge_base/coaching_questions_knowledge_base.json')
-grade_points_mapping_data = load_json_file('knowledge_base/grade_to_points_mapping.json')
-
-# Load Academic Benchmark Data (ALPS Bands for A-Levels)
-alps_bands_aLevel_60 = load_json_file('knowledge_base/alpsBands_aLevel_60.json')
-alps_bands_aLevel_75 = load_json_file('knowledge_base/alpsBands_aLevel_75.json')
-alps_bands_aLevel_90 = load_json_file('knowledge_base/alpsBands_aLevel_90.json')
-alps_bands_aLevel_100 = load_json_file('knowledge_base/alpsBands_aLevel_100.json')
-
-# Load Academic Benchmark Data for other qualifications
-alps_bands_btec2010 = load_json_file('knowledge_base/alpsBands_btec2010_main.json')
-alps_bands_btec2016 = load_json_file('knowledge_base/alpsBands_btec2016_main.json')
-alps_bands_cache = load_json_file('knowledge_base/alpsBands_cache.json')
-alps_bands_ib = load_json_file('knowledge_base/alpsBands_ib.json')
-alps_bands_preU = load_json_file('knowledge_base/alpsBands_preU.json')
-alps_bands_ual = load_json_file('knowledge_base/alpsBands_ual.json')
-alps_bands_wjec = load_json_file('knowledge_base/alpsBands_wjec.json')
-
-if not psychometric_question_details:
-    app.logger.warning("Psychometric question details KB is empty or failed to load.")
-if not question_id_to_text_mapping:
-    app.logger.warning("Question ID to text mapping KB is empty or failed to load.")
-if not report_text_data:
-    # This will now be a list of records if loaded correctly, or None/empty if not.
-    app.logger.warning("Report text data (Object_33 from reporttext.json) is empty or failed to load.")
-else:
-    app.logger.info(f"Loaded {len(report_text_data)} records from reporttext.json")
-
-if not coaching_kb:
-    app.logger.warning("Coaching Questions Knowledge Base (coaching_questions_knowledge_base.json) is empty or failed to load.")
-else:
-    app.logger.info("Successfully loaded Coaching Questions Knowledge Base.")
-
-if not grade_points_mapping_data:
-    app.logger.error("CRITICAL: Grade to Points Mapping (grade_to_points_mapping.json) failed to load. Point calculations will be incorrect.")
-else:
-    app.logger.info("Successfully loaded Grade to Points Mapping.")
 
 
 # --- Function to Generate Student Summary with LLM (Now with active LLM call) ---
