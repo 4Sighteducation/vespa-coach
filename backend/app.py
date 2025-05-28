@@ -885,9 +885,17 @@ def coaching_suggestions():
         app.logger.info(f"Attempting to load 100 statements from: {alt_statements_file_path}")
         with open(alt_statements_file_path, 'r', encoding='utf-8') as f:
             student_goals_statements_content = f.read()
-        app.logger.info("Successfully loaded '100 statements - 2023.txt'")
+        app.logger.info("Successfully loaded '100 statements - 2023.txt' using UTF-8")
     except FileNotFoundError:
         app.logger.error(f"'100 statements - 2023.txt' not found at {alt_statements_file_path}. Also tried {statements_file_path}")
+    except UnicodeDecodeError:
+        app.logger.warning(f"UTF-8 decoding failed for '100 statements - 2023.txt' at {alt_statements_file_path}. Attempting with latin-1.")
+        try:
+            with open(alt_statements_file_path, 'r', encoding='latin-1') as f:
+                student_goals_statements_content = f.read()
+            app.logger.info("Successfully loaded '100 statements - 2023.txt' using latin-1 fallback.")
+        except Exception as e_latin1:
+            app.logger.error(f"Error loading '100 statements - 2023.txt' with latin-1 fallback: {e_latin1}")
     except Exception as e:
         app.logger.error(f"Error loading '100 statements - 2023.txt': {e}")
 

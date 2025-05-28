@@ -579,90 +579,78 @@ if (window.aiCoachLauncherInitialized) {
         panelContent.innerHTML = htmlShell;
 
         // --- 2. Conditionally Populate Content Sections (only if data.student_name is valid) ---
-        //    This check ensures we don't try to populate if the core student identifier is missing.
         if (data.student_name && data.student_name !== "N/A") {
             // --- Populate VESPA Profile Section (now VESPA Insights) ---
             const vespaContainer = document.getElementById('aiCoachVespaProfileContainer');
             
-            if (vespaContainer && data.llm_generated_insights) { // Check for llm_generated_insights
+            if (vespaContainer && data.llm_generated_insights) { 
                 const insights = data.llm_generated_insights;
+                let vespaInsightsHtml = ''; // Build the entire inner HTML for vespaContainer here
 
-                // 1. Populate Chart & Comparative Data Section
-                const chartComparativeSection = vespaContainer.querySelector('#vespaChartComparativeSection');
-                if (chartComparativeSection) {
-                    let chartHtml = '<h5>Chart & Comparative Data</h5>';
-                    chartHtml += '<div id="vespaComparisonChartContainer" style="height: 250px; margin-bottom: 15px; background: #eee; display:flex; align-items:center; justify-content:center;"><p>Comparison Chart Area</p></div>';
-                    if (insights.chart_comparative_insights) {
-                        chartHtml += `<p>${insights.chart_comparative_insights}</p>`;
-                    } else {
-                        chartHtml += '<p><em>AI insights on chart data are currently unavailable.</em></p>';
-                    }
-                    chartComparativeSection.innerHTML = chartHtml;
-                    // Ensure chart is rendered if data for it is available
-                    ensureChartJsLoaded(() => {
-                        renderVespaComparisonChart(data.vespa_profile, data.school_vespa_averages);
+                // 1. Chart & Comparative Data Section
+                vespaInsightsHtml += '<div id="vespaChartComparativeSection">';
+                vespaInsightsHtml += '<h5>Chart & Comparative Data</h5>';
+                vespaInsightsHtml += '<div id="vespaComparisonChartContainer" style="height: 250px; margin-bottom: 15px; background: #eee; display:flex; align-items:center; justify-content:center;"><p>Comparison Chart Area</p></div>';
+                if (insights.chart_comparative_insights) {
+                    vespaInsightsHtml += `<p>${insights.chart_comparative_insights}</p>`;
+                } else {
+                    vespaInsightsHtml += '<p><em>AI insights on chart data are currently unavailable.</em></p>';
+                }
+                vespaInsightsHtml += '</div>'; // end vespaChartComparativeSection
+
+                vespaInsightsHtml += '<hr style="border-top: 1px dashed #eee; margin: 15px 0;">';
+
+                // 2. Most Important Coaching Questions Section
+                vespaInsightsHtml += '<div id="vespaCoachingQuestionsSection">';
+                vespaInsightsHtml += '<h5>Most Important Coaching Questions</h5>';
+                if (insights.most_important_coaching_questions && insights.most_important_coaching_questions.length > 0) {
+                    vespaInsightsHtml += '<ul>';
+                    insights.most_important_coaching_questions.forEach(q => {
+                        vespaInsightsHtml += `<li>${q}</li>`;
                     });
+                    vespaInsightsHtml += '</ul>';
                 } else {
-                    console.warn("[AICoachLauncher] vespaChartComparativeSection not found.")
+                    vespaInsightsHtml += '<p><em>AI-selected coaching questions are currently unavailable.</em></p>';
                 }
+                vespaInsightsHtml += '</div>'; // end vespaCoachingQuestionsSection
 
-                // 2. Populate Most Important Coaching Questions Section
-                const coachingQuestionsSection = vespaContainer.querySelector('#vespaCoachingQuestionsSection');
-                if (coachingQuestionsSection) {
-                    let questionsHtml = '<h5>Most Important Coaching Questions</h5>';
-                    if (insights.most_important_coaching_questions && insights.most_important_coaching_questions.length > 0) {
-                        questionsHtml += '<ul>';
-                        insights.most_important_coaching_questions.forEach(q => {
-                            questionsHtml += `<li>${q}</li>`;
-                        });
-                        questionsHtml += '</ul>';
-                    } else {
-                        questionsHtml += '<p><em>AI-selected coaching questions are currently unavailable.</em></p>';
-                    }
-                    coachingQuestionsSection.innerHTML = questionsHtml;
-                }
+                vespaInsightsHtml += '<hr style="border-top: 1px dashed #eee; margin: 15px 0;">';
 
-                // 3. Populate Student Comment & Goals Insights Section
-                const studentCommentsGoalsSection = vespaContainer.querySelector('#vespaStudentCommentsGoalsSection');
-                if (studentCommentsGoalsSection) {
-                    let commentsGoalsHtml = '<h5>Student Comment & Goals Insights</h5>';
-                    if (insights.student_comment_analysis) {
-                        commentsGoalsHtml += `<p><strong>Comment Analysis:</strong> ${insights.student_comment_analysis}</p>`;
-                    } else {
-                        commentsGoalsHtml += '<p><em>AI analysis of student comments is currently unavailable.</em></p>';
-                    }
-                    if (insights.suggested_student_goals && insights.suggested_student_goals.length > 0) {
-                        commentsGoalsHtml += '<div style="margin-top:10px;"><strong>Suggested Goals:</strong><ul>';
-                        insights.suggested_student_goals.forEach(g => {
-                            commentsGoalsHtml += `<li>${g}</li>`;
-                        });
-                        commentsGoalsHtml += '</ul></div>';
-                    } else {
-                        commentsGoalsHtml += '<p style="margin-top:10px;"><em>Suggested goals are currently unavailable.</em></p>';
-                    }
-                    studentCommentsGoalsSection.innerHTML = commentsGoalsHtml;
-                }
-            } else if (vespaContainer) { // If llm_generated_insights is missing but container exists
-                // Keep the overall placeholder structure if insights object is missing
-                let baseHtml = vespaContainer.innerHTML; // Preserve existing structure (title, 3 sections)
-                if (!baseHtml.includes('id="vespaChartComparativeSection"')) { // Basic check if it was even setup
-                    baseHtml = '<div class="ai-coach-section"><h4>VESPA Insights</h4>';
-                    baseHtml += '<div id="vespaChartComparativeSection"><h5>Chart & Comparative Data</h5><p>VESPA insights data not available.</p></div>';
-                    baseHtml += '<hr style="border-top: 1px dashed #eee; margin: 15px 0;">';
-                    baseHtml += '<div id="vespaCoachingQuestionsSection"><h5>Most Important Coaching Questions</h5><p>VESPA insights data not available.</p></div>';
-                    baseHtml += '<hr style="border-top: 1px dashed #eee; margin: 15px 0;">';
-                    baseHtml += '<div id="vespaStudentCommentsGoalsSection"><h5>Student Comment & Goals Insights</h5><p>VESPA insights data not available.</p></div>';
-                    baseHtml += '</div>';
-                    vespaContainer.innerHTML = baseHtml;
+                // 3. Student Comment & Goals Insights Section
+                vespaInsightsHtml += '<div id="vespaStudentCommentsGoalsSection">';
+                vespaInsightsHtml += '<h5>Student Comment & Goals Insights</h5>';
+                if (insights.student_comment_analysis) {
+                    vespaInsightsHtml += `<p><strong>Comment Analysis:</strong> ${insights.student_comment_analysis}</p>`;
                 } else {
-                    // If the structure is there but data is missing, update placeholders in each section
-                    const chartSection = vespaContainer.querySelector('#vespaChartComparativeSection p:not([style*="color:red"])'); // target the placeholder
-                    if(chartSection) chartSection.textContent = 'Chart and comparative insights data not available.';
-                    const questionsSection = vespaContainer.querySelector('#vespaCoachingQuestionsSection p');
-                    if(questionsSection) questionsSection.textContent = 'Coaching questions data not available.';
-                    const goalsSection = vespaContainer.querySelector('#vespaStudentCommentsGoalsSection p');
-                    if(goalsSection) goalsSection.textContent = 'Student comment/goals analysis data not available.';
+                    vespaInsightsHtml += '<p><em>AI analysis of student comments is currently unavailable.</em></p>';
                 }
+                if (insights.suggested_student_goals && insights.suggested_student_goals.length > 0) {
+                    vespaInsightsHtml += '<div style="margin-top:10px;"><strong>Suggested Goals:</strong><ul>';
+                    insights.suggested_student_goals.forEach(g => {
+                        vespaInsightsHtml += `<li>${g}</li>`;
+                    });
+                    vespaInsightsHtml += '</ul></div>';
+                } else {
+                    vespaInsightsHtml += '<p style="margin-top:10px;"><em>Suggested goals are currently unavailable.</em></p>';
+                }
+                vespaInsightsHtml += '</div>'; // end vespaStudentCommentsGoalsSection
+
+                // Set the complete inner HTML for the VESPA insights area
+                vespaContainer.innerHTML = vespaInsightsHtml;
+
+                // Ensure chart is rendered now that its container div exists with content
+                ensureChartJsLoaded(() => {
+                    renderVespaComparisonChart(data.vespa_profile, data.school_vespa_averages);
+                });
+            
+            } else if (vespaContainer) { 
+                // If llm_generated_insights is missing but container exists, fill with placeholders
+                let placeholderHtml = '<div id="vespaChartComparativeSection"><h5>Chart & Comparative Data</h5><p>VESPA insights data not available for this student.</p></div>';
+                placeholderHtml += '<hr style="border-top: 1px dashed #eee; margin: 15px 0;">';
+                placeholderHtml += '<div id="vespaCoachingQuestionsSection"><h5>Most Important Coaching Questions</h5><p>VESPA insights data not available for this student.</p></div>';
+                placeholderHtml += '<hr style="border-top: 1px dashed #eee; margin: 15px 0;">';
+                placeholderHtml += '<div id="vespaStudentCommentsGoalsSection"><h5>Student Comment & Goals Insights</h5><p>VESPA insights data not available for this student.</p></div>';
+                vespaContainer.innerHTML = placeholderHtml;
             }
 
             // --- Populate Academic Profile Section ---
