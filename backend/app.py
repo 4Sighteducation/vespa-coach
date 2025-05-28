@@ -665,7 +665,9 @@ def coaching_suggestions():
     student_level = student_vespa_data.get("field_568_raw", "N/A") 
     current_m_cycle_str = student_vespa_data.get("field_146_raw", "0")
     try:
-        current_m_cycle = int(current_m_cycle_str) if current_m_cycle_str and current_m_cycle_str.isdigit() else 0
+        # Ensure current_m_cycle_str is treated as a string for isdigit(), then convert to int
+        current_m_cycle_str_for_check = str(current_m_cycle_str) if current_m_cycle_str is not None else "0"
+        current_m_cycle = int(current_m_cycle_str_for_check) if current_m_cycle_str_for_check.isdigit() else 0
     except ValueError:
         app.logger.warning(f"Could not parse current_m_cycle '{current_m_cycle_str}' to int. Defaulting to 0.")
         current_m_cycle = 0
