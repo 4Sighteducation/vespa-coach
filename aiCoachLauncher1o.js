@@ -989,7 +989,7 @@ if (window.aiCoachLauncherInitialized) {
                 logAICoach(`refreshAICoachData: Student ID ${studentObject10Id}. Last fetched ID: ${lastFetchedStudentId}. Condition met for fetching data.`);
                 // Only set loader here if not already fetching this specific ID, fetchAICoachingData will manage its own loader then.
                 if (currentlyFetchingStudentId !== studentObject10Id && panelContent.innerHTML.indexOf('loader') === -1 ){
-                    panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Identifying student report...</p>';
+                    panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Analysing student data...</p>';
                 }
                 fetchAICoachingData(studentObject10Id); 
             } else {

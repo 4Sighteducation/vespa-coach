@@ -752,12 +752,12 @@ if (window.aiCoachLauncherInitialized) {
                     const hasRelevantALevelMegs = ['aLevel_meg_grade_60th', 'aLevel_meg_grade_75th', 'aLevel_meg_grade_90th', 'aLevel_meg_grade_100th']
                                                 .some(key => data.academic_megs[key] && data.academic_megs[key] !== 'N/A');
                     if (hasRelevantALevelMegs) {
-                        academicHtml += `<h6>A-Level Percentile MEGs (where applicable):</h6>
+                        academicHtml += `<h6>A-Level Percentile MEGs (Minimum Expected Grades):</h6>
                                      <ul>
-                                         <li><strong>60th Pct:</strong> ${data.academic_megs.aLevel_meg_grade_60th || 'N/A'} (${data.academic_megs.aLevel_meg_points_60th !== undefined ? data.academic_megs.aLevel_meg_points_60th : 0} pts)</li>
-                                         <li><strong>75th Pct (Standard):</strong> ${data.academic_megs.aLevel_meg_grade_75th || 'N/A'} (${data.academic_megs.aLevel_meg_points_75th !== undefined ? data.academic_megs.aLevel_meg_points_75th : 0} pts)</li>
-                                         <li><strong>90th Pct:</strong> ${data.academic_megs.aLevel_meg_grade_90th || 'N/A'} (${data.academic_megs.aLevel_meg_points_90th !== undefined ? data.academic_megs.aLevel_meg_points_90th : 0} pts)</li>
-                                         <li><strong>100th Pct:</strong> ${data.academic_megs.aLevel_meg_grade_100th || 'N/A'} (${data.academic_megs.aLevel_meg_points_100th !== undefined ? data.academic_megs.aLevel_meg_points_100th : 0} pts)</li>
+                                         <li><strong>Top 40% (60th):</strong> <strong>${data.academic_megs.aLevel_meg_grade_60th || 'N/A'}</strong> (${data.academic_megs.aLevel_meg_points_60th !== undefined ? data.academic_megs.aLevel_meg_points_60th : 0} pts)</li>
+                                         <li><strong>Top 25% (75th - Standard MEG):</strong> <strong>${data.academic_megs.aLevel_meg_grade_75th || 'N/A'}</strong> (${data.academic_megs.aLevel_meg_points_75th !== undefined ? data.academic_megs.aLevel_meg_points_75th : 0} pts)</li>
+                                         <li><strong>Top 10% (90th):</strong> <strong>${data.academic_megs.aLevel_meg_grade_90th || 'N/A'}</strong> (${data.academic_megs.aLevel_meg_points_90th !== undefined ? data.academic_megs.aLevel_meg_points_90th : 0} pts)</li>
+                                         <li><strong>Top 1% (100th):</strong> <strong>${data.academic_megs.aLevel_meg_grade_100th || 'N/A'}</strong> (${data.academic_megs.aLevel_meg_points_100th !== undefined ? data.academic_megs.aLevel_meg_points_100th : 0} pts)</li>
                                      </ul>`;
                     } else {
                         academicHtml += '<p><em>A-Level percentile MEG data not available or not applicable.</em></p>';
@@ -785,7 +785,7 @@ if (window.aiCoachLauncherInitialized) {
                                         </div>
                                         <p class="subject-grades-info">
                                             Current: <strong>${subject.currentGrade || 'N/A'}</strong> (${subject.currentGradePoints !== undefined ? subject.currentGradePoints : 'N/A'} pts) | 
-                                            Standard MEG: <strong>${subject.standard_meg || 'N/A'}</strong> (${subject.standardMegPoints !== undefined ? subject.standardMegPoints : 'N/A'} pts)
+                                            ${subject.normalized_qualification_type === 'A Level' ? 'Top 25% (MEG)' : 'Standard MEG'}: <strong>${subject.standard_meg || 'N/A'}</strong> (${subject.standardMegPoints !== undefined ? subject.standardMegPoints : 'N/A'} pts)
                                         </p>`;
                             academicHtml += createSubjectBenchmarkScale(subject, index);
                             academicHtml += `</div>`; 
@@ -1282,23 +1282,38 @@ if (window.aiCoachLauncherInitialized) {
             const leftPosition = Math.max(0, Math.min(percentage, 100));
             const markerClass = type.toLowerCase().replace(/ /g, '-') + '-marker' + (specificClass ? ' ' + specificClass : '');
 
+            // Updated Label Logic
+            let displayLabel = label;
+            if (specificClass === 'p60') displayLabel = 'Top40%'; // 60th percentile = Top 40%
+            else if (label === 'MEG' && subject.normalized_qualification_type === 'A Level') displayLabel = 'Top25%'; // Standard MEG for A-Level (75th percentile)
+            else if (specificClass === 'p90') displayLabel = 'Top10%';
+            else if (specificClass === 'p100') displayLabel = 'Top1%';
+
             return `<div class="scale-marker ${markerClass}" style="left: ${leftPosition}%;" title="${titleText}">
-                        <span class="marker-label">${label}</span>
+                        <span class="marker-label">${displayLabel}</span>
                     </div>`;
         };
         
+        // For A-Levels, standard MEG is 75th (Top25%). For others, it's just MEG.
+        let standardMegLabel = "MEG";
+        if (subject.normalized_qualification_type === "A Level") {
+            standardMegLabel = "Top25%";
+        }
+
         scaleHtml += createMarker(subject.currentGradePoints, subject.currentGrade, "Current Grade", "CG");
-        scaleHtml += createMarker(subject.standardMegPoints, subject.standard_meg, "Standard MEG", "MEG");
+        // Pass standardMegLabel to createMarker for the standard MEG
+        scaleHtml += createMarker(subject.standardMegPoints, subject.standard_meg, "Standard MEG", standardMegLabel);
 
         if (subject.normalized_qualification_type === "A Level") {
             if (typeof subject.megPoints60 === 'number') {
-                scaleHtml += createMarker(subject.megPoints60, null, "A-Level MEG", "P60", "60th Pct", "p60");
+                scaleHtml += createMarker(subject.megPoints60, null, "A-Level MEG", "P60", "60th Percentile", "p60");
             }
+            // 75th is standardMegPoints, already marked with updated label
             if (typeof subject.megPoints90 === 'number') {
-                scaleHtml += createMarker(subject.megPoints90, null, "A-Level MEG", "P90", "90th Pct", "p90");
+                scaleHtml += createMarker(subject.megPoints90, null, "A-Level MEG", "P90", "90th Percentile", "p90");
             }
             if (typeof subject.megPoints100 === 'number') {
-                scaleHtml += createMarker(subject.megPoints100, null, "A-Level MEG", "P100", "100th Pct", "p100");
+                scaleHtml += createMarker(subject.megPoints100, null, "A-Level MEG", "P100", "100th Percentile", "p100");
             }
         }
 
