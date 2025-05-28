@@ -447,6 +447,51 @@ if (window.aiCoachLauncherInitialized) {
             .a-level-meg-marker.p60 .marker-label { color: #17a2b8; } /* Teal for P60 label */
             .a-level-meg-marker.p90 .marker-label { color: #fd7e14; } /* Orange for P90 label */
             .a-level-meg-marker.p100 .marker-label { color: #dc3545; } /* Red for P100 label */
+
+            /* New styles for distinct markers */
+            .current-grade-dot-marker {
+                background-color: #28a745; /* Green - student's actual grade */
+                width: 10px; /* Make it slightly wider for a dot feel */
+                height: 10px; /* Make it a circle/square dot */
+                border-radius: 50%; /* Circle dot */
+                border: 2px solid white; /* White border to stand out */
+                box-shadow: 0 0 3px rgba(0,0,0,0.4);
+                z-index: 15; /* Higher z-index to be on top */
+            }
+            .current-grade-dot-marker .marker-label {
+                bottom: -22px; /* Adjust label position for dot */
+                font-weight: bold; /* Make student name bold */
+            }
+
+            .percentile-line-marker {
+                background-color: #6c757d; /* Grey for percentile lines - can be overridden by specific Px colors */
+                width: 2px; /* Thin line */
+                height: 20px; /* Taller line, extending above and below center */
+                border-radius: 1px; 
+                z-index: 12; /* Below student marker but above bar */
+            }
+            /* Override for A-Level MEG percentiles to use their specific colors */
+            .percentile-line-marker.a-level-meg-marker {
+                 background-color: #007bff; /* Blue for general A-Level percentiles */
+            }
+            .percentile-line-marker.p60 {
+                 background-color: #17a2b8; /* Teal */
+            }
+            .percentile-line-marker.p90 {
+                 background-color: #fd7e14; /* Orange */
+            }
+            .percentile-line-marker.p100 {
+                 background-color: #dc3545; /* Red */
+            }
+            .percentile-line-marker.standard-meg-marker { /* For the Top25% or general MEG */
+                background-color: #ffc107; /* Yellow, if it's the main MEG marker */
+                z-index: 13; /* Slightly higher z-index to ensure it's visible over other percentiles like P60 if they overlap */
+            }
+
+            .percentile-line-marker .marker-label {
+                bottom: -20px; /* Keep labels consistent for lines */
+                 font-size: 0.65em; /* Slightly smaller for percentile labels if needed */
+            }
         `;
         const styleElement = document.createElement('style');
         styleElement.id = styleId;
@@ -779,6 +824,7 @@ if (window.aiCoachLauncherInitialized) {
                             !subject.subject.includes("not found by any method") && 
                             !subject.subject.includes("No academic subjects parsed")) {
                             validSubjectsFoundForScales++;
+                            const studentFirstName = data.student_name ? data.student_name.split(' ')[0] : "Current";
                             academicHtml += `<div class="subject-benchmark-item">
                                         <div class="subject-benchmark-header">
                                             <h5>${subject.subject || 'N/A'} (${subject.normalized_qualification_type || 'Qual Type N/A'})</h5>
@@ -787,7 +833,7 @@ if (window.aiCoachLauncherInitialized) {
                                             Current: <strong>${subject.currentGrade || 'N/A'}</strong> (${subject.currentGradePoints !== undefined ? subject.currentGradePoints : 'N/A'} pts) | 
                                             ${subject.normalized_qualification_type === 'A Level' ? 'Top 25% (MEG)' : 'Standard MEG'}: <strong>${subject.standard_meg || 'N/A'}</strong> (${subject.standardMegPoints !== undefined ? subject.standardMegPoints : 'N/A'} pts)
                                         </p>`;
-                            academicHtml += createSubjectBenchmarkScale(subject, index);
+                            academicHtml += createSubjectBenchmarkScale(subject, index, studentFirstName);
                             academicHtml += `</div>`; 
                         }
                     });
@@ -1073,7 +1119,7 @@ if (window.aiCoachLauncherInitialized) {
                 logAICoach(`refreshAICoachData: Student ID ${studentObject10Id}. Last fetched ID: ${lastFetchedStudentId}. Condition met for fetching data.`);
                 // Only set loader here if not already fetching this specific ID, fetchAICoachingData will manage its own loader then.
                 if (currentlyFetchingStudentId !== studentObject10Id && panelContent.innerHTML.indexOf('loader') === -1 ){
-                    panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Identifying student report...</p>';
+                    panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Please wait while I analyse the student data...</p>';
                 }
                 fetchAICoachingData(studentObject10Id); 
             } else {
@@ -1262,7 +1308,7 @@ if (window.aiCoachLauncherInitialized) {
     }
 
     // --- Helper function to create a single subject's benchmark scale ---
-    function createSubjectBenchmarkScale(subject, subjectIndex) {
+    function createSubjectBenchmarkScale(subject, subjectIndex, studentFirstName) {
         if (!subject || typeof subject.currentGradePoints !== 'number' || typeof subject.standardMegPoints !== 'number') {
             return '<p style="font-size:0.8em; color: #777;">Benchmark scale cannot be displayed due to missing point data.</p>';
         }
@@ -1284,12 +1330,25 @@ if (window.aiCoachLauncherInitialized) {
 
             // Updated Label Logic
             let displayLabel = label;
-            if (specificClass === 'p60') displayLabel = 'Top40%'; // 60th percentile = Top 40%
-            else if (label === 'MEG' && subject.normalized_qualification_type === 'A Level') displayLabel = 'Top25%'; // Standard MEG for A-Level (75th percentile)
-            else if (specificClass === 'p90') displayLabel = 'Top10%';
-            else if (specificClass === 'p100') displayLabel = 'Top1%';
+            let titleType = type;
+            if (specificClass === 'p60') { displayLabel = 'Top40%'; titleType = 'Top 40% MEG (60th)'; }
+            else if (label === 'MEG' && subject.normalized_qualification_type === 'A Level') { displayLabel = 'Top25%'; titleType = 'Top 25% MEG (75th)'; }
+            else if (specificClass === 'p90') { displayLabel = 'Top10%'; titleType = 'Top 10% MEG (90th)'; }
+            else if (specificClass === 'p100') { displayLabel = 'Top1%'; titleType = 'Top 1% MEG (100th)'; }
+            else if (label === 'CG') { 
+                displayLabel = studentFirstName || "Current"; 
+                titleType = `${studentFirstName || "Current"}'s Grade`;
+            }
 
-            return `<div class="scale-marker ${markerClass}" style="left: ${leftPosition}%;" title="${titleText}">
+            // Add a specific class for percentile markers to style them differently
+            const isPercentileMarker = ['p60', 'p90', 'p100'].includes(specificClass) || (label === 'MEG' && subject.normalized_qualification_type === 'A Level');
+            const finalMarkerClass = `${markerClass} ${isPercentileMarker ? 'percentile-line-marker' : 'current-grade-dot-marker'}`;
+
+            // Update titleText to use titleType for more descriptive tooltips
+            titleText = `${titleType}: ${grade || 'N/A'} (${points} pts)`;
+            if (percentile && !titleType.includes("Percentile")) titleText += ` - ${percentile}`;
+
+            return `<div class="scale-marker ${finalMarkerClass}" style="left: ${leftPosition}%;" title="${titleText}">
                         <span class="marker-label">${displayLabel}</span>
                     </div>`;
         };
@@ -1297,12 +1356,12 @@ if (window.aiCoachLauncherInitialized) {
         // For A-Levels, standard MEG is 75th (Top25%). For others, it's just MEG.
         let standardMegLabel = "MEG";
         if (subject.normalized_qualification_type === "A Level") {
-            standardMegLabel = "Top25%";
+            standardMegLabel = "Top25%"; // This will be used by the updated displayLabel logic inside createMarker
         }
 
-        scaleHtml += createMarker(subject.currentGradePoints, subject.currentGrade, "Current Grade", "CG");
-        // Pass standardMegLabel to createMarker for the standard MEG
-        scaleHtml += createMarker(subject.standardMegPoints, subject.standard_meg, "Standard MEG", standardMegLabel);
+        // Use studentFirstName for the Current Grade marker label
+        scaleHtml += createMarker(subject.currentGradePoints, subject.currentGrade, "Current Grade", "CG", null, 'cg-student'); 
+        scaleHtml += createMarker(subject.standardMegPoints, subject.standard_meg, "Standard MEG", "MEG"); // Label will be adjusted by logic in createMarker
 
         if (subject.normalized_qualification_type === "A Level") {
             if (typeof subject.megPoints60 === 'number') {
