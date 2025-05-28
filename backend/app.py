@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import requests
 import logging # Add logging import
 import openai # Import the OpenAI library
+import time # Add time for cache expiry
 
 # Load environment variables from .env file
 load_dotenv()
@@ -36,6 +37,11 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 # SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY') # For later use
 
 KNACK_BASE_URL = f"https://api.knack.com/v1/objects"
+
+# --- Cache for School VESPA Averages ---
+# Simple in-memory cache with TTL
+SCHOOL_AVERAGES_CACHE = {}
+CACHE_TTL_SECONDS = 3600  # 1 hour
 
 # Initialize OpenAI client
 if OPENAI_API_KEY:
@@ -75,11 +81,12 @@ def load_json_file(file_path):
 
 # Removed: load_csv_file function as it's no longer needed
 
-def get_knack_record(object_key, record_id=None, filters=None):
+def get_knack_record(object_key, record_id=None, filters=None, page=1, rows_per_page=1000):
     """
     Fetches records from a Knack object.
     - If record_id is provided, fetches a specific record.
     - If filters are provided, fetches records matching the filters.
+    - Handles pagination for fetching multiple records.
     """
     if not KNACK_APP_ID or not KNACK_API_KEY:
         app.logger.error("Knack App ID or API Key is missing.")
@@ -91,40 +98,36 @@ def get_knack_record(object_key, record_id=None, filters=None):
         'Content-Type': 'application/json'
     }
     
+    params = {'page': page, 'rows_per_page': rows_per_page}
+    if filters:
+        params['filters'] = json.dumps(filters)
+
     if record_id:
         url = f"{KNACK_BASE_URL}/{object_key}/records/{record_id}"
         action = "fetch specific record"
-    elif filters:
+        current_params = {} # No params for specific record ID fetch typically
+    else:
         url = f"{KNACK_BASE_URL}/{object_key}/records"
-        if filters:
-            url += f"?filters={json.dumps(filters)}"
-        action = f"fetch records with filters: {filters}"
-    else: # Fetch all records for an object if no ID or filters. Be cautious with this.
-        url = f"{KNACK_BASE_URL}/{object_key}/records"
-        action = "fetch all records"
+        action = f"fetch records (page {page}) with filters: {filters if filters else 'None'}"
+        current_params = params
 
-
-    app.logger.info(f"Attempting to {action} from Knack: object_key={object_key}")
+    app.logger.info(f"Attempting to {action} from Knack: object_key={object_key}, URL={url}, Params={current_params}")
 
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, params=current_params)
         response.raise_for_status()  # Raises an HTTPError for bad responses (4XX or 5XX)
         
-        app.logger.info(f"Knack API response status: {response.status_code} for object {object_key}")
-        # Knack returns a single record directly, or a 'records' array for multiple
+        app.logger.info(f"Knack API response status: {response.status_code} for object {object_key} (page {page})")
         data = response.json()
-        if record_id:
-            return data # Single record
-        else: # Multiple records or filtered list
-            return data.get('records', []) # Return list of records, or empty list if 'records' key not found
+        return data # Return the full response which includes 'current_page', 'total_pages', 'records'
             
     except requests.exceptions.HTTPError as e:
-        app.logger.error(f"HTTP error fetching Knack data for object {object_key}: {e}")
+        app.logger.error(f"HTTP error fetching Knack data for object {object_key} (page {page}): {e}")
         app.logger.error(f"Response content: {response.content}")
     except requests.exceptions.RequestException as e:
-        app.logger.error(f"Request exception fetching Knack data for object {object_key}: {e}")
+        app.logger.error(f"Request exception fetching Knack data for object {object_key} (page {page}): {e}")
     except json.JSONDecodeError:
-        app.logger.error(f"JSON decode error for Knack response from object {object_key}. Response: {response.text}")
+        app.logger.error(f"JSON decode error for Knack response from object {object_key} (page {page}). Response: {response.text}")
     return None
 
 
@@ -443,13 +446,39 @@ def coaching_suggestions():
 
     # --- Phase 1: Data Gathering ---
     # Fetch Object_10 record (VESPA Results)
-    student_vespa_data = get_knack_record("object_10", record_id=student_obj10_id_from_request)
+    student_vespa_data_response = get_knack_record("object_10", record_id=student_obj10_id_from_request)
 
-    if not student_vespa_data:
+    if not student_vespa_data_response:
         app.logger.error(f"Could not retrieve data for student_object10_record_id: {student_obj10_id_from_request} from Knack Object_10.")
         return jsonify({"error": f"Could not retrieve data for student {student_obj10_id_from_request}"}), 404
     
+    # For a single record fetch, the response IS the record, not a dict with a 'records' key
+    student_vespa_data = student_vespa_data_response 
     app.logger.info(f"Successfully fetched Object_10 data for ID {student_obj10_id_from_request}")
+
+    # Determine School ID for the student
+    school_id = None
+    school_connection_raw = student_vespa_data.get("field_133_raw") # School connection field
+    if isinstance(school_connection_raw, list) and school_connection_raw:
+        school_id = school_connection_raw[0].get('id')
+        app.logger.info(f"Extracted school_id '{school_id}' from student's Object_10 field_133_raw.")
+    elif isinstance(school_connection_raw, str): # If it's just a string ID
+        school_id = school_connection_raw
+        app.logger.info(f"Extracted school_id '{school_id}' (string) from student's Object_10 field_133_raw.")
+    else:
+        app.logger.warning(f"Could not determine school_id from field_133_raw for student {student_obj10_id_from_request}. Data: {school_connection_raw}")
+
+    # Get School-wide VESPA Averages
+    school_wide_vespa_averages = None
+    if school_id:
+        school_wide_vespa_averages = get_school_vespa_averages(school_id)
+        if school_wide_vespa_averages:
+            app.logger.info(f"Successfully retrieved school-wide VESPA averages for school {school_id}: {school_wide_vespa_averages}")
+        else:
+            app.logger.warning(f"Failed to retrieve school-wide VESPA averages for school {school_id}.")
+    else:
+        app.logger.warning("Cannot fetch school-wide VESPA averages as school_id is unknown.")
+
 
     student_name_for_profile_lookup = student_vespa_data.get("field_187_raw", {}).get("full", "N/A")
     # Extract student email from Object_10 for linking to Object_3
@@ -779,7 +808,8 @@ def coaching_suggestions():
             "key_discussion_points": ["Consider your VESPA profile. (Placeholder)"],
             "suggested_next_steps_for_tutor": ["Discuss strategies based on the profile. (Placeholder)"]
         },
-        "previous_interaction_summary": previous_interaction_summary
+        "previous_interaction_summary": previous_interaction_summary,
+        "school_vespa_averages": school_wide_vespa_averages # Add school averages to response
     }
 
     # Add LLM-generated summary (placeholder for now)
@@ -788,6 +818,83 @@ def coaching_suggestions():
 
     app.logger.info(f"Successfully prepared response for student_object10_record_id: {student_obj10_id_from_request}")
     return jsonify(response_data)
+
+# --- Function to get School VESPA Averages ---
+def get_school_vespa_averages(school_id):
+    """Calculates and caches average VESPA scores for a given school ID."""
+    if not school_id:
+        app.logger.warning("get_school_vespa_averages called with no school_id.")
+        return None
+
+    # Check cache first
+    cached_data = SCHOOL_AVERAGES_CACHE.get(school_id)
+    if cached_data:
+        if time.time() - cached_data['timestamp'] < CACHE_TTL_SECONDS:
+            app.logger.info(f"Returning cached school VESPA averages for school_id: {school_id}")
+            return cached_data['averages']
+        else:
+            app.logger.info(f"Cache expired for school_id: {school_id}")
+            del SCHOOL_AVERAGES_CACHE[school_id]
+
+    app.logger.info(f"Calculating school VESPA averages for school_id: {school_id}")
+    
+    filters_school_students = [{'field': 'field_133_raw.id', 'operator': 'is', 'value': school_id}]
+    # Knack's connection field `field_133_raw` might store the ID directly or in an array of objects [{id: 'actual_id'}].
+    # If it's directly the ID, the filter above might work if Knack allows querying text field part of a connection this way.
+    # A more robust way if field_133 is a connection to Object_2 (Schools):
+    # filters_school_students = [{'field': 'field_133', 'operator': 'is', 'value': school_id}] 
+    # We'll stick to `field_133_raw.id` as indicated by inspection of CopyofstaffHomepage4d.js's patterns, 
+    # but this might need adjustment based on how Object_10.field_133 is structured and queryable.
+    # For now, let's try with the direct 'is' on the connection field ID (field_133 is connection to object_2 - schools)
+    filters_school_students_alt = [{'field': 'field_133', 'operator': 'is', 'value': school_id}]
+
+    # Try the more direct connection filter first
+    school_student_records = get_knack_record("object_10", filters=filters_school_students_alt)
+
+    if not school_student_records:
+        app.logger.warning(f"No student records found for school_id {school_id} using field_133 direct filter. Trying field_133_raw.id filter.")
+        # Fallback to _raw.id filter if direct one fails (less likely to work for 'is' operator but worth trying)
+        # This assumes field_133_raw is an object with an 'id' key and Knack allows querying this sub-property directly with 'is'.
+        # This is unlikely. A 'contains' on field_133_raw (if it's a string of the ID) or different filter structure might be needed.
+        # For simplicity of this step, we'll log the failure and proceed if it still fails.
+        # A more robust filter might be needed here based on actual Knack data structure of field_133_raw.
+        school_student_records = get_knack_record("object_10", filters=[{'field': 'field_133_raw', 'operator': 'contains', 'value': school_id}])
+        if not school_student_records:
+            app.logger.error(f"Could not retrieve any student records for school_id: {school_id} using multiple filter attempts. Cannot calculate averages.")
+            return None
+        app.logger.info(f"Retrieved {len(school_student_records)} student records for school_id {school_id} using fallback filter.")
+    else:
+        app.logger.info(f"Retrieved {len(school_student_records)} student records for school_id {school_id} using direct field_133 filter.")
+
+    vespa_elements = {
+        "Vision": "field_147", "Effort": "field_148",
+        "Systems": "field_149", "Practice": "field_150",
+        "Attitude": "field_151"
+    }
+    sums = {key: 0 for key in vespa_elements}
+    counts = {key: 0 for key in vespa_elements}
+
+    for record in school_student_records:
+        for element_name, field_key in vespa_elements.items():
+            score_value = record.get(field_key)
+            if score_value is not None:
+                try:
+                    score = float(score_value)
+                    sums[element_name] += score
+                    counts[element_name] += 1
+                except (ValueError, TypeError):
+                    app.logger.debug(f"Could not convert score '{score_value}' for {element_name} in record {record.get('id')} to float.")
+    
+    averages = {}
+    for element_name in vespa_elements:
+        if counts[element_name] > 0:
+            averages[element_name] = round(sums[element_name] / counts[element_name], 2)
+        else:
+            averages[element_name] = 0 # Or None, or "N/A"
+    
+    app.logger.info(f"Calculated school VESPA averages for school_id {school_id}: {averages}")
+    SCHOOL_AVERAGES_CACHE[school_id] = {'averages': averages, 'timestamp': time.time()}
+    return averages
 
 if __name__ == '__main__':
     # Ensure the FLASK_ENV is set to development for debug mode if not using `flask run`

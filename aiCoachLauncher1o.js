@@ -1,0 +1,1003 @@
+// AI Coach Launcher Script (aiCoachLauncher.js)
+
+// Guard to prevent re-initialization
+if (window.aiCoachLauncherInitialized) {
+    console.warn("[AICoachLauncher] Attempted to re-initialize. Skipping.");
+} else {
+    window.aiCoachLauncherInitialized = true;
+
+    let AI_COACH_LAUNCHER_CONFIG = null;
+    let coachObserver = null;
+    let coachUIInitialized = false;
+    let debouncedObserverCallback = null; // For debouncing mutation observer
+    let eventListenersAttached = false; // ADDED: Module-scoped flag for event listeners
+    let currentFetchAbortController = null; // ADD THIS
+    let lastFetchedStudentId = null; // ADD THIS to track the ID for which data was last fetched
+    let observerLastProcessedStudentId = null; // ADD THIS: Tracks ID processed by observer
+    let currentlyFetchingStudentId = null; // ADD THIS
+    let vespaChartInstance = null; // To keep track of the chart instance for updates/destruction
+
+    // --- Configuration ---
+    const HEROKU_API_URL = 'https://vespa-coach-c64c795edaa7.herokuapp.com/api/v1/coaching_suggestions';
+    // Knack App ID and API Key are expected in AI_COACH_LAUNCHER_CONFIG if any client-side Knack calls were needed,
+    // but with the new approach, getStudentObject10RecordId will primarily rely on a global variable.
+
+    function logAICoach(message, data) {
+        // Temporarily log unconditionally for debugging
+        console.log(`[AICoachLauncher] ${message}`, data === undefined ? '' : data);
+        // if (AI_COACH_LAUNCHER_CONFIG && AI_COACH_LAUNCHER_CONFIG.debugMode) {
+        //     console.log(`[AICoachLauncher] ${message}`, data === undefined ? '' : data);
+        // }
+    }
+
+    // Function to ensure Chart.js is loaded
+    function ensureChartJsLoaded(callback) {
+        if (typeof Chart !== 'undefined') {
+            logAICoach("Chart.js already loaded.");
+            if (callback) callback();
+            return;
+        }
+        logAICoach("Chart.js not found, attempting to load from CDN...");
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js';
+        script.onload = () => {
+            logAICoach("Chart.js loaded successfully from CDN.");
+            if (callback) callback();
+        };
+        script.onerror = () => {
+            console.error("[AICoachLauncher] Failed to load Chart.js from CDN.");
+            // Optionally, display an error in the chart container
+            const chartContainer = document.getElementById('vespaComparisonChartContainer');
+            if(chartContainer) chartContainer.innerHTML = '<p style="color:red; text-align:center;">Chart library failed to load.</p>';
+        };
+        document.head.appendChild(script);
+    }
+
+    // Function to check if we are on the individual student report view
+    function isIndividualReportView() {
+        const studentNameDiv = document.querySelector('#student-name p'); // More specific selector for the student name paragraph
+        const backButton = document.querySelector('a.kn-back-link'); // General Knack back link
+        
+        if (studentNameDiv && studentNameDiv.textContent && studentNameDiv.textContent.includes('STUDENT:')) {
+            logAICoach("Individual report view confirmed by STUDENT: text in #student-name.");
+            return true;
+        }
+        // Fallback to back button if the #student-name structure changes or isn't specific enough
+        if (backButton && document.body.contains(backButton)) { 
+             logAICoach("Individual report view confirmed by BACK button presence.");
+            return true;
+        }
+        logAICoach("Not on individual report view.");
+        return false;
+    }
+
+    // Function to initialize the UI elements (button and panel)
+    function initializeCoachUI() {
+        if (coachUIInitialized && document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId)) {
+            logAICoach("Coach UI appears to be already initialized with a button. Skipping full re-initialization.");
+            // If UI is marked initialized and button exists, critical parts are likely fine.
+            // Data refresh is handled by observer logic or toggleAICoachPanel.
+            return;
+        }
+
+        logAICoach("Conditions met. Initializing AI Coach UI (button and panel).");
+        addAICoachStyles();
+        createAICoachPanel();
+        addLauncherButton();
+        setupEventListeners();
+        coachUIInitialized = true; // Mark as initialized
+        logAICoach("AICoachLauncher UI initialization complete.");
+    }
+    
+    // Function to clear/hide the UI elements when not on individual report
+    function clearCoachUI() {
+        if (!coachUIInitialized) return;
+        logAICoach("Clearing AI Coach UI.");
+        const launcherButtonContainer = document.getElementById('aiCoachLauncherButtonContainer');
+        if (launcherButtonContainer) {
+            launcherButtonContainer.innerHTML = ''; // Clear the button
+        }
+        toggleAICoachPanel(false); // Ensure panel is closed
+        // Optionally, remove the panel from DOM if preferred when navigating away
+        // const panel = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId);
+        // if (panel && panel.parentNode) panel.parentNode.removeChild(panel);
+        coachUIInitialized = false; // Reset for next individual report view
+        lastFetchedStudentId = null; 
+        observerLastProcessedStudentId = null; // ADD THIS: Reset when UI is cleared
+        currentlyFetchingStudentId = null; // ADD THIS: Clear if ID becomes null
+        if (currentFetchAbortController) { 
+            currentFetchAbortController.abort();
+            currentFetchAbortController = null;
+            logAICoach("Aborted ongoing fetch as UI was cleared (not individual report).");
+        }
+    }
+
+    function initializeAICoachLauncher() {
+        logAICoach("AICoachLauncher initializing and setting up observer...");
+
+        if (typeof window.AI_COACH_LAUNCHER_CONFIG === 'undefined') {
+            console.error("[AICoachLauncher] AI_COACH_LAUNCHER_CONFIG is not defined. Cannot initialize.");
+            return;
+        }
+        AI_COACH_LAUNCHER_CONFIG = window.AI_COACH_LAUNCHER_CONFIG;
+        logAICoach("Config loaded:", AI_COACH_LAUNCHER_CONFIG);
+
+        if (!AI_COACH_LAUNCHER_CONFIG.elementSelector || 
+            !AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId ||
+            !AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId ||
+            !AI_COACH_LAUNCHER_CONFIG.mainContentSelector) {
+            console.error("[AICoachLauncher] Essential configuration properties missing.");
+            return;
+        }
+
+        const targetNode = document.querySelector('#kn-scene_1095'); // Observe the scene for changes
+
+        if (!targetNode) {
+            console.error("[AICoachLauncher] Target node for MutationObserver not found (#kn-scene_1095).");
+            return;
+        }
+
+        // Debounce utility
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        const observerCallback = function(mutationsList, observer) {
+            logAICoach("MutationObserver detected DOM change (raw event).");
+            const currentStudentIdFromWindow = window.currentReportObject10Id;
+
+            if (isIndividualReportView()) {
+                const panelIsActive = document.body.classList.contains('ai-coach-active');
+                if (!coachUIInitialized) { 
+                    initializeCoachUI();
+                } else if (panelIsActive) { 
+                    // Only refresh if the student ID has actually changed from the observer's last processed ID
+                    if (currentStudentIdFromWindow && currentStudentIdFromWindow !== observerLastProcessedStudentId) {
+                        logAICoach(`Observer: Student ID changed from ${observerLastProcessedStudentId} to ${currentStudentIdFromWindow}. Triggering refresh.`);
+                        observerLastProcessedStudentId = currentStudentIdFromWindow; // Update before refresh
+                        refreshAICoachData(); 
+                    } else if (!currentStudentIdFromWindow && observerLastProcessedStudentId !== null) {
+                        // Case: Student ID became null (e.g., navigating away from a specific student but still on a report page somehow)
+                        logAICoach(`Observer: Student ID became null. Previously ${observerLastProcessedStudentId}. Clearing UI.`);
+                        observerLastProcessedStudentId = null;
+                        clearCoachUI(); // Or handle as appropriate, maybe refreshAICoachData will show error.
+                    } else if (currentStudentIdFromWindow && currentStudentIdFromWindow === observerLastProcessedStudentId){
+                        logAICoach(`Observer: Student ID ${currentStudentIdFromWindow} is the same as observerLastProcessedStudentId. No refresh from observer.`);
+                    }
+                }
+            } else {
+                if (observerLastProcessedStudentId !== null) { // Only clear if we were previously tracking a student
+                    logAICoach("Observer: Not on individual report view. Clearing UI and resetting observer ID.");
+                    observerLastProcessedStudentId = null;
+                    clearCoachUI();
+                }
+            }
+        };
+
+        // Use a debounced version of the observer callback
+        debouncedObserverCallback = debounce(function() {
+            logAICoach("MutationObserver processing (debounced).");
+            const currentStudentIdFromWindow = window.currentReportObject10Id;
+
+            if (isIndividualReportView()) {
+                const panelIsActive = document.body.classList.contains('ai-coach-active');
+                if (!coachUIInitialized) { 
+                    initializeCoachUI();
+                } else if (panelIsActive) { 
+                    // Only refresh if the student ID has actually changed from the observer's last processed ID
+                    if (currentStudentIdFromWindow && currentStudentIdFromWindow !== observerLastProcessedStudentId) {
+                        logAICoach(`Observer: Student ID changed from ${observerLastProcessedStudentId} to ${currentStudentIdFromWindow}. Triggering refresh.`);
+                        observerLastProcessedStudentId = currentStudentIdFromWindow; // Update before refresh
+                        refreshAICoachData(); 
+                    } else if (!currentStudentIdFromWindow && observerLastProcessedStudentId !== null) {
+                        // Case: Student ID became null (e.g., navigating away from a specific student but still on a report page somehow)
+                        logAICoach(`Observer: Student ID became null. Previously ${observerLastProcessedStudentId}. Clearing UI.`);
+                        observerLastProcessedStudentId = null;
+                        clearCoachUI(); // Or handle as appropriate, maybe refreshAICoachData will show error.
+                    } else if (currentStudentIdFromWindow && currentStudentIdFromWindow === observerLastProcessedStudentId){
+                        logAICoach(`Observer: Student ID ${currentStudentIdFromWindow} is the same as observerLastProcessedStudentId. No refresh from observer.`);
+                    }
+                }
+            } else {
+                if (observerLastProcessedStudentId !== null) { // Only clear if we were previously tracking a student
+                    logAICoach("Observer: Not on individual report view. Clearing UI and resetting observer ID.");
+                    observerLastProcessedStudentId = null;
+                    clearCoachUI();
+                }
+            }
+        }, 750); // Debounce for 750ms
+
+        coachObserver = new MutationObserver(observerCallback); // Use the raw, non-debounced one
+        coachObserver.observe(targetNode, { childList: true, subtree: true });
+
+        // Initial check in case the page loads directly on an individual report
+        if (isIndividualReportView()) {
+            initializeCoachUI();
+        }
+    }
+
+    function addAICoachStyles() {
+        const styleId = 'ai-coach-styles';
+        if (document.getElementById(styleId)) return;
+
+        const css = `
+            body.ai-coach-active ${AI_COACH_LAUNCHER_CONFIG.mainContentSelector} {
+                width: calc(100% - 450px); /* Increased panel width */
+                margin-right: 450px; /* Increased panel width */
+                transition: width 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            }
+            #${AI_COACH_LAUNCHER_CONFIG.mainContentSelector} {
+                 transition: width 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            }
+            #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} {
+                width: 0;
+                opacity: 0;
+                visibility: hidden;
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100vh;
+                background-color: #f4f6f8;
+                border-left: 1px solid #ddd;
+                padding: 20px;
+                box-sizing: border-box;
+                overflow-y: auto;
+                z-index: 1050;
+                transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s;
+                font-family: Arial, sans-serif; /* Added a default font */
+            }
+            body.ai-coach-active #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} {
+                width: 450px; /* Increased panel width */
+                opacity: 1;
+                visibility: visible;
+            }
+            #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                border-bottom: 1px solid #ccc;
+                padding-bottom: 10px;
+            }
+            #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-header h3 {
+                margin: 0;
+                font-size: 1.3em;
+            }
+            #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-close-btn {
+                background: none;
+                border: none;
+                font-size: 1.6em;
+                cursor: pointer;
+                padding: 5px;
+            }
+            #aiCoachLauncherButtonContainer {
+                 text-align: center; 
+                 padding: 20px; 
+                 border-top: 1px solid #eee;
+            }
+            .ai-coach-section {
+                margin-bottom: 20px;
+                padding: 15px;
+                background-color: #fff;
+                border: 1px solid #e0e0e0;
+                border-radius: 5px;
+            }
+            .ai-coach-section h4 {
+                font-size: 1.1em;
+                margin-top: 0;
+                margin-bottom: 10px;
+                color: #333;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 5px;
+            }
+            .ai-coach-section p, .ai-coach-section ul, .ai-coach-section li {
+                font-size: 0.9em;
+                line-height: 1.6;
+                color: #555;
+            }
+            .ai-coach-section ul {
+                padding-left: 20px;
+                margin-bottom: 0;
+            }
+            .loader {
+                border: 5px solid #f3f3f3; 
+                border-top: 5px solid #3498db; 
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin: 20px auto;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        const styleElement = document.createElement('style');
+        styleElement.id = styleId;
+        styleElement.type = 'text/css';
+        styleElement.appendChild(document.createTextNode(css));
+        document.head.appendChild(styleElement);
+        logAICoach("AICoachLauncher styles added.");
+    }
+
+    function createAICoachPanel() {
+        const panelId = AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId;
+        if (document.getElementById(panelId)) {
+            logAICoach("AI Coach panel already exists.");
+            return;
+        }
+        const panel = document.createElement('div');
+        panel.id = panelId;
+        panel.className = 'ai-coach-panel';
+        panel.innerHTML = `
+            <div class="ai-coach-panel-header">
+                <h3>AI Coaching Assistant</h3>
+                <button class="ai-coach-close-btn" aria-label="Close AI Coach Panel">&times;</button>
+            </div>
+            <div class="ai-coach-panel-content">
+                <p>Activate the AI Coach to get insights.</p>
+            </div>
+        `;
+        document.body.appendChild(panel);
+        logAICoach("AI Coach panel created.");
+    }
+
+    function addLauncherButton() {
+        const targetElement = document.querySelector(AI_COACH_LAUNCHER_CONFIG.elementSelector);
+        if (!targetElement) {
+            console.error(`[AICoachLauncher] Launcher button target element '${AI_COACH_LAUNCHER_CONFIG.elementSelector}' not found.`);
+            return;
+        }
+
+        let buttonContainer = document.getElementById('aiCoachLauncherButtonContainer');
+        
+        // If the main button container div doesn't exist within the targetElement, create it.
+        if (!buttonContainer) {
+            buttonContainer = document.createElement('div');
+            buttonContainer.id = 'aiCoachLauncherButtonContainer';
+            // Clear targetElement before appending to ensure it only contains our button container.
+            // This assumes targetElement is designated EXCLUSIVELY for the AI Coach button.
+            // If targetElement can have other dynamic content, this approach needs refinement.
+            targetElement.innerHTML = ''; // Clear previous content from target
+            targetElement.appendChild(buttonContainer);
+            logAICoach("Launcher button container DIV created in target: " + AI_COACH_LAUNCHER_CONFIG.elementSelector);
+        }
+
+        // Now, populate/repopulate the buttonContainer if the button itself is missing.
+        // clearCoachUI empties buttonContainer.innerHTML.
+        if (!buttonContainer.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId}`)) {
+            const buttonContentHTML = `
+                <p>Get AI-powered insights and suggestions to enhance your coaching conversation.</p>
+                <button id="${AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId}" class="p-button p-component">🚀 Activate AI Coach</button>
+            `;
+            buttonContainer.innerHTML = buttonContentHTML;
+            logAICoach("Launcher button content added/re-added to container.");
+        } else {
+            logAICoach("Launcher button content already present in container.");
+        }
+    }
+
+    async function getStudentObject10RecordId(retryCount = 0) {
+        logAICoach("Attempting to get student_object10_record_id from global variable set by ReportProfiles script...");
+
+        if (window.currentReportObject10Id) {
+            logAICoach("Found student_object10_record_id in window.currentReportObject10Id: " + window.currentReportObject10Id);
+            return window.currentReportObject10Id;
+        } else if (retryCount < 5) { // Retry up to 5 times (e.g., 5 * 500ms = 2.5 seconds)
+            logAICoach(`student_object10_record_id not found. Retrying in 500ms (Attempt ${retryCount + 1}/5)`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return getStudentObject10RecordId(retryCount + 1);
+        } else {
+            logAICoach("Warning: student_object10_record_id not found in window.currentReportObject10Id after multiple retries. AI Coach may not function correctly if ReportProfiles hasn't set this.");
+            // Display a message in the panel if the ID isn't found.
+            const panelContent = document.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-content`);
+            if(panelContent) {
+                // Avoid overwriting a more specific error already shown by a failed Knack API call if we were to reinstate it.
+                if (!panelContent.querySelector('.ai-coach-section p[style*="color:red"], .ai-coach-section p[style*="color:orange"] ')) {
+                    panelContent.innerHTML = '<div class="ai-coach-section"><p style="color:orange;">Could not automatically determine the specific VESPA report ID for this student. Ensure student profile data is fully loaded.</p></div>';
+                }
+            }
+            return null; // Important to return null so fetchAICoachingData isn't called with undefined.
+        }
+    }
+
+    async function fetchAICoachingData(studentId) {
+        const panelContent = document.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-content`);
+        if (!panelContent) return;
+
+        if (!studentId) { 
+             logAICoach("fetchAICoachingData called with no studentId. Aborting.");
+             if(panelContent && !panelContent.querySelector('.ai-coach-section p[style*="color:red"], .ai-coach-section p[style*="color:orange"] ')) {
+                panelContent.innerHTML = '<div class="ai-coach-section"><p style="color:orange;">Student ID missing, cannot fetch AI coaching data.</p></div>';
+             }
+             return;
+        }
+
+        // If already fetching for this specific studentId, don't start another one.
+        if (currentlyFetchingStudentId === studentId) {
+            logAICoach(`fetchAICoachingData: Already fetching data for student ID ${studentId}. Aborting duplicate call.`);
+            return;
+        }
+
+        // If there's an ongoing fetch for a *different* student, abort it.
+        if (currentFetchAbortController) {
+            currentFetchAbortController.abort();
+            logAICoach("Aborted previous fetchAICoachingData call for a different student.");
+        }
+        currentFetchAbortController = new AbortController(); 
+        const signal = currentFetchAbortController.signal;
+
+        currentlyFetchingStudentId = studentId; // Mark that we are now fetching for this student
+
+        // Set loader text more judiciously
+        if (!panelContent.innerHTML.includes('<div class="loader"></div>')) {
+            panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Loading AI Coach insights...</p>';
+        }
+
+        try {
+            logAICoach("Fetching AI Coaching Data for student_object10_record_id: " + studentId);
+            const response = await fetch(HEROKU_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ student_object10_record_id: studentId }),
+                signal: signal 
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: "An unknown error occurred."}));
+                throw new Error(`API Error (${response.status}): ${errorData.error || errorData.message || response.statusText}`);
+            }
+
+            const data = await response.json();
+            logAICoach("AI Coaching data received:", data);
+            lastFetchedStudentId = studentId; 
+            renderAICoachData(data);
+
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                logAICoach('Fetch aborted for student ID: ' + studentId);
+            } else {
+                logAICoach("Error fetching AI Coaching data:", error);
+                // Only update panel if this error wasn't for an aborted old fetch
+                if (currentlyFetchingStudentId === studentId) { 
+                    panelContent.innerHTML = `<div class="ai-coach-section"><p style="color:red;">Error loading AI Coach insights: ${error.message}</p></div>`;
+                }
+            }
+        } finally {
+            // If this fetch (for this studentId) was the one being tracked, clear the tracking flag.
+            if (currentlyFetchingStudentId === studentId) {
+                currentlyFetchingStudentId = null;
+            }
+            // If this specific fetch was the one associated with the current controller, nullify it
+            if (currentFetchAbortController && currentFetchAbortController.signal === signal) {
+                currentFetchAbortController = null;
+            }
+        }
+    }
+
+    function renderAICoachData(data) {
+        logAICoach("renderAICoachData CALLED. Data received:", JSON.parse(JSON.stringify(data)));
+        const panelContent = document.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-content`);
+
+        if (!panelContent) {
+            logAICoach("renderAICoachData: panelContent element not found. Cannot render.");
+            return;
+        }
+
+        panelContent.innerHTML = ''; // Clear previous content
+
+        let html = '';
+
+        // 1. Render the AI Student Overview Summary (Always Visible)
+        html += '<div class="ai-coach-section">';
+        html += '<h4>AI Student Snapshot</h4>';
+        if (data.llm_generated_summary_and_suggestions && data.llm_generated_summary_and_suggestions.student_overview_summary) {
+            html += `<p>${data.llm_generated_summary_and_suggestions.student_overview_summary}</p>`;
+        } else if (data.student_name) { // Only show "generating" if we have student context
+            html += '<p>AI summary is being generated or is not available for this student.</p>';
+        } else { // Generic message if no data at all
+             html += '<p>No detailed coaching data available. Ensure the student report is fully loaded and the AI Coach is active.</p>';
+             panelContent.innerHTML = html; // Set basic message and exit
+             return;
+        }
+        html += '</div>';
+        
+        // If primary data like student_name is missing, don't attempt to render details.
+        if (!data.student_name) {
+            logAICoach("renderAICoachData: data received is missing student_name. Rendering only snapshot/error.");
+            panelContent.innerHTML = html; // Render what we have (snapshot or error) and exit.
+            return;
+        }
+
+        // 2. Add New Toggle Buttons for Sections
+        html += `
+            <div class="ai-coach-section-toggles" style="margin: 10px 0 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                <button id="aiCoachToggleVespaButton" class="p-button p-component" style="width: 100%; padding: 10px; font-size: 0.9em;" aria-expanded="false" aria-controls="aiCoachVespaProfileContainer">
+                    View VESPA Profile Insights
+                </button>
+                <button id="aiCoachToggleAcademicButton" class="p-button p-component" style="width: 100%; padding: 10px; font-size: 0.9em;" aria-expanded="false" aria-controls="aiCoachAcademicProfileContainer">
+                    View Academic Profile Insights
+                </button>
+                <button id="aiCoachToggleQuestionButton" class="p-button p-component" style="width: 100%; padding: 10px; font-size: 0.9em;" aria-expanded="false" aria-controls="aiCoachQuestionAnalysisContainer">
+                    View Questionnaire Analysis
+                </button>
+            </div>
+        `;
+        
+        // 3. Containers for collapsible sections
+        html += '<div id="aiCoachVespaProfileContainer" class="ai-coach-details-section" style="display: none;"></div>';
+        html += '<div id="aiCoachAcademicProfileContainer" class="ai-coach-details-section" style="display: none;"></div>';
+        html += '<div id="aiCoachQuestionAnalysisContainer" class="ai-coach-details-section" style="display: none;"></div>';
+        
+        panelContent.innerHTML = html;
+
+        // --- Populate VESPA Profile Section ---
+        let vespaHtml = '';
+        if (data.vespa_profile) {
+            vespaHtml += '<div class="ai-coach-section"><h4>VESPA Profile Details</h4>';
+            // Placeholder for chart
+            vespaHtml += '<div id="vespaComparisonChartContainer" style="height: 250px; margin-bottom: 15px; background: #eee; display:flex; align-items:center; justify-content:center;"><p>Comparison Chart Area</p></div>';
+
+            for (const [element, details] of Object.entries(data.vespa_profile)) {
+                vespaHtml += `
+                    <div>
+                        <h5>${element} (Score: ${details.score_1_to_10 !== undefined ? details.score_1_to_10 : 'N/A'}) - <em>${details.score_profile_text || 'N/A'}</em></h5>
+                        ${details.primary_tutor_coaching_comments ? `<p><strong>Tutor Coaching Comments (Report Gen):</strong> ${details.primary_tutor_coaching_comments}</p>` : ''}
+                        ${details.report_text_for_student ? `<p><em>Student Report Text:</em> ${details.report_text_for_student}</p>` : ''}
+                        ${details.report_questions_for_student ? `<p><em>Student Report Questions:</em> ${details.report_questions_for_student}</p>` : ''}
+                        ${details.report_suggested_tools_for_student ? `<p><em>Student Report Tools:</em> ${details.report_suggested_tools_for_student}</p>` : ''}
+                        ${details.supplementary_tutor_questions && details.supplementary_tutor_questions.length > 0 && details.supplementary_tutor_questions[0] !== "No supplementary questions found for this profile." ?
+                            `<div><strong>Supplementary Tutor Questions (KB):</strong><ul>${details.supplementary_tutor_questions.map(q => `<li>${q}</li>`).join('')}</ul></div>` : ''}
+                        ${details.historical_summary_scores ?
+                            `<div><strong>Historical Scores:</strong> ${Object.entries(details.historical_summary_scores).map(([cycle, score]) => `Cycle ${cycle.replace('cycle', '')}: ${score}`).join(', ') || 'N/A'}</div>` : ''}
+                    </div>
+                `;
+                 // Add a separator, but not after the "Overall" element if it's last
+                const keys = Object.keys(data.vespa_profile);
+                const isLastElement = keys.indexOf(element) === keys.length - 1;
+                if (element !== "Overall" && !isLastElement) {
+                     vespaHtml += '<hr style="border-top: 1px dashed #eee; margin: 10px 0;">';
+                } else if (element === "Overall" && !isLastElement && keys[keys.indexOf(element) +1] !== "Overall"){ // If overall is not last and next is not overall
+                     vespaHtml += '<hr style="border-top: 1px dashed #eee; margin: 10px 0;">';
+                }
+            }
+            vespaHtml += '</div>';
+        } else {
+            vespaHtml = '<div class="ai-coach-section"><p>VESPA profile data not available.</p></div>';
+        }
+        const vespaContainer = document.getElementById('aiCoachVespaProfileContainer');
+        if (vespaContainer) vespaContainer.innerHTML = vespaHtml;
+
+        // After populating vespaHtml, render the chart
+        ensureChartJsLoaded(() => {
+            renderVespaComparisonChart(data.vespa_profile, data.school_vespa_averages);
+        });
+
+        // --- Populate Academic Profile Section ---
+        let academicHtml = '';
+        // Student Info
+        academicHtml += `
+            <div class="ai-coach-section">
+                <h4>Student Overview</h4>
+                <p><strong>Name:</strong> ${data.student_name || 'N/A'}</p>
+                <p><strong>Level:</strong> ${data.student_level || 'N/A'}</p>
+                <p><strong>Current VESPA Cycle:</strong> ${data.current_cycle || 'N/A'}</p>
+            </div>
+        `;
+        if (data.academic_profile_summary && data.academic_profile_summary.length > 0 && 
+            !(data.academic_profile_summary.length === 1 && data.academic_profile_summary[0].subject.includes("not found")) &&
+            !(data.academic_profile_summary.length === 1 && data.academic_profile_summary[0].subject.includes("No academic subjects parsed"))) {
+            academicHtml += '<div class="ai-coach-section"><h4>Academic Profile</h4><ul>';
+            data.academic_profile_summary.forEach(subject => {
+                academicHtml += `<li><strong>${subject.subject || 'N/A'}:</strong> Grade ${subject.currentGrade || 'N/A'} (Target: ${subject.targetGrade || 'N/A'}, Effort: ${subject.effortGrade || 'N/A'})</li>`;
+            });
+            academicHtml += '</ul></div>';
+        } else {
+            academicHtml += '<div class="ai-coach-section"><h4>Academic Profile</h4><p>No detailed academic profile available or profile not found.</p></div>';
+        }
+        // Placeholder for AI analysis linking VESPA to Academics
+        academicHtml += '<div class="ai-coach-section"><h4>AI Analysis: Linking VESPA to Academics</h4><p><em>(AI will analyze non-cognitive factors affecting academic performance here)</em></p></div>';
+        const academicContainer = document.getElementById('aiCoachAcademicProfileContainer');
+        if (academicContainer) academicContainer.innerHTML = academicHtml;
+
+        // --- Populate Question Level Analysis Section ---
+        let questionHtml = '';
+        // Key Psychometric Insights (Object_29)
+        questionHtml += '<div class="ai-coach-section"><h4>Questionnaire Analysis (Object_29)</h4>';
+        if (data.object29_question_highlights && (data.object29_question_highlights.top_3 || data.object29_question_highlights.bottom_3)) {
+            const highlights = data.object29_question_highlights;
+            if (highlights.top_3 && highlights.top_3.length > 0) {
+                questionHtml += '<h5>Top Scoring Questions:</h5><ul>';
+                highlights.top_3.forEach(q => {
+                    questionHtml += `<li>Score ${q.score}/5 (${q.category}): "${q.text}"</li>`;
+                });
+                questionHtml += '</ul>';
+            }
+            if (highlights.bottom_3 && highlights.bottom_3.length > 0) {
+                questionHtml += '<h5>Bottom Scoring Questions:</h5><ul>';
+                highlights.bottom_3.forEach(q => {
+                    questionHtml += `<li>Score ${q.score}/5 (${q.category}): "${q.text}"</li>`;
+                });
+                questionHtml += '</ul>';
+            }
+             // Placeholder for chart of all question responses
+            questionHtml += '<div id="questionScoresChartContainer" style="height: 300px; margin-top:15px; background: #eee; display:flex; align-items:center; justify-content:center;"><p>Question Scores Chart Area</p></div>';
+
+        } else {
+            questionHtml += "<p>No specific top/bottom question highlights processed from Object_29.</p>";
+        }
+
+        // Student Reflections & Goals (from Object_10)
+        if (data.student_reflections_and_goals) {
+            const reflections = data.student_reflections_and_goals;
+            const currentCycle = data.current_cycle ? parseInt(data.current_cycle) : null;
+            let reflectionsContent = '';
+
+            const reflectionsMap = [
+                { key: 'rrc1_comment', label: 'RRC1', cycle: 1 },
+                { key: 'rrc2_comment', label: 'RRC2', cycle: 2 },
+                { key: 'rrc3_comment', label: 'RRC3', cycle: 3 },
+                { key: 'goal1', label: 'Goal 1', cycle: 1 },
+                { key: 'goal2', label: 'Goal 2', cycle: 2 },
+                { key: 'goal3', label: 'Goal 3', cycle: 3 },
+            ];
+
+            reflectionsMap.forEach(item => {
+                if (reflections[item.key] && reflections[item.key].trim() !== '' && reflections[item.key].trim() !== 'Not specified') {
+                    const isCurrentCycleComment = currentCycle === item.cycle;
+                    const style = isCurrentCycleComment ? 'font-weight: bold; color: #0056b3;' : '';
+                    const cycleLabel = isCurrentCycleComment ? ' (Current Cycle)' : ` (Cycle ${item.cycle})`;
+                    reflectionsContent += `<p style="${style}"><strong>${item.label}${cycleLabel}:</strong> ${reflections[item.key]}</p>`;
+                }
+            });
+
+            if (reflectionsContent.trim() !== '') {
+                questionHtml += `
+                    <div style="margin-top:15px;">
+                        <h5>Student Reflections & Goals (Object_10)</h5>
+                        ${reflectionsContent}
+                    </div>
+                `;
+            } else {
+                 questionHtml += "<div style='margin-top:15px;'><h5>Student Reflections & Goals (Object_10)</h5><p>No specific comments or goals recorded.</p></div>";
+            }
+        }
+         questionHtml += "<div style='margin-top:15px;'><h5>General AI Interpretation of Questionnaire</h5><p><em>(AI will provide an overall summary of what the questionnaire responses suggest about the student here)</em></p></div>";
+        questionHtml += '</div>'; // Close main question analysis section
+        const questionContainer = document.getElementById('aiCoachQuestionAnalysisContainer');
+        if (questionContainer) questionContainer.innerHTML = questionHtml;
+
+
+        // Add event listeners for the new toggle buttons
+        const toggleButtons = [
+            { id: 'aiCoachToggleVespaButton', containerId: 'aiCoachVespaProfileContainer' },
+            { id: 'aiCoachToggleAcademicButton', containerId: 'aiCoachAcademicProfileContainer' },
+            { id: 'aiCoachToggleQuestionButton', containerId: 'aiCoachQuestionAnalysisContainer' }
+        ];
+
+        toggleButtons.forEach(btnConfig => {
+            const button = document.getElementById(btnConfig.id);
+            if (button) {
+                button.addEventListener('click', () => {
+                    const detailsContainer = document.getElementById(btnConfig.containerId);
+                    const allDetailSections = document.querySelectorAll('.ai-coach-details-section');
+                    const currentButtonText = button.textContent;
+
+                    if (detailsContainer) {
+                        const isCurrentlyVisible = detailsContainer.style.display === 'block';
+
+                        // Hide all sections first
+                        allDetailSections.forEach(section => section.style.display = 'none');
+                        // Reset all button texts and ARIA states
+                        toggleButtons.forEach(b => {
+                            const otherBtn = document.getElementById(b.id);
+                            if (otherBtn) {
+                                otherBtn.textContent = `View ${b.id.replace('aiCoachToggle', '').replace('Button','')} Insights`;
+                                otherBtn.setAttribute('aria-expanded', 'false');
+                            }
+                        });
+                        
+                        if (isCurrentlyVisible) {
+                            // If it was visible, it's now hidden (by the loop above), so keep text as "View..."
+                            // Button text already reset by the loop
+                        } else {
+                            detailsContainer.style.display = 'block';
+                            button.textContent = `Hide ${btnConfig.id.replace('aiCoachToggle', '').replace('Button','')} Insights`;
+                            button.setAttribute('aria-expanded', 'true');
+                        }
+                    }
+                });
+            }
+        });
+
+        logAICoach("renderAICoachData: Successfully rendered data with new section toggles.");
+
+        // --- Add Chat Interface --- 
+        addChatInterface(panelContent, data.student_name || "Student");
+    }
+
+    function renderVespaComparisonChart(studentVespaProfile, schoolVespaAverages) {
+        const chartContainer = document.getElementById('vespaComparisonChartContainer');
+        if (!chartContainer) {
+            logAICoach("VESPA comparison chart container not found.");
+            return;
+        }
+
+        if (typeof Chart === 'undefined') {
+            logAICoach("Chart.js is not loaded. Cannot render VESPA comparison chart.");
+            chartContainer.innerHTML = '<p style="color:red; text-align:center;">Chart library not loaded.</p>';
+            return;
+        }
+
+        // Destroy previous chart instance if it exists
+        if (vespaChartInstance) {
+            vespaChartInstance.destroy();
+            vespaChartInstance = null;
+            logAICoach("Previous VESPA chart instance destroyed.");
+        }
+        
+        // Ensure chartContainer is empty before creating a new canvas
+        chartContainer.innerHTML = '<canvas id="vespaStudentVsSchoolChart"></canvas>';
+        const ctx = document.getElementById('vespaStudentVsSchoolChart').getContext('2d');
+
+        if (!studentVespaProfile) {
+            logAICoach("Student VESPA profile data is missing. Cannot render chart.");
+            chartContainer.innerHTML = '<p style="text-align:center;">Student VESPA data not available for chart.</p>';
+            return;
+        }
+
+        const labels = ['Vision', 'Effort', 'Systems', 'Practice', 'Attitude'];
+        const studentScores = labels.map(label => {
+            const elementData = studentVespaProfile[label];
+            return elementData && elementData.score_1_to_10 !== undefined && elementData.score_1_to_10 !== "N/A" ? parseFloat(elementData.score_1_to_10) : 0;
+        });
+
+        const datasets = [
+            {
+                label: 'Student Scores',
+                data: studentScores,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }
+        ];
+
+        let chartTitle = 'Student VESPA Scores';
+
+        if (schoolVespaAverages) {
+            const schoolScores = labels.map(label => {
+                return schoolVespaAverages[label] !== undefined && schoolVespaAverages[label] !== "N/A" ? parseFloat(schoolVespaAverages[label]) : 0;
+            });
+            datasets.push({
+                label: 'School Average',
+                data: schoolScores,
+                backgroundColor: 'rgba(255, 159, 64, 0.6)', // Orange
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1
+            });
+            chartTitle = 'Student VESPA Scores vs. School Average';
+            logAICoach("School averages available, adding to chart.", {studentScores, schoolScores});
+        } else {
+            logAICoach("School averages not available for chart.");
+        }
+
+        try {
+            vespaChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: chartTitle,
+                            font: { size: 16, weight: 'bold' },
+                            padding: { top: 10, bottom: 20 }
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: {
+                                display: true,
+                                text: 'Score (1-10)'
+                            }
+                        }
+                    }
+                }
+            });
+            logAICoach("VESPA comparison chart rendered successfully.");
+        } catch (error) {
+            console.error("[AICoachLauncher] Error rendering Chart.js chart:", error);
+            chartContainer.innerHTML = '<p style="color:red; text-align:center;">Error rendering chart.</p>';
+        }
+    }
+
+    // New function to specifically refresh data if panel is already open
+    async function refreshAICoachData() {
+        const panel = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId);
+        const panelContent = panel ? panel.querySelector('.ai-coach-panel-content') : null;
+
+        if (!panel || !panelContent) {
+            logAICoach("Cannot refresh AI Coach data: panel or panelContent not found.");
+            return;
+        }
+        if (!document.body.classList.contains('ai-coach-active')) {
+            logAICoach("AI Coach panel is not active, refresh not needed.");
+            return;
+        }
+
+        logAICoach("refreshAICoachData: Attempting to get student ID...");
+        
+        const studentObject10Id = await getStudentObject10RecordId(); 
+        
+        if (studentObject10Id) {
+            if (studentObject10Id !== lastFetchedStudentId || lastFetchedStudentId === null) {
+                logAICoach(`refreshAICoachData: Student ID ${studentObject10Id}. Last fetched ID: ${lastFetchedStudentId}. Condition met for fetching data.`);
+                // Only set loader here if not already fetching this specific ID, fetchAICoachingData will manage its own loader then.
+                if (currentlyFetchingStudentId !== studentObject10Id && panelContent.innerHTML.indexOf('loader') === -1 ){
+                    panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Identifying student report...</p>';
+                }
+                fetchAICoachingData(studentObject10Id); 
+            } else {
+                logAICoach(`refreshAICoachData: Student ID ${studentObject10Id} is same as last fetched (${lastFetchedStudentId}). Data likely current.`);
+            }
+        } else {
+            logAICoach("refreshAICoachData: Student Object_10 ID not available. Panel will show error from getStudentObject10RecordId.");
+            lastFetchedStudentId = null; 
+            observerLastProcessedStudentId = null; 
+            currentlyFetchingStudentId = null; // ADD THIS: Clear if ID becomes null
+            if (panelContent.innerHTML.includes('loader') && !panelContent.innerHTML.includes('ai-coach-section')){
+                 panelContent.innerHTML = '<div class="ai-coach-section"><p style="color:orange;">Could not identify student report. Please ensure the report is fully loaded.</p></div>';
+            }
+        }
+    }
+
+    async function toggleAICoachPanel(show) { 
+        const panel = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId);
+        const toggleButton = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId);
+        const panelContent = panel ? panel.querySelector('.ai-coach-panel-content') : null;
+
+        if (show) {
+            document.body.classList.add('ai-coach-active');
+            if (toggleButton) toggleButton.textContent = '🙈 Hide AI Coach';
+            logAICoach("AI Coach panel activated.");
+            
+            // Instead of direct call here, refreshAICoachData will be primary way for new/refreshed data
+            await refreshAICoachData(); 
+
+        } else {
+            document.body.classList.remove('ai-coach-active');
+            if (toggleButton) toggleButton.textContent = '🚀 Activate AI Coach';
+            if (panelContent) panelContent.innerHTML = '<p>Activate the AI Coach to get insights.</p>';
+            logAICoach("AI Coach panel deactivated.");
+            lastFetchedStudentId = null; 
+            observerLastProcessedStudentId = null; 
+            currentlyFetchingStudentId = null; // ADD THIS: Reset when panel is closed
+            if (currentFetchAbortController) { 
+                currentFetchAbortController.abort();
+                currentFetchAbortController = null;
+                logAICoach("Aborted ongoing fetch as panel was closed.");
+            }
+        }
+    }
+
+    function setupEventListeners() {
+        if (eventListenersAttached) {
+            logAICoach("Global AI Coach event listeners already attached. Skipping setup.");
+            return;
+        }
+
+        document.body.addEventListener('click', function(event) {
+            if (!AI_COACH_LAUNCHER_CONFIG || 
+                !AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId || 
+                !AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId) {
+                // Config might not be ready if an event fires too early, or if script reloaded weirdly.
+                // console.warn("[AICoachLauncher] Event listener fired, but essential config is missing.");
+                return; 
+            }
+
+            const toggleButtonId = AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId;
+            const panelId = AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId;
+            
+            if (event.target && event.target.id === toggleButtonId) {
+                const isActive = document.body.classList.contains('ai-coach-active');
+                toggleAICoachPanel(!isActive);
+            }
+            
+            const panel = document.getElementById(panelId);
+            if (panel && event.target && event.target.classList.contains('ai-coach-close-btn') && panel.contains(event.target)) {
+                toggleAICoachPanel(false);
+            }
+        });
+        eventListenersAttached = true;
+        logAICoach("Global AI Coach event listeners set up ONCE.");
+    }
+
+    // --- Function to add Chat Interface --- 
+    function addChatInterface(panelContentElement, studentNameForContext) {
+        if (!panelContentElement) return;
+
+        logAICoach("Adding chat interface...");
+
+        const chatContainer = document.createElement('div');
+        chatContainer.id = 'aiCoachChatContainer';
+        chatContainer.className = 'ai-coach-section'; // Use existing class for styling consistency
+        chatContainer.style.marginTop = '20px';
+
+        chatContainer.innerHTML = `
+            <h4>AI Chat with ${studentNameForContext}</h4>
+            <div id="aiCoachChatDisplay" style="height: 200px; border: 1px solid #ccc; overflow-y: auto; padding: 10px; margin-bottom: 10px; background-color: #fff;">
+                <p class="ai-chat-message ai-chat-message-bot"><em>AI Coach:</em> Hello! How can I help you with ${studentNameForContext} today? (Chat functionality is under development)</p>
+            </div>
+            <div style="display: flex;">
+                <input type="text" id="aiCoachChatInput" style="flex-grow: 1; padding: 8px; border: 1px solid #ccc;" placeholder="Type your message...">
+                <button id="aiCoachChatSendButton" class="p-button p-component" style="margin-left: 10px; padding: 8px 15px;">Send</button>
+            </div>
+        `;
+        panelContentElement.appendChild(chatContainer);
+
+        const chatInput = document.getElementById('aiCoachChatInput');
+        const chatSendButton = document.getElementById('aiCoachChatSendButton');
+        const chatDisplay = document.getElementById('aiCoachChatDisplay');
+
+        function sendChatMessage() {
+            if (!chatInput || !chatDisplay) return;
+            const messageText = chatInput.value.trim();
+            if (messageText === '') return;
+
+            // Display user message
+            const userMessageElement = document.createElement('p');
+            userMessageElement.className = 'ai-chat-message ai-chat-message-user';
+            userMessageElement.textContent = `You: ${messageText}`;
+            chatDisplay.appendChild(userMessageElement);
+
+            chatInput.value = ''; // Clear input
+            chatDisplay.scrollTop = chatDisplay.scrollHeight; // Scroll to bottom
+
+            // Placeholder for LLM response
+            // In the future, this will involve an API call
+            setTimeout(() => {
+                const botMessageElement = document.createElement('p');
+                botMessageElement.className = 'ai-chat-message ai-chat-message-bot';
+                botMessageElement.innerHTML = `<em>AI Coach:</em> Thinking... (response for \"${messageText}\" will appear here)`;
+                chatDisplay.appendChild(botMessageElement);
+                chatDisplay.scrollTop = chatDisplay.scrollHeight; // Scroll to bottom
+            }, 500);
+        }
+
+        if (chatSendButton) {
+            chatSendButton.addEventListener('click', sendChatMessage);
+        }
+        if (chatInput) {
+            chatInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    sendChatMessage();
+                }
+            });
+        }
+        logAICoach("Chat interface added and event listeners set up.");
+    }
+
+    window.initializeAICoachLauncher = initializeAICoachLauncher;
+} 

@@ -1,0 +1,31 @@
+Data Analysis Questions:
+
+What are the most and least agreed-upon statements among students?
+How do students' responses vary across the five themes (Vision, Systems, Attitude, Effort, Practice)?
+Are there any noticeable correlations between students' attitudes and their reported levels of effort?
+Do students who exhibit strong organizational skills (e.g., Q2 and Q22) also report high confidence in academic ability (e.g., Q10)?
+Is there a significant difference in responses to Vision-related questions compared to Practice-related questions?
+What percentage of students agree or strongly agree with the growth mindset statement: "No matter who you are, you can change your intelligence" (Q5)?
+Which individual questions within the Attitude theme have the highest and lowest average scores?
+Are students who focus on effective revision strategies (e.g., Q7 and Q25) also confident in their ability to handle academic pressure (e.g., Q20)?
+How does the sentiment about long-term planning (e.g., Q1 and Q3) relate to students' confidence and coping mechanisms (e.g., Q20 and Q28)?
+What proportion of students demonstrate a balance between academic effort and self-perception as hard-working (e.g., Q9 and Q21)?
+Do students who report high confidence in academic ability (Q10) also indicate strong organizational skills (Q22) or effective study habits (Q6)?
+Is there a significant difference in responses between questions related to self-perception (e.g., Q9, Q8) and questions related to external practices like revision techniques (e.g., Q7, Q25)?
+How do responses to questions about managing pressure (e.g., Q20, Q28) vary across the different themes (e.g., Vision vs. Effort)?
+Are there any gender or demographic trends in responses, if such data is available, particularly in themes like Attitude or Practice?
+Which themes or specific questions show the highest variability in responses, indicating a range of perspectives among students?
+Are there any patterns in how students perceive the importance of education (Q29) in relation to their effort levels (e.g., Q6, Q21)?
+Do students who frequently engage in self-testing (Q7) report higher levels of confidence in their academic ability (Q10)?
+How do students’ responses to growth mindset statements (e.g., Q5, Q26) correlate with their overall academic confidence (e.g., Q10) and effort (e.g., Q21)?
+What is the relationship between students' ability to handle nerves during tests (Q28) and their reported use of study techniques like teaching others (Q23)?
+Are students who actively seek feedback (Q27) more likely to display positive views of themselves (Q8) or confidence in coping with school pressure (Q20)?
+Are there specific questions where student responses significantly deviate (positively or negatively) from the national average?
+Do students at this institution perform above or below the national benchmark in growth mindset indicators (e.g., Q5, Q26)?
+How does the distribution of scores for academic confidence (Q10) differ from the national benchmark?
+Are students in your dataset more or less likely than the national average to report effective use of study time (Q6)?
+In which areas (themes or specific questions) do your students exceed national benchmarks, and where do they fall short?
+What percentage of students in your data report high agreement (scores 4-5) on questions about planning and organization (Q2, Q22), and how does this compare to national statistics?
+Are there significant differences between your students' reported ability to handle academic pressure (Q20, Q28) and the national benchmark for these questions?
+Do your students exhibit stronger or weaker engagement with active revision strategies (e.g., Q7, Q25) compared to the national average?
+How do self-perception and attitudes towards intelligence (e.g., Q8, Q5) in your dataset align with national trends in these areas?

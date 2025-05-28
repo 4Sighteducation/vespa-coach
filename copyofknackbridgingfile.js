@@ -17,13 +17,13 @@
         'myAcademicProfile': {
   scenes: ['scene_43'], // Load on scene_43
   views: ['view_3046'],  // Specifically for view_3046
-  scriptUrl: 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/MyAcademicProfilePage2c.js', // Ensure this URL is correct and points to your script
+  scriptUrl: 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/MyAcademicProfilePage2d.js', // Ensure this URL is correct and points to your script
   configBuilder: (baseConfig, sceneKey, viewKey) => ({
     ...baseConfig, // Includes knackAppId, knackApiKey, debugMode, etc.
     appType: 'myAcademicProfile',
     sceneKey: sceneKey, // Will be 'scene_43' in this case
     viewKey: viewKey,   // Will be 'view_3046' in this case
-    elementSelector: '#view_3046 .kn-rich-text', // Target for rendering the profile
+    elementSelector: '#view_3046', // Target for rendering the profile
   }),
   configGlobalVar: 'MY_ACADEMIC_PROFILE_CONFIG', // Matches the global variable used in your script
   initializerFunctionName: 'initializeMyAcademicProfilePage' // Matches the function name in your script
@@ -32,7 +32,7 @@
         'reportProfiles': {
             scenes: ['scene_1095'],
             views: ['view_2776', 'view_3015'],
-            scriptUrl: 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/ReportProfiles2n.js',
+            scriptUrl: 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/ReportProfiles2w.js',
             configBuilder: (baseConfig, sceneKey, viewKey) => ({
                 ...baseConfig,
                 appType: 'reportProfiles',
@@ -40,8 +40,8 @@
                 sceneKey: sceneKey,
                 viewKey: viewKey,
                 elementSelectors: {
-                    reportContainer: '#view_2776 .kn-rich_text__content',
-                    profileContainer: '#view_3015 .kn-rich_text__content'
+                    reportContainer: '#view_2776',
+                    profileContainer: '#view_3015'
                 }
             }),
             configGlobalVar: 'REPORTPROFILE_CONFIG',
@@ -50,14 +50,14 @@
         'aiCoachLauncher': { // New entry for the AI Coach Launcher
             scenes: ['scene_1095'], // Same scene as reportProfiles
             views: ['view_3047'],   // The new rich text view
-            scriptUrl: 'https://raw.githubusercontent.com/4Sighteducation/vespa-coach/main/src/aiCoachLauncher1c.js', // Ensure this matches the actual filename on GitHub
+            scriptUrl: 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/aiCoachLauncher1p.js', // Ensure this matches the actual filename on GitHub
             configBuilder: (baseConfig, sceneKey, viewKey) => ({
                 ...baseConfig,
                 appType: 'aiCoachLauncher',
                 debugMode: true, // Enable debugging for aiCoachLauncher
                 sceneKey: sceneKey,
                 viewKey: viewKey, // Will be 'view_3047'
-                elementSelector: '#view_3047 .kn-rich_text__content', // Target for the button
+                elementSelector: '#view_3047', // Target for the button
                 aiCoachPanelId: 'aiCoachSlidePanel', // ID for the panel we'll create
                 aiCoachToggleButtonId: 'activateAICoachBtn', // ID for the toggle button
                 mainContentSelector: '#kn-scene_1095' // Selector for the main content area to resize

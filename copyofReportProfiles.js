@@ -6,7 +6,7 @@
 if (typeof window.REPORT_PROFILES_DEBUG_MODE === 'undefined') {
   window.REPORT_PROFILES_DEBUG_MODE = true; 
 }
-const DEBUG_MODE = window.REPORT_PROFILES_DEBUG_MODE;
+var DEBUG_MODE = window.REPORT_PROFILES_DEBUG_MODE; // CHANGED from const to var
 
 // Global config variable - will be set by loader
 // let REPORTPROFILE_CONFIG = null; // Moved to prevent re-declaration errors
