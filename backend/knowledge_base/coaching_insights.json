@@ -1,0 +1,2079 @@
+[
+  {"id": "divers_thrivers_loc",
+  "name": "Divers vs. Thrivers: Locus of Control",
+  "description": "Research from the University of Toronto highlights that language can indicate a student's locus of control. 'Divers' often use language reflecting an external locus (e.g., 'I deserve X grade', 'the test was unfair', 'I will receive a grade'), while 'Thrivers' use language reflecting an internal locus (e.g., 'I will earn X grade', 'I need to achieve X by doing Y').",
+  "implications_for_tutor": "When analyzing student comments or goals, note language patterns. If externalizing language is prevalent, it's a coaching opportunity to help the student shift towards an internal locus of control by discussing their agency, effort, and strategies. Ask questions like 'What steps can you take to achieve that grade?' or 'How can your effort influence that outcome?' rather than focusing on what they 'deserve' or will 'receive'.",
+  "keywords": ["locus of control", "language", "mindset", "motivation", "agency", "effort", "divers", "thrivers", "student comments", "goal setting", "deserve", "receive", "earn", "achieve"],
+  "derived_from_activity_id": "VI30",
+  "derived_from_activity_name": "Diver & Thriver Goals"
+},
+
+
+  {
+    "id": "insight_vi31",
+    "name": "Self-Reflection and Goal Setting",
+    "description": "Encouraging students to engage in self-reflection and goal setting can enhance their self-awareness, motivation, and decision-making skills.",
+    "implications_for_tutor": "Tutors can guide students through reflective questions to help them explore their interests, strengths, and aspirations. By discussing goals related to study and work, tutors can assist students in creating a roadmap for their academic and professional development.",
+    "keywords": [
+      "self-reflection",
+      "goal setting",
+      "self-awareness",
+      "motivation",
+      "decision-making",
+      "career aspirations",
+      "student development"
+    ],
+    "derived_from_activity_id": "VI31",
+    "derived_from_activity_name": "20 Questions"
+  },
+  {
+    "id": "insight_vi21",
+    "name": "Motivation Alignment",
+    "description": "Aligning personal motivations with academic goals and tasks can significantly impact student success and motivation.",
+    "implications_for_tutor": "Tutors can guide students in reflecting on how their motivations drive their actions and outcomes in academics. They can help students identify if their current goals align with their intrinsic motivations and adjust them if needed to increase motivation and success.",
+    "keywords": [
+      "motivation",
+      "alignment",
+      "goal-setting",
+      "intrinsic motivation",
+      "student success",
+      "self-reflection",
+      "academic motivation"
+    ],
+    "derived_from_activity_id": "VI21",
+    "derived_from_activity_name": "Motivation Diamond"
+  },
+  {
+    "id": "insight_ef1",
+    "name": "Self-Regulated Learning",
+    "description": "Self-regulated learning refers to the process where learners take control of their own learning through monitoring, regulating, and evaluating their cognitive processes. It involves setting goals, planning, self-assessment, and adapting strategies to enhance learning outcomes.",
+    "implications_for_tutor": "Tutors can guide students to reflect on their current study habits and encourage them to set specific proactive goals for improvement. They can help students develop metacognitive skills by asking questions that prompt self-assessment and reflection on the effectiveness of their study strategies.",
+    "keywords": [
+      "self-regulated learning",
+      "metacognition",
+      "goal setting",
+      "study habits",
+      "reflection",
+      "cognitive processes",
+      "learning strategies"
+    ],
+    "derived_from_activity_id": "EF1",
+    "derived_from_activity_name": "Proactive vs Reactive"
+  },
+  {
+    "id": "insight_vi22",
+    "name": "Problem-Centered Purpose",
+    "description": "Focusing on identifying and pursuing solutions to problems that resonate with personal interests can lead to a more fulfilling and purpose-driven life path.",
+    "implications_for_tutor": "When coaching students through activities like 'Personal Compass,' tutors can guide them to reflect on problems that fascinate them and discuss how solving these can shape their life journey. Tutors can ask students about the problems that spark their curiosity and how addressing them aligns with their sense of purpose.",
+    "keywords": [
+      "problem-solving",
+      "purpose-driven",
+      "intrinsic motivation",
+      "personal interests",
+      "life path",
+      "fulfillment",
+      "curiosity"
+    ],
+    "derived_from_activity_id": "VI22",
+    "derived_from_activity_name": "Personal Compass"
+  },
+  {
+    "id": "insight_ef32",
+    "name": "Effort Regulation and Goal Setting",
+    "description": "Effort regulation involves monitoring and adjusting one's level of effort to achieve academic goals, while goal setting provides a clear direction and motivation for learning tasks.",
+    "implications_for_tutor": "Tutors can help students develop self-awareness by discussing how they assess their effort levels and set realistic study goals. They can encourage students to reflect on their progress, adjust their effort as needed, and set specific, challenging yet achievable goals to enhance motivation and academic success.",
+    "keywords": [
+      "effort regulation",
+      "goal setting",
+      "self-awareness",
+      "motivation",
+      "academic success",
+      "self-regulated learning",
+      "study habits"
+    ],
+    "derived_from_activity_id": "EF32",
+    "derived_from_activity_name": "1-10 Scale"
+  },
+  {
+    "id": "insight_sy2",
+    "name": "Intrinsic Motivation and Personalized Learning",
+    "description": "Empowering students to take ownership of their learning by creating a personalized environment taps into intrinsic motivation, fostering engagement, interest, and focus in the learning process.",
+    "implications_for_tutor": "Tutors can encourage students to reflect on their intrinsic motivations for learning and guide them in designing personalized study environments that align with their interests. By discussing the importance of autonomy and personalization in learning, tutors can help students cultivate a sense of ownership and passion for their education.",
+    "keywords": [
+      "intrinsic motivation",
+      "personalized learning",
+      "student ownership",
+      "autonomy",
+      "engagement",
+      "interest",
+      "focus"
+    ],
+    "derived_from_activity_id": "SY2",
+    "derived_from_activity_name": "Night School"
+  },
+  {
+    "id": "insight_ef23",
+    "name": "Habit Formation and Reward",
+    "description": "Effort can be cultivated as a habit through repeated activities and routines, with positive reinforcement playing a crucial role in sustaining and strengthening this habit.",
+    "implications_for_tutor": "Tutors can guide students in setting up a structured routine that promotes consistent effort. They can discuss the importance of rewarding oneself for increased effort levels to reinforce the habit. Questions like 'How can we design your study schedule to incorporate regular effortful tasks?' or 'What rewards motivate you to maintain high levels of effort?' can be beneficial.",
+    "keywords": [
+      "habit formation",
+      "effort",
+      "routine",
+      "reward system",
+      "positive reinforcement",
+      "study habits",
+      "motivation"
+    ],
+    "derived_from_activity_id": "EF23",
+    "derived_from_activity_name": "Mission and Medal"
+  },
+  {
+    "id": "insight_at33",
+    "name": "Emotional Awareness and Acceptance",
+    "description": "Encouraging students to recognize, acknowledge, and accept their emotional responses to change fosters emotional intelligence, resilience, and adaptive coping mechanisms.",
+    "implications_for_tutor": "When coaching students through transitions like A level study, tutors can ask open-ended questions to help students identify and articulate their emotions. By validating these feelings and discussing strategies for managing them, tutors can support students in developing emotional awareness and acceptance, ultimately facilitating their adjustment to change.",
+    "keywords": [
+      "emotional awareness",
+      "emotional intelligence",
+      "resilience",
+      "coping mechanisms",
+      "adaptive behavior",
+      "change management",
+      "coaching",
+      "transition support"
+    ],
+    "derived_from_activity_id": "AT33",
+    "derived_from_activity_name": "Change Curve"
+  },
+  {
+    "id": "insight_vi3",
+    "name": "Self-Reflection and Goal Setting",
+    "description": "Encouraging students to engage in self-reflection and goal setting fosters personal growth, enhances decision-making skills, and promotes intrinsic motivation.",
+    "implications_for_tutor": "When coaching students through '20 More Questions' or similar activities, tutors can guide them in reflecting on their responses to identify patterns or themes that align with their values and aspirations. By discussing how these insights can inform short and long-term goals, tutors can help students develop a sense of purpose and direction.",
+    "keywords": [
+      "self-reflection",
+      "goal setting",
+      "personal growth",
+      "decision-making",
+      "intrinsic motivation",
+      "values",
+      "aspirations"
+    ],
+    "derived_from_activity_id": "VI3",
+    "derived_from_activity_name": "20 More Questions"
+  },
+  {
+    "id": "insight_vi34",
+    "name": "Goal Setting Theory in Action",
+    "description": "Goal Setting Theory posits that setting specific, challenging goals leads to higher performance and motivation. By differentiating between dreams and goals, reflecting on progress, and taking action towards achievable objectives, individuals can enhance their likelihood of success.",
+    "implications_for_tutor": "Tutors can guide students in setting specific, challenging goals based on their aspirations. They should encourage students to reflect on their progress regularly, identify obstacles, and adjust their strategies accordingly. By emphasizing actionable steps towards goals, tutors can help students stay motivated and focused on achieving desired outcomes.",
+    "keywords": [
+      "goal setting theory",
+      "dreams vs goals",
+      "reflection",
+      "progress monitoring",
+      "motivation",
+      "achievement",
+      "actionable steps"
+    ],
+    "derived_from_activity_id": "VI34",
+    "derived_from_activity_name": "Getting Dreams Done"
+  },
+  {
+    "id": "insight_at24",
+    "name": "Growth Mindset Development",
+    "description": "The concept of growth mindset, as proposed by Carol Dweck, emphasizes the belief that abilities can be developed through dedication and hard work, rather than being fixed traits. It involves embracing challenges, persisting in the face of setbacks, seeing effort as the path to mastery, and learning from criticism.",
+    "implications_for_tutor": "Tutors can guide students to recognize their beliefs about intelligence and abilities, encouraging them to shift towards a growth mindset by praising efforts, providing constructive feedback, and highlighting the power of 'yet' (e.g., 'I can't do this yet'). Tutors can ask students to reflect on times they exhibited a growth mindset and discuss strategies for maintaining this perspective during challenges.",
+    "keywords": [
+      "growth mindset",
+      "Carol Dweck",
+      "learning attitude",
+      "effort",
+      "persistence",
+      "feedback",
+      "intelligence beliefs"
+    ],
+    "derived_from_activity_id": "AT24",
+    "derived_from_activity_name": "Growth Mindset"
+  },
+  {
+    "id": "insight_at4",
+    "name": "Achievement Motivation Theory",
+    "description": "Achievement Motivation Theory focuses on individuals' tendencies to strive for success and avoid failure. It suggests that people are motivated by the desire to achieve success (Need for Achievement - NAch) or the fear of failure (Need to Avoid Failure - NAF).",
+    "implications_for_tutor": "Tutors can use Achievement Motivation Theory to help students understand their own motivations and behaviors when facing challenges. They can ask students reflective questions to identify whether they lean more towards NAch or NAF tendencies and guide them in adopting strategies aligned with a growth mindset to enhance their academic performance.",
+    "keywords": [
+      "achievement motivation",
+      "success",
+      "failure avoidance",
+      "growth mindset",
+      "self-awareness",
+      "student motivation",
+      "performance orientation"
+    ],
+    "derived_from_activity_id": "AT4",
+    "derived_from_activity_name": "NAF vs NACH"
+  },
+  {
+    "id": "insight_vi25",
+    "name": "Goal Setting Theory and Self-Regulated Learning",
+    "description": "Goal setting theory emphasizes setting specific and challenging goals to enhance motivation and performance, while self-regulated learning involves monitoring progress, identifying obstacles, and seeking support to achieve those goals.",
+    "implications_for_tutor": "Tutors can guide students in setting specific, challenging goals aligned with their values and interests. They can help students break down goals into manageable steps, monitor progress, reflect on obstacles, and seek support when needed. Tutors can also encourage students to visualize their progress and celebrate successes to maintain motivation.",
+    "keywords": [
+      "goal setting theory",
+      "self-regulated learning",
+      "motivation",
+      "performance",
+      "goal clarity",
+      "progress monitoring",
+      "support seeking",
+      "visualization"
+    ],
+    "derived_from_activity_id": "VI25",
+    "derived_from_activity_name": "The Roadmap"
+  },
+  {
+    "id": "insight_at35",
+    "name": "Social Influence and Peer Relationships",
+    "description": "The educational activity leverages the psychological principle of social influence, highlighting the impact of peer relationships on attitudes, behaviors, and academic performance.",
+    "implications_for_tutor": "Tutors can guide students to reflect on how their peers influence their mindset and academic success. By discussing the qualities of supportive relationships and encouraging students to surround themselves with positive influences, tutors can help students proactively shape their social circle for improved well-being and academic outcomes.",
+    "keywords": [
+      "social influence",
+      "peer relationships",
+      "support system",
+      "positive influences",
+      "academic performance",
+      "mindset",
+      "well-being"
+    ],
+    "derived_from_activity_id": "AT35",
+    "derived_from_activity_name": "Vampire Test"
+  },
+  {
+    "id": "insight_pr5",
+    "name": "Metacognitive Exam Preparation",
+    "description": "Encouraging students to understand and plan for the cognitive processes involved in exam preparation, including recognizing different types of exam questions and the command verbs associated with them, can enhance their exam performance and reduce anxiety.",
+    "implications_for_tutor": "Tutors can guide students to reflect on their exam preparation strategies, helping them categorize exam questions based on command verbs and practice applying appropriate strategies for each type. By discussing the importance of metacognition in exam readiness, tutors can empower students to take a proactive approach to studying and feel more confident in their exam-taking abilities.",
+    "keywords": [
+      "metacognition",
+      "exam preparation",
+      "cognitive processes",
+      "command verbs",
+      "categorization",
+      "anxiety reduction",
+      "study strategies"
+    ],
+    "derived_from_activity_id": "PR5",
+    "derived_from_activity_name": "The Command Verb Table"
+  },
+  {
+    "id": "insight_sy26",
+    "name": "Time Management and Self-Regulation",
+    "description": "Effective time management and self-regulation skills are essential for academic success and well-being. Reflecting on one's schedule, identifying time commitments, and making strategic changes can help students balance their workload and reduce stress.",
+    "implications_for_tutor": "When coaching students through the 'Weekly Planner' activity, tutors can guide them in reflecting on how they currently manage their time and commitments. Tutors can help students set realistic goals, prioritize tasks, and develop strategies to improve self-regulation. By discussing the importance of balance and self-care, tutors can empower students to take control of their schedules and academic performance.",
+    "keywords": [
+      "time management",
+      "self-regulation",
+      "reflection",
+      "goal setting",
+      "stress management",
+      "workload balance",
+      "academic performance"
+    ],
+    "derived_from_activity_id": "SY26",
+    "derived_from_activity_name": "Weekly Planner"
+  },
+  {
+    "id": "insight_ef36",
+    "name": "Habit Formation for Behavior Change",
+    "description": "Utilizing the principles of habit formation, including reminders, routines, and rewards, can facilitate behavior change and the establishment of positive study habits.",
+    "implications_for_tutor": "Tutors can guide students in identifying triggers, designing routines, and defining rewards to create new study habits effectively. They can explore with students how consistent practice of these habits can lead to long-term positive outcomes and academic success.",
+    "keywords": [
+      "habit formation",
+      "behavior change",
+      "positive habits",
+      "reminders",
+      "routines",
+      "rewards",
+      "academic success"
+    ],
+    "derived_from_activity_id": "EF36",
+    "derived_from_activity_name": "3R's of Habit"
+  },
+  {
+    "id": "insight_sy6",
+    "name": "Active Note-Taking and Elaborative Encoding",
+    "description": "Engaging in active note-taking processes, such as summarizing, questioning, and elaborating on the material, enhances learning through elaborative encoding, where new information is linked to existing knowledge for better retention and understanding.",
+    "implications_for_tutor": "Tutors can guide students to actively process information during note-taking by asking them to summarize key points, generate questions, or connect new concepts with prior knowledge. By discussing the benefits of elaborative encoding and how it strengthens memory retrieval, tutors can motivate students to adopt these strategies consistently.",
+    "keywords": [
+      "active learning",
+      "note-taking strategies",
+      "elaborative encoding",
+      "information processing",
+      "memory retention",
+      "cognitive engagement",
+      "knowledge integration"
+    ],
+    "derived_from_activity_id": "SY6",
+    "derived_from_activity_name": "Cornell Notes"
+  },
+  {
+    "id": "insight_vi27",
+    "name": "Goal Setting Theory in Practice",
+    "description": "Goal Setting Theory emphasizes the importance of setting specific and achievable goals to enhance motivation and success. By breaking down long-term goals into smaller actionable steps, individuals can maintain focus, track progress, and increase their likelihood of goal attainment.",
+    "implications_for_tutor": "Tutors can guide students in setting SMART (Specific, Measurable, Achievable, Relevant, Time-bound) goals and breaking them down into manageable tasks. Through regular check-ins, tutors can help students reflect on their progress, adjust goals if needed, and celebrate small wins to maintain motivation and momentum.",
+    "keywords": [
+      "goal setting theory",
+      "SMART goals",
+      "motivation",
+      "progress tracking",
+      "task breakdown",
+      "achievement",
+      "success mindset"
+    ],
+    "derived_from_activity_id": "VI27",
+    "derived_from_activity_name": "Rule of Three"
+  },
+  {
+    "id": "insight_pr37",
+    "name": "Effective Revision Strategies",
+    "description": "Utilizing a combination of content techniques, skills techniques, and feedback techniques in revision can significantly impact exam performance and lead to better outcomes, even with reduced study hours.",
+    "implications_for_tutor": "Tutors can guide students in assessing their current revision practices, encouraging them to balance content review, skill development, and feedback incorporation. They can ask students to reflect on how they currently revise, allocate time to each technique, and consider the effectiveness of their approach in optimizing learning outcomes.",
+    "keywords": [
+      "revision strategies",
+      "content techniques",
+      "skills techniques",
+      "feedback techniques",
+      "academic performance",
+      "study habits",
+      "active learning"
+    ],
+    "derived_from_activity_id": "PR37",
+    "derived_from_activity_name": "Revision Questionnaire"
+  },
+  {
+    "id": "insight_sy7",
+    "name": "Visual Task Management and Cognitive Organization",
+    "description": "Utilizing visual aids like task boards to organize pending, doing, and done tasks aligns with cognitive psychology principles related to memory, attention, and visual learning strategies.",
+    "implications_for_tutor": "Tutors can discuss with students the benefits of visually organizing tasks and how it can enhance memory retention and task prioritization. They can guide students in creating their own visual task management systems tailored to their learning preferences and workload, fostering better organization and reduced stress.",
+    "keywords": [
+      "visual aids",
+      "task management",
+      "cognitive psychology",
+      "memory retention",
+      "attention",
+      "visual learning",
+      "organization strategies"
+    ],
+    "derived_from_activity_id": "SY7",
+    "derived_from_activity_name": "Pending, Doing, Done"
+  },
+  {
+    "id": "insight_sy38",
+    "name": "Chronobiology and Peak Brain Efficiency",
+    "description": "Leveraging the knowledge of the body's natural rhythms and peak cognitive functioning times can optimize learning and productivity. Understanding how the brain's efficiency fluctuates throughout the day can help individuals strategically plan tasks and activities.",
+    "implications_for_tutor": "When coaching students, tutors can discuss the concept of chronobiology and how the brain functions optimally at certain times of the day. Tutors can encourage students to align their most challenging tasks during their peak brain efficiency periods, such as the morning hours, to enhance learning and performance.",
+    "keywords": [
+      "chronobiology",
+      "peak brain efficiency",
+      "cognitive functioning",
+      "circadian rhythms",
+      "learning optimization",
+      "productivity",
+      "time management"
+    ],
+    "derived_from_activity_id": "SY38",
+    "derived_from_activity_name": "Breakfast Club"
+  },
+  {
+    "id": "insight_sy28",
+    "name": "Task Chunking and Goal Setting Theory",
+    "description": "Breaking down tasks into smaller steps (chunking) aligns with the psychological principle of chunking in cognitive psychology and the educational theory of goal setting. Setting milestones and seeking help are strategies supported by social cognitive theory, enhancing planning, time management, and collaboration skills.",
+    "implications_for_tutor": "When coaching a student, the tutor can guide them in chunking tasks into manageable steps and setting specific goals to track progress. By discussing the importance of seeking support and celebrating milestones, the tutor can foster a sense of achievement and accountability.",
+    "keywords": [
+      "task chunking",
+      "goal setting theory",
+      "milestone setting",
+      "seeking help",
+      "planning skills",
+      "time management",
+      "collaboration"
+    ],
+    "derived_from_activity_id": "SY28",
+    "derived_from_activity_name": "Chunking Steps"
+  },
+  {
+    "id": "insight_sy38",
+    "name": "Chronobiology of Learning",
+    "description": "Understanding how cognitive abilities and self-control vary throughout the day based on chronobiological rhythms can help optimize learning and productivity.",
+    "implications_for_tutor": "Tutors can discuss with students the importance of aligning their study habits with their peak cognitive periods, such as the morning, to enhance learning efficiency. They can encourage students to reflect on their daily routines and experiment with adjusting study sessions to capitalize on optimal brain activity times.",
+    "keywords": [
+      "chronobiology",
+      "circadian rhythms",
+      "cognitive performance",
+      "peak brain activity",
+      "time management",
+      "learning efficiency",
+      "self-control"
+    ],
+    "derived_from_activity_id": "SY38",
+    "derived_from_activity_name": "S2-The Breakfast Club"
+  },
+  {
+    "id": "insight_vi8",
+    "name": "Career Exploration and Self-Efficacy",
+    "description": "Engaging in real-world career exploration activities, such as seeking summer jobs, can enhance students' self-efficacy beliefs and foster a sense of agency and confidence in their ability to pursue and attain their career goals.",
+    "implications_for_tutor": "Tutors can encourage students to reflect on their experiences during the activity, discussing how facing challenges and making decisions in job-seeking situations can contribute to their belief in their own capabilities. By asking students to identify skills they have developed and areas where they have grown, tutors can help them recognize their progress and build a positive self-perception.",
+    "keywords": [
+      "career exploration",
+      "self-efficacy",
+      "agency",
+      "confidence",
+      "goal pursuit",
+      "decision-making",
+      "reflection"
+    ],
+    "derived_from_activity_id": "VI8",
+    "derived_from_activity_name": "Sweet and Sour Summers"
+  },
+  {
+    "id": "insight_vi29",
+    "name": "Development of Grit",
+    "description": "The development of grit, defined as passion and perseverance for long-term goals, is essential for achieving success and overcoming challenges.",
+    "implications_for_tutor": "Tutors can guide students in reflecting on past experiences where they demonstrated grit and help them identify strategies to cultivate grit in areas where they may feel less persistent. They can discuss the importance of setting long-term goals, maintaining passion, and persevering in the face of obstacles to foster grit.",
+    "keywords": [
+      "grit development",
+      "passion",
+      "perseverance",
+      "long-term goals",
+      "overcoming challenges",
+      "resilience",
+      "goal setting"
+    ],
+    "derived_from_activity_id": "VI29",
+    "derived_from_activity_name": "Grit"
+  },
+  {
+    "id": "insight_sy39",
+    "name": "Task Prioritization and Energy Management",
+    "description": "Task prioritization involves organizing tasks based on importance and urgency, while energy management focuses on allocating effort effectively to tasks. This helps individuals optimize productivity and achieve goals efficiently.",
+    "implications_for_tutor": "When coaching a student using the 'Energy Line' activity, tutors can guide them in reflecting on the relationship between task importance, urgency, and the energy required for completion. They can ask students to consider how aligning energy levels with task priorities can lead to better time management and productivity. Additionally, tutors can help students explore strategies for balancing high-energy tasks with lower-energy tasks to maintain motivation and prevent burnout.",
+    "keywords": [
+      "task prioritization",
+      "time management",
+      "energy allocation",
+      "productivity",
+      "goal achievement",
+      "task management",
+      "motivation"
+    ],
+    "derived_from_activity_id": "SY39",
+    "derived_from_activity_name": "Energy Line"
+  },
+  {
+    "id": "insight_ef9",
+    "name": "Goal Setting and Academic Positioning",
+    "description": "Encouraging students to set specific academic goals and reflect on their current position relative to peers can enhance self-regulation and motivation for academic improvement.",
+    "implications_for_tutor": "Tutors can guide students in setting specific, attainable goals based on their academic position. They can help students reflect on their strengths and areas for growth, fostering a sense of agency and direction in their learning journey.",
+    "keywords": [
+      "goal setting",
+      "academic performance",
+      "self-reflection",
+      "academic positioning",
+      "self-regulation",
+      "motivation",
+      "peer comparison"
+    ],
+    "derived_from_activity_id": "EF9",
+    "derived_from_activity_name": "The Peleton"
+  },
+  {
+    "id": "insight_at310",
+    "name": "Cognitive Restructuring for Self-Talk",
+    "description": "Cognitive restructuring involves identifying and challenging negative self-talk patterns to improve self-confidence and promote a positive mindset.",
+    "implications_for_tutor": "When coaching a student through 'Kill Your Critic' or similar activities, tutors can guide students in recognizing their inner critic's voice, questioning its validity, and reframing negative thoughts into more positive and realistic perspectives. Tutors can encourage students to practice positive affirmations and self-compassion to counteract self-doubt and build resilience.",
+    "keywords": [
+      "cognitive restructuring",
+      "self-talk",
+      "negative thought patterns",
+      "self-confidence",
+      "positive mindset",
+      "inner critic",
+      "cognitive-behavioral techniques"
+    ],
+    "derived_from_activity_id": "AT310",
+    "derived_from_activity_name": "Kill your Critic"
+  },
+  {
+    "id": "insight_pr210",
+    "name": "Developing Grit and Resilience",
+    "description": "Fostering grit and resilience, as seen through perseverance and passion for long-term goals, is crucial for academic success and personal growth.",
+    "implications_for_tutor": "Tutors can guide students in reflecting on challenges they've overcome and how they can apply similar strategies to independent learning tasks. By discussing the importance of perseverance and resilience in academic pursuits, tutors can help students develop a growth mindset towards overcoming obstacles.",
+    "keywords": [
+      "grit",
+      "resilience",
+      "perseverance",
+      "growth mindset",
+      "goal pursuit",
+      "academic success",
+      "passion"
+    ],
+    "derived_from_activity_id": "PR210",
+    "derived_from_activity_name": "Building Independent Learning"
+  },
+  {
+    "id": "insight_ef10",
+    "name": "Distraction Mitigation Strategies",
+    "description": "Utilizing techniques to recognize and address discomfort as a precursor to distraction, identifying external and internal triggers of distraction, and establishing indistractable spaces and routines can enhance focus and productivity.",
+    "implications_for_tutor": "When coaching students, tutors can guide them to reflect on their discomfort triggers and distractions, helping them create personalized strategies to mitigate these challenges. Tutors can also assist students in setting up conducive study environments and routines that promote sustained attention and minimize interruptions.",
+    "keywords": [
+      "distraction",
+      "discomfort recognition",
+      "focus",
+      "productivity",
+      "study environment",
+      "routines",
+      "attention management"
+    ],
+    "derived_from_activity_id": "EF10",
+    "derived_from_activity_name": "Indisctractible"
+  },
+  {
+    "id": "insight_vi311",
+    "name": "Vision and Goal Setting",
+    "description": "Creating a vision of one's ideal self and setting specific goals based on that vision can enhance self-reflection, self-awareness, and motivation towards personal growth.",
+    "implications_for_tutor": "When coaching students, tutors can guide them to visualize their future selves and articulate specific goals aligned with their values and aspirations. Tutors can help students break down these goals into actionable steps and regularly reflect on their progress to maintain motivation and focus.",
+    "keywords": [
+      "vision",
+      "goal setting",
+      "self-reflection",
+      "self-awareness",
+      "motivation",
+      "personal growth",
+      "values",
+      "aspirations"
+    ],
+    "derived_from_activity_id": "VI311",
+    "derived_from_activity_name": "21st Birthday"
+  },
+  {
+    "id": "insight_sy211",
+    "name": "Attentional Control Theory",
+    "description": "Attentional Control Theory suggests that individuals have limited cognitive resources for attention and that these resources can be flexibly allocated based on task demands and mental states.",
+    "implications_for_tutor": "When coaching students using the '3 Types of Attention' activity, tutors can help students recognize their current mental state and tailor task selection accordingly. Tutors can guide students to reflect on how they allocate attention, manage cognitive resources, and adjust task priorities based on their level of focus and energy.",
+    "keywords": [
+      "attentional control",
+      "cognitive resources",
+      "task prioritization",
+      "mental state",
+      "focus",
+      "energy management",
+      "cognitive flexibility"
+    ],
+    "derived_from_activity_id": "SY211",
+    "derived_from_activity_name": "3 Types of Attention"
+  },
+  {
+    "id": "insight_vi11",
+    "name": "Ikigai - Purpose Discovery Framework",
+    "description": "The 'Ikigai - Purpose Discovery Framework' encourages individuals to explore their passions, strengths, societal needs, and financial viability to find a fulfilling sense of purpose and direction in their personal and professional lives.",
+    "implications_for_tutor": "Tutors can guide students through self-reflection activities like 'Ikigai' to help them identify their core values, strengths, and interests. By discussing how these elements intersect, tutors can assist students in aligning their aspirations with meaningful career paths and life goals. Tutors should ask open-ended questions to prompt deep reflection and provide feedback on the connections students make between their internal desires and external opportunities.",
+    "keywords": [
+      "Ikigai",
+      "purpose discovery",
+      "self-reflection",
+      "strengths exploration",
+      "values alignment",
+      "career development",
+      "vocational psychology"
+    ],
+    "derived_from_activity_id": "VI11",
+    "derived_from_activity_name": "Ikigai"
+  },
+  {
+    "id": "insight_at212",
+    "name": "Social Support Networks",
+    "description": "Utilizing social support networks, seeking help, and building a team of individuals for advice and assistance are crucial for academic and personal success.",
+    "implications_for_tutor": "Tutors can encourage students to reflect on their existing support network, identify key individuals who can offer support, and discuss strategies to effectively leverage this network when facing challenges. Tutors can also explore the role of social support in motivation, resilience, and overall well-being.",
+    "keywords": [
+      "social support",
+      "networking",
+      "team building",
+      "advice seeking",
+      "academic success",
+      "motivation",
+      "resilience"
+    ],
+    "derived_from_activity_id": "AT212",
+    "derived_from_activity_name": "Network Audits"
+  },
+  {
+    "id": "insight_ef312",
+    "name": "Task Prioritization and Importance",
+    "description": "Prioritizing tasks based on importance and focusing effort on high-impact activities are key strategies for effective time management and productivity.",
+    "implications_for_tutor": "When coaching a student, the tutor can guide them to identify tasks based on importance and difficulty, encouraging them to tackle the most critical ones first. The tutor can discuss the concept of 'eating the ugliest frog' to emphasize the benefits of addressing challenging tasks early for long-term success.",
+    "keywords": [
+      "task prioritization",
+      "importance",
+      "effort allocation",
+      "time management",
+      "productivity",
+      "task difficulty",
+      "goal setting"
+    ],
+    "derived_from_activity_id": "EF312",
+    "derived_from_activity_name": "Frogs & Bannisters"
+  },
+  {
+    "id": "insight_at12",
+    "name": "Structured Problem-Solving",
+    "description": "Utilizing a systematic approach like the Observe, Decide, Act (O.D.A.) model fosters effective problem-solving skills by guiding students through critical thinking processes.",
+    "implications_for_tutor": "Tutors can encourage students to apply structured problem-solving by asking guiding questions in each phase of O.D.A. For instance, they can prompt students to reflect on how they observe a problem, evaluate their decision-making process, and analyze the outcomes of their actions. This approach helps students develop a methodical problem-solving strategy they can apply across different academic challenges.",
+    "keywords": [
+      "problem-solving",
+      "critical thinking",
+      "structured approach",
+      "decision-making",
+      "problem analysis",
+      "guided questioning",
+      "academic challenges"
+    ],
+    "derived_from_activity_id": "AT12",
+    "derived_from_activity_name": "ODA"
+  },
+  {
+    "id": "insight_ef313",
+    "name": "Overcoming Psychological Blockers",
+    "description": "Addressing psychological barriers that hinder productivity, such as self-sabotage and negative thought patterns, is crucial for academic success. Recognizing and breaking down these blockers aligns with cognitive-behavioral principles and motivation theory.",
+    "implications_for_tutor": "Tutors can guide students in identifying their specific blockers by asking reflective questions like 'What thoughts or behaviors tend to derail your focus?' They can then help students develop strategies to challenge and reframe these patterns, fostering self-awareness and improved productivity.",
+    "keywords": [
+      "psychological blockers",
+      "self-sabotage",
+      "cognitive-behavioral principles",
+      "motivation theory",
+      "productivity",
+      "self-awareness",
+      "reframing"
+    ],
+    "derived_from_activity_id": "EF313",
+    "derived_from_activity_name": "Recognising your Blockers"
+  },
+  {
+    "id": "insight_ef213",
+    "name": "Confronting Reality for Growth",
+    "description": "Confronting reality involves acknowledging challenges and seeking support to address underlying issues, leading to personal growth and improved outcomes.",
+    "implications_for_tutor": "Tutors can guide students to honestly assess their situation, identify obstacles, and seek assistance when necessary. Encouraging students to set goals, assign accountability, and utilize their support network can foster self-awareness, resilience, and proactive problem-solving.",
+    "keywords": [
+      "confronting reality",
+      "growth mindset",
+      "problem-solving",
+      "goal setting",
+      "self-awareness",
+      "support network",
+      "resilience"
+    ],
+    "derived_from_activity_id": "EF213",
+    "derived_from_activity_name": "Looking Under Rocks"
+  },
+  {
+    "id": "insight_ef13",
+    "name": "Deep Work and Attention Management",
+    "description": "Deep work, as proposed by Cal Newport, emphasizes focused, undistracted work on cognitively demanding tasks, while attention management involves controlling distractions and maintaining sustained focus. These concepts are crucial for enhancing productivity and cognitive performance.",
+    "implications_for_tutor": "Tutors can guide students in understanding the importance of deep work for achieving high-quality outcomes and the significance of managing attention to minimize disruption costs. They can help students reflect on their current study habits, identify distractions, and create strategies to cultivate deep work practices, such as setting specific study goals, establishing time blocks for focused work, and creating distraction-free environments.",
+    "keywords": [
+      "deep work",
+      "attention management",
+      "focus",
+      "productivity",
+      "cognitive performance",
+      "distractions",
+      "study habits",
+      "task prioritization"
+    ],
+    "derived_from_activity_id": "EF13",
+    "derived_from_activity_name": "Disruption Cost vs Deep Work"
+  },
+  {
+    "id": "insight_sy314",
+    "name": "Spaced Learning",
+    "description": "Spaced learning is a cognitive phenomenon where information is better retained and understood when it is reviewed repeatedly over time, rather than in one large block. This principle is based on the spacing effect, which suggests that distributing learning sessions leads to improved long-term retention.",
+    "implications_for_tutor": "When coaching a student, tutors can emphasize the benefits of spaced learning by discussing how regular review sessions can enhance memory and comprehension. They can encourage students to create a study schedule that includes spaced review sessions for different subjects. Tutors can also help students reflect on their learning process and identify ways to integrate spaced learning into their study routines.",
+    "keywords": [
+      "spaced learning",
+      "spacing effect",
+      "memory retention",
+      "study habits",
+      "review sessions",
+      "cognitive psychology",
+      "learning strategies"
+    ],
+    "derived_from_activity_id": "SY314",
+    "derived_from_activity_name": "Snack Don't Binge"
+  },
+  {
+    "id": "insight_pr214",
+    "name": "Metacognition and Self-Regulated Learning",
+    "description": "Encouraging students to reflect on and regulate their own learning processes (metacognition) leads to improved academic performance and self-awareness.",
+    "implications_for_tutor": "Tutors can guide students in understanding their study habits and decision-making processes through discussions about the questionnaire responses. They can help students set specific, achievable goals based on their reflections and monitor progress, fostering self-regulated learning skills.",
+    "keywords": [
+      "metacognition",
+      "self-regulated learning",
+      "study habits",
+      "goal setting",
+      "reflection",
+      "academic performance",
+      "self-awareness"
+    ],
+    "derived_from_activity_id": "PR214",
+    "derived_from_activity_name": "The Practice Questionnaire"
+  },
+  {
+    "id": "insight_sy14",
+    "name": "Task Categorization and Balance",
+    "description": "Categorizing tasks into Have to, Ought to, and Want to zones helps students prioritize based on impact and maintain a healthy balance between essential tasks, future goals, and personal well-being.",
+    "implications_for_tutor": "When coaching students, tutors can guide them in categorizing their tasks into these zones to understand priorities and balance. Tutors can ask questions like 'How do you feel about the tasks in each zone?' and 'How can you ensure a balance between Have to, Ought to, and Want to tasks?' to foster self-awareness and effective task management.",
+    "keywords": [
+      "task categorization",
+      "task prioritization",
+      "balance",
+      "time management",
+      "well-being",
+      "goal setting",
+      "task impact"
+    ],
+    "derived_from_activity_id": "SY14",
+    "derived_from_activity_name": "Have to, Ought to, Want to"
+  },
+  {
+    "id": "insight_vi315",
+    "name": "Ideal Self Reflection",
+    "description": "Encouraging students to reflect on qualities they admire in others to envision their ideal self aligns with self-concept theory and positive psychology principles.",
+    "implications_for_tutor": "Tutors can guide students in exploring how the qualities they admire in others reflect their own values and aspirations. They can facilitate discussions on how envisioning their ideal self can motivate goal setting and personal development.",
+    "keywords": [
+      "ideal self",
+      "self-concept",
+      "positive psychology",
+      "reflection",
+      "goal setting",
+      "personal development",
+      "motivation"
+    ],
+    "derived_from_activity_id": "VI315",
+    "derived_from_activity_name": "Fix your Dashboard"
+  },
+  {
+    "id": "insight_ef215",
+    "name": "Goal Setting Theory in Study Habits",
+    "description": "Goal Setting Theory emphasizes the importance of setting specific, challenging, and measurable goals to enhance motivation, focus, and productivity in achieving desired outcomes.",
+    "implications_for_tutor": "Tutors can guide students in setting specific study goals using the '3 How's' framework, helping them break down tasks into manageable steps, determine study durations, and establish criteria for measuring progress. By discussing the importance of clear objectives and providing feedback on goal achievement, tutors can support students in developing effective study habits aligned with their learning goals.",
+    "keywords": [
+      "goal setting theory",
+      "study habits",
+      "motivation",
+      "productivity",
+      "task specificity",
+      "feedback",
+      "study goals"
+    ],
+    "derived_from_activity_id": "EF215",
+    "derived_from_activity_name": "The 3 How's of Independent Work"
+  },
+  {
+    "id": "insight_vi15",
+    "name": "Intrinsic Motivation and Job Satisfaction",
+    "description": "Intrinsic motivation, driven by personal values, interests, and job preferences beyond monetary rewards, plays a significant role in job satisfaction and fulfillment.",
+    "implications_for_tutor": "Tutors can guide students to reflect on their intrinsic motivators and values in career choices, emphasizing the importance of aligning personal preferences with work environments. They can explore how intrinsic motivation can lead to sustained job satisfaction and engagement, even when monetary compensation is not the primary factor.",
+    "keywords": [
+      "intrinsic motivation",
+      "job satisfaction",
+      "personal values",
+      "interests",
+      "motivation theories",
+      "work environment",
+      "career choices"
+    ],
+    "derived_from_activity_id": "VI15",
+    "derived_from_activity_name": "Question of Money"
+  },
+  {
+    "id": "insight_pr216",
+    "name": "Active Recall and Teaching",
+    "description": "Active recall, particularly through teaching others or oneself, is a powerful revision strategy that enhances memory retention and promotes deeper understanding of concepts.",
+    "implications_for_tutor": "Tutors can encourage students to practice active recall by teaching a concept to themselves or others, emphasizing the benefits of this strategy in improving exam preparation. They can prompt students to explain concepts in their own words, ask probing questions to stimulate recall, and provide opportunities for students to teach back the material to solidify learning.",
+    "keywords": [
+      "active recall",
+      "teaching",
+      "revision strategy",
+      "memory retention",
+      "deeper understanding",
+      "exam preparation",
+      "explanation"
+    ],
+    "derived_from_activity_id": "PR216",
+    "derived_from_activity_name": "Time to Teach"
+  },
+  {
+    "id": "insight_pr316",
+    "name": "Learning from Mistakes and Metacognition",
+    "description": "Encouraging students to actively engage with their mistakes, reflect on the underlying reasons, and develop strategies for improvement promotes metacognitive awareness and enhances learning outcomes.",
+    "implications_for_tutor": "Tutors can guide students to reflect on their mistakes by asking questions like 'What led to this error?' and 'How can you prevent similar mistakes in the future?' Encouraging students to categorize errors and create action plans fosters metacognitive skills, self-regulation, and a growth mindset.",
+    "keywords": [
+      "learning from mistakes",
+      "metacognition",
+      "error analysis",
+      "reflection",
+      "growth mindset",
+      "self-regulation",
+      "cognitive strategies"
+    ],
+    "derived_from_activity_id": "PR316",
+    "derived_from_activity_name": "Learn from Mistakes"
+  },
+  {
+    "id": "insight_at16",
+    "name": "Healthy Self-Comparison for Well-Being",
+    "description": "Utilizing self-comparison in a constructive manner by focusing on comparing oneself to less fortunate individuals or one's own progress can positively impact well-being, motivation, and self-reflection.",
+    "implications_for_tutor": "When coaching students, tutors can guide them to reflect on how they compare themselves to others and encourage them to shift their focus towards comparing their progress or circumstances to less fortunate individuals. Tutors can ask questions that prompt students to consider their achievements, upcoming challenges, ways to help others, and how these reflections influence their mindset and motivation.",
+    "keywords": [
+      "self-comparison",
+      "well-being",
+      "motivation",
+      "self-reflection",
+      "gratitude",
+      "progress evaluation",
+      "mindset"
+    ],
+    "derived_from_activity_id": "AT16",
+    "derived_from_activity_name": "Check Ahead, Check Back"
+  },
+  {
+    "id": "insight_vi217",
+    "name": "Setting Personal Bests for Academic Improvement",
+    "description": "Setting specific and challenging personal best (PB) targets can enhance academic performance by motivating students to surpass their previous achievements in a manageable and stimulating manner.",
+    "implications_for_tutor": "Tutors can guide students in setting PB targets by helping them define specific goals, encouraging them to challenge themselves appropriately, and supporting them in maintaining a growth mindset towards learning and progress. Questions like 'What specific achievement do you aim for?' and 'How can you challenge yourself without feeling overwhelmed?' can facilitate discussions around setting PBs effectively.",
+    "keywords": [
+      "personal best",
+      "academic performance",
+      "goal setting",
+      "motivation",
+      "growth mindset",
+      "progress monitoring",
+      "learning challenges"
+    ],
+    "derived_from_activity_id": "VI217",
+    "derived_from_activity_name": "Setting a Personal Best"
+  },
+  {
+    "id": "insight_ef317",
+    "name": "Self-Talk in Second/Third Person",
+    "description": "Using self-talk in the second or third person, as supported by research, can be a powerful method to improve self-perception, habits, and efforts.",
+    "implications_for_tutor": "When coaching students, tutors can introduce the concept of using second or third person self-talk to enhance motivation and productivity. Tutors can guide students to reflect on their inner dialogue and explore how changing the narrative perspective can impact their mindset and behaviors positively.",
+    "keywords": [
+      "self-talk",
+      "self-perception",
+      "psychological perspective",
+      "motivation",
+      "habit formation",
+      "mindset shift",
+      "coaching",
+      "inner dialogue"
+    ],
+    "derived_from_activity_id": "EF317",
+    "derived_from_activity_name": "Inner Storytelling"
+  },
+  {
+    "id": "insight_ef17",
+    "name": "Gamification and Goal-Setting",
+    "description": "Utilizing game elements and setting specific objectives can enhance motivation, engagement, and persistence in students when facing challenging tasks.",
+    "implications_for_tutor": "Tutors can encourage students to set clear goals, create a gamified approach to learning, and tie rewards or celebrations to task completion. They can inquire about students' progress towards their goals, discuss strategies for maintaining motivation, and explore how gamification can make learning more enjoyable and effective.",
+    "keywords": [
+      "gamification",
+      "goal-setting",
+      "motivation",
+      "engagement",
+      "persistence",
+      "educational games",
+      "task completion",
+      "rewards"
+    ],
+    "derived_from_activity_id": "EF17",
+    "derived_from_activity_name": "Questify"
+  },
+  {
+    "id": "insight_vi218",
+    "name": "Social Learning Theory in Peer Mentoring",
+    "description": "Utilizing social learning theory, students can benefit from observing and modeling successful peers to enhance their own academic performance and goal-setting strategies.",
+    "implications_for_tutor": "Tutors can encourage students to reflect on the experiences shared by successful peers and guide discussions on how they can apply similar study habits, revision techniques, and goal-setting approaches. Tutors can prompt students to consider how they can adapt successful strategies to their own unique learning styles and circumstances.",
+    "keywords": [
+      "social learning theory",
+      "peer mentoring",
+      "observational learning",
+      "modeling behavior",
+      "academic success",
+      "goal setting",
+      "study habits"
+    ],
+    "derived_from_activity_id": "VI218",
+    "derived_from_activity_name": "Success Leaves Clues"
+  },
+  {
+    "id": "insight_sy318",
+    "name": "Chunking for Time Management",
+    "description": "Chunking, the practice of breaking down tasks into smaller, more manageable parts, is a research-based strategy that enhances time management, reduces overwhelm, and boosts motivation.",
+    "implications_for_tutor": "When coaching students on time management, tutors can introduce the concept of chunking by helping them break down their projects into smaller milestones. Tutors can guide students in setting specific targets at different intervals, fostering a sense of progress and accomplishment while mitigating feelings of being overwhelmed.",
+    "keywords": [
+      "chunking",
+      "time management",
+      "task completion",
+      "project management",
+      "goal setting",
+      "motivation",
+      "overwhelm"
+    ],
+    "derived_from_activity_id": "SY318",
+    "derived_from_activity_name": "2-4-8 Rule"
+  },
+  {
+    "id": "insight_pr18",
+    "name": "Effective Study Techniques Selection",
+    "description": "Choosing high-utility study techniques over low-utility ones significantly impacts learning outcomes and academic success.",
+    "implications_for_tutor": "Tutors can guide students to reflect on their current study habits and encourage them to prioritize high-utility strategies. They could ask students to explain why they prefer certain techniques and help them experiment with more effective methods to enhance their learning efficiency and exam performance.",
+    "keywords": [
+      "study techniques",
+      "utility",
+      "effectiveness",
+      "learning outcomes",
+      "academic success",
+      "student reflection",
+      "prioritization"
+    ],
+    "derived_from_activity_id": "PR18",
+    "derived_from_activity_name": "High & Low Utility"
+  },
+  {
+    "id": "insight_vi219",
+    "name": "Decision-Making Visualization",
+    "description": "Engaging students in visualizing potential outcomes of their decisions can enhance clarity, critical thinking, and goal setting by making abstract choices more tangible and facilitating reflection.",
+    "implications_for_tutor": "When coaching students through the 'Five Roads' activity, tutors can guide them to vividly imagine the consequences of each path and encourage them to consider how each aligns with their personal goals. Tutors can ask students to describe their mental imagery in detail, prompting deeper reflection on potential outcomes and fostering a more concrete understanding of their choices.",
+    "keywords": [
+      "decision-making",
+      "visualization",
+      "goal setting",
+      "critical thinking",
+      "reflection",
+      "mental imagery",
+      "student guidance"
+    ],
+    "derived_from_activity_id": "VI219",
+    "derived_from_activity_name": "Five Roads"
+  },
+  {
+    "id": "insight_at319",
+    "name": "Embracing Failure for Learning",
+    "description": "Recognizing failure as a valuable source of information and learning opportunity can lead to growth mindset development and improved problem-solving skills.",
+    "implications_for_tutor": "Tutors can guide students to reflect on their failures, analyze feedback constructively, and create actionable plans for improvement. They can encourage students to view mistakes as stepping stones to success, fostering resilience and a positive attitude towards challenges.",
+    "keywords": [
+      "failure",
+      "learning from mistakes",
+      "growth mindset",
+      "problem-solving",
+      "resilience",
+      "constructive feedback",
+      "positive attitude"
+    ],
+    "derived_from_activity_id": "AT319",
+    "derived_from_activity_name": "Failing Forwards"
+  },
+  {
+    "id": "insight_sy19",
+    "name": "Task Organization and Time Management",
+    "description": "Effective task organization and time management are crucial skills for academic success. By structuring tasks, prioritizing them, and allocating time efficiently, students can catch up on missed work and reduce stress.",
+    "implications_for_tutor": "Tutors can guide students in breaking down their workload, setting realistic goals for each day, and creating a schedule that balances study time with breaks. They can discuss the importance of planning, staying focused, and using rewards as motivation to help students effectively manage their time and tasks.",
+    "keywords": [
+      "task organization",
+      "time management",
+      "prioritization",
+      "goal setting",
+      "scheduling",
+      "stress reduction",
+      "motivation"
+    ],
+    "derived_from_activity_id": "SY19",
+    "derived_from_activity_name": "Catch-Up Week"
+  },
+  {
+    "id": "insight_ef320",
+    "name": "Task Initiation and Procrastination",
+    "description": "Addressing task initiation and procrastination by setting a specific, brief timeframe for work can help students overcome avoidance behaviors and start challenging tasks.",
+    "implications_for_tutor": "Tutors can discuss with students the concept of starting a task for a short, defined period to reduce the perceived barrier of initiation. By asking students to commit to just 10 minutes of work, tutors can help them break the cycle of procrastination and build momentum for longer work sessions.",
+    "keywords": [
+      "task initiation",
+      "procrastination",
+      "time management",
+      "commitment",
+      "work ethic",
+      "productivity",
+      "avoidance behaviors"
+    ],
+    "derived_from_activity_id": "EF320",
+    "derived_from_activity_name": "10min Rule"
+  },
+  {
+    "id": "insight_vi20",
+    "name": "Specific and Controllable Goal Setting",
+    "description": "Setting specific and controllable goals, as guided by goal-setting theory, enhances self-regulation and self-efficacy by providing clarity and a sense of agency in achieving desired outcomes.",
+    "implications_for_tutor": "When coaching students, tutors can encourage them to define specific goals within their control, fostering a sense of ownership and motivation. Tutors can guide students to reflect on their goals' specificity and adjust them to enhance achievability and self-efficacy.",
+    "keywords": [
+      "goal setting",
+      "specificity",
+      "controllability",
+      "self-regulation",
+      "self-efficacy",
+      "motivation",
+      "achievement"
+    ],
+    "derived_from_activity_id": "VI20",
+    "derived_from_activity_name": "Outcome Control"
+  },
+  {
+    "id": "insight_at321",
+    "name": "Force Field Analysis",
+    "description": "Force Field Analysis, based on Kurt Lewin's Field Theory in social psychology, helps individuals identify and evaluate driving and restraining forces influencing a particular situation or decision.",
+    "implications_for_tutor": "Tutors can guide students through identifying internal and external factors affecting their motivation and academic challenges using the Force Field Analysis framework. They can ask students to reflect on how they can strengthen driving forces and mitigate restraining forces to enhance their problem-solving and decision-making skills.",
+    "keywords": [
+      "Force Field Analysis",
+      "Kurt Lewin",
+      "Field Theory",
+      "driving forces",
+      "restraining forces",
+      "motivation",
+      "decision-making",
+      "problem-solving"
+    ],
+    "derived_from_activity_id": "AT321",
+    "derived_from_activity_name": "Force Field Analysis"
+  },
+  {
+    "id": "insight_at221",
+    "name": "Confidence Building through Past Successes",
+    "description": "Reconnecting with past achievements to boost confidence and challenge negative self-talk is a psychological approach for enhancing self-belief and performance.",
+    "implications_for_tutor": "Tutors can guide students in reflecting on their past successes to recharge their confidence 'battery.' By asking students to recall specific instances of achievement and recognition, tutors can help them challenge self-doubt and shift focus from failures to accomplishments, fostering a stronger sense of self-worth.",
+    "keywords": [
+      "confidence building",
+      "self-belief",
+      "past achievements",
+      "positive self-talk",
+      "recognition",
+      "self-worth",
+      "reflection"
+    ],
+    "derived_from_activity_id": "AT221",
+    "derived_from_activity_name": "The Battery"
+  },
+  {
+    "id": "insight_at21",
+    "name": "Problem-Solving Categorization",
+    "description": "Categorizing solutions based on ease of implementation (time-bound categories) helps students prioritize actions effectively and break down complex issues into manageable steps.",
+    "implications_for_tutor": "Tutors can guide students in categorizing and prioritizing solutions for study problems using time-bound categories like 'Five Minutes,' 'Five Days,' and 'Five Weeks.' They can ask students how breaking down tasks into manageable parts can make problem-solving more achievable and discuss the importance of setting realistic timelines for each action.",
+    "keywords": [
+      "problem-solving",
+      "categorization",
+      "prioritization",
+      "time management",
+      "study skills",
+      "self-regulated learning",
+      "goal setting"
+    ],
+    "derived_from_activity_id": "AT21",
+    "derived_from_activity_name": "5,5,5"
+  },
+  {
+    "id": "insight_vi322",
+    "name": "Goal-Setting Theory in Career Planning",
+    "description": "Goal-setting theory emphasizes the importance of setting specific, actionable goals to enhance motivation and success. By differentiating between 'be' goals (aspirations) and 'do' goals (activities), individuals can clarify their objectives and work towards achieving them.",
+    "implications_for_tutor": "When coaching students in career planning activities like 'Perfect Day', tutors can guide them to translate vague aspirations into concrete goals by asking questions that prompt specific descriptions of desired work environments, tasks, and daily routines. Tutors can also encourage students to consider how setting actionable goals can lead to greater motivation and fulfillment in their future careers.",
+    "keywords": [
+      "goal setting theory",
+      "career planning",
+      "aspirations",
+      "actionable goals",
+      "motivation",
+      "success",
+      "coaching",
+      "educational psychology"
+    ],
+    "derived_from_activity_id": "VI322",
+    "derived_from_activity_name": "Perfect Day"
+  },
+  {
+    "id": "insight_sy222",
+    "name": "Priority Matrix for Task Management",
+    "description": "Using a priority matrix to assess tasks based on importance and urgency can enhance time management and focus on weaknesses, ultimately improving learning outcomes.",
+    "implications_for_tutor": "Tutors can guide students in creating their own priority matrix to identify key tasks and allocate time effectively. They can discuss the importance of addressing challenging tasks early to prevent procrastination and ensure comprehensive learning.",
+    "keywords": [
+      "priority matrix",
+      "task prioritization",
+      "time management",
+      "task importance",
+      "task urgency",
+      "procrastination",
+      "learning outcomes"
+    ],
+    "derived_from_activity_id": "SY222",
+    "derived_from_activity_name": "The Bottom Left"
+  },
+  {
+    "id": "insight_ef22",
+    "name": "Initiating vs Sustaining Effort",
+    "description": "Distinguishing between initiating effort (getting started) and sustaining effort (persevering through challenges) is crucial for understanding motivation and achieving long-term goals.",
+    "implications_for_tutor": "When coaching a student, the tutor can prompt reflection on how the student typically starts tasks versus how they maintain momentum. By discussing strategies for both initiation and sustainability, the tutor can help the student develop a more balanced and effective approach to maintaining motivation over time.",
+    "keywords": [
+      "effort regulation",
+      "motivation",
+      "task initiation",
+      "perseverance",
+      "self-awareness",
+      "goal pursuit",
+      "achievement mindset"
+    ],
+    "derived_from_activity_id": "EF22",
+    "derived_from_activity_name": "Activating vs Sustaining"
+  },
+  {
+    "id": "insight_at223",
+    "name": "Feedback Processing and Emotional Regulation",
+    "description": "Effectively managing reactions to feedback involves recognizing and navigating through emotional responses (feedback processing) while regulating these emotions to maintain a constructive mindset (emotional regulation).",
+    "implications_for_tutor": "When coaching a student through feedback, tutors can help them identify their emotional responses (red zone) and work towards constructive actions (green zone) by discussing strategies for emotional regulation and self-reflection. Tutors can also explore how different individuals interpret and respond to feedback, fostering empathy and awareness in feedback interactions.",
+    "keywords": [
+      "feedback processing",
+      "emotional regulation",
+      "constructive feedback",
+      "self-reflection",
+      "empathy",
+      "mindset",
+      "self-awareness"
+    ],
+    "derived_from_activity_id": "AT223",
+    "derived_from_activity_name": "Managing Reactions to Feedback"
+  },
+  {
+    "id": "insight_pr323",
+    "name": "Modeling and Error Analysis",
+    "description": "Utilizing modeling for observational learning and incorporating error analysis into the learning process can enhance understanding and skill development.",
+    "implications_for_tutor": "Tutors can guide students to observe correct examples, make intentional errors, analyze those errors, and correct them. By discussing the importance of learning through imitation and self-assessment, tutors can help students internalize concepts and improve problem-solving skills effectively.",
+    "keywords": [
+      "modeling",
+      "observational learning",
+      "error analysis",
+      "self-assessment",
+      "skill development",
+      "cognitive psychology",
+      "imitation"
+    ],
+    "derived_from_activity_id": "PR323",
+    "derived_from_activity_name": "Right, Wrong, Right"
+  },
+  {
+    "id": "insight_pr23",
+    "name": "Active Recall for Enhanced Learning",
+    "description": "Active recall, the process of actively retrieving information from memory, has been shown to be a highly effective learning strategy for improving retention and understanding of study material.",
+    "implications_for_tutor": "Tutors can highlight the importance of actively recalling information from memory rather than passive review methods like re-reading notes. They can guide students to incorporate active recall techniques like Closed-Book Notetaking to enhance their learning outcomes and test performance.",
+    "keywords": [
+      "active recall",
+      "memory retrieval",
+      "learning strategies",
+      "study techniques",
+      "test performance",
+      "educational psychology",
+      "retention"
+    ],
+    "derived_from_activity_id": "PR23",
+    "derived_from_activity_name": "Closed Book Notetaking"
+  },
+  {
+    "id": "insight_vi324",
+    "name": "SMART Goal Setting",
+    "description": "SMART goal setting is a well-established method that enhances goal-setting success by ensuring goals are Specific, Measurable, Achievable, Relevant, and Time-bound.",
+    "implications_for_tutor": "Tutors can guide students to apply the SMART criteria when setting goals, helping them clarify their objectives, track progress, and stay motivated. They can ask students to reflect on how each element of SMART criteria contributes to the effectiveness of their goals and how they can adjust their goals accordingly.",
+    "keywords": [
+      "goal setting",
+      "SMART goals",
+      "specificity",
+      "measurability",
+      "achievability",
+      "relevance",
+      "time-bound",
+      "motivation"
+    ],
+    "derived_from_activity_id": "VI324",
+    "derived_from_activity_name": "Smart Goals"
+  },
+  {
+    "id": "insight_ef224",
+    "name": "Effort Reflection and Growth Mindset",
+    "description": "Encouraging students to reflect on their effort levels and prioritize hard work over innate talent aligns with the principles of growth mindset, which emphasizes the belief that abilities can be developed through dedication and hard work.",
+    "implications_for_tutor": "Tutors can guide students in reflecting on how their effort impacts their learning outcomes, encouraging a shift towards a growth mindset that values perseverance and effort. By discussing examples of successful individuals who attribute their achievements to hard work, tutors can help students see the connection between effort and success.",
+    "keywords": [
+      "effort reflection",
+      "growth mindset",
+      "hard work",
+      "talent development",
+      "perseverance",
+      "learning outcomes",
+      "student motivation"
+    ],
+    "derived_from_activity_id": "EF224",
+    "derived_from_activity_name": "The Effort Thermometer"
+  },
+  {
+    "id": "insight_sy24",
+    "name": "Reflective Planning for Time Management",
+    "description": "Allocating a small portion of time for daily planning and reflection enhances efficiency, focus, and goal achievement by leveraging principles of cognitive psychology and time management strategies.",
+    "implications_for_tutor": "When coaching students, tutors can emphasize the importance of setting aside dedicated time for planning and reflection to improve time management skills. They can guide students in identifying tasks, reflecting on progress, and setting future goals to enhance organization and reduce stress. Tutors can also discuss how this practice reinforces cognitive processes like attention, focus, and memory.",
+    "keywords": [
+      "reflective planning",
+      "time management",
+      "cognitive psychology",
+      "goal setting",
+      "task prioritization",
+      "efficiency",
+      "focus"
+    ],
+    "derived_from_activity_id": "SY24",
+    "derived_from_activity_name": "1% Planning"
+  },
+  {
+    "id": "insight_sy325",
+    "name": "Goal Setting Theory and Project Management Principles",
+    "description": "Goal Setting Theory emphasizes setting specific, challenging goals to enhance motivation and performance. Project Management Principles involve planning, organizing, and managing resources to achieve specific objectives.",
+    "implications_for_tutor": "Tutors can guide students in setting SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound) to enhance motivation and focus. They can help students break down goals into manageable tasks, create timelines, and identify necessary resources, fostering effective project planning and execution.",
+    "keywords": [
+      "goal setting theory",
+      "project management",
+      "SMART goals",
+      "task breakdown",
+      "resource management",
+      "motivation",
+      "performance"
+    ],
+    "derived_from_activity_id": "SY325",
+    "derived_from_activity_name": "STQR"
+  },
+  {
+    "id": "insight_ef225",
+    "name": "Goal Setting Theory and Self-Regulation",
+    "description": "Goal Setting Theory emphasizes the importance of setting specific, challenging goals to enhance motivation and performance. Self-regulation involves monitoring progress towards goals, adapting strategies as needed, and reflecting on outcomes to improve future performance.",
+    "implications_for_tutor": "Tutors can guide students in setting clear, measurable goals related to their academic efforts, such as improving study habits or time management. They can support students in developing self-regulation skills by helping them track their progress, identify obstacles, and adjust their strategies to stay on track. Encouraging students to reflect on their achievements and setbacks can foster a growth mindset and enhance their ability to self-regulate effectively.",
+    "keywords": [
+      "goal setting",
+      "self-regulation",
+      "motivation",
+      "performance",
+      "feedback",
+      "reflection",
+      "academic achievement"
+    ],
+    "derived_from_activity_id": "EF225",
+    "derived_from_activity_name": "Packing my Bags"
+  },
+  {
+    "id": "insight_vi25",
+    "name": "Visual Mapping for Goal Achievement",
+    "description": "Utilizing visual maps, like the 'innovation map' in this activity, aids in understanding the sequential steps and interconnectedness involved in achieving goals, fostering strategic thinking and perseverance.",
+    "implications_for_tutor": "Tutors can guide students in creating visual representations of their goals and the steps needed to accomplish them, promoting a deeper understanding of the process. They can ask students to reflect on how breaking down goals into manageable stages can enhance their strategic planning and persistence.",
+    "keywords": [
+      "visual mapping",
+      "goal setting",
+      "strategic thinking",
+      "perseverance",
+      "sequential steps",
+      "goal achievement",
+      "visualization"
+    ],
+    "derived_from_activity_id": "VI25",
+    "derived_from_activity_name": "Paths are Well Lit"
+  },
+  {
+    "id": "insight_vi326",
+    "name": "Cognitive Dissonance Reduction",
+    "description": "Cognitive dissonance reduction theory suggests that individuals strive for consistency in their beliefs and attitudes. By committing to one choice and immersing themselves in it, individuals may experience a shift in preferences to align with their committed decision.",
+    "implications_for_tutor": "When coaching students through decision-making processes, tutors can guide them to commit fully to one option temporarily to reduce conflicting thoughts. They can help students explore the positives of their choice and reflect on how this immersion influences their preferences, fostering more decisive decision-making.",
+    "keywords": [
+      "cognitive dissonance",
+      "decision-making",
+      "commitment",
+      "attitude change",
+      "preference shift",
+      "belief consistency"
+    ],
+    "derived_from_activity_id": "VI326",
+    "derived_from_activity_name": "Fake It"
+  },
+  {
+    "id": "insight_ef226",
+    "name": "Time Management and Focus",
+    "description": "Utilizing time management techniques like the Pomodoro Technique can enhance focus, productivity, and task initiation by breaking work into manageable intervals with dedicated breaks.",
+    "implications_for_tutor": "Tutors can guide students in implementing the Pomodoro Technique to improve time management and focus. They can discuss the importance of setting specific timeframes for tasks, minimizing distractions, and taking regular breaks to maintain productivity and mental freshness.",
+    "keywords": [
+      "time management",
+      "focus",
+      "productivity",
+      "task initiation",
+      "Pomodoro Technique",
+      "intervals",
+      "breaks",
+      "distractions"
+    ],
+    "derived_from_activity_id": "EF226",
+    "derived_from_activity_name": "25min Sprints"
+  },
+  {
+    "id": "insight_at26",
+    "name": "Progress Monitoring and Growth Mindset",
+    "description": "Encouraging students to monitor and appreciate incremental improvements in non-academic areas promotes a growth mindset by emphasizing progress over immediate outcomes.",
+    "implications_for_tutor": "Tutors can support students by helping them identify and celebrate small victories in personal growth areas like confidence and time management. By discussing these achievements, tutors can reinforce the idea that progress is multifaceted and not solely tied to grades, fostering a growth mindset.",
+    "keywords": [
+      "progress monitoring",
+      "growth mindset",
+      "incremental improvements",
+      "personal growth",
+      "non-academic achievements",
+      "motivation",
+      "celebration"
+    ],
+    "derived_from_activity_id": "AT26",
+    "derived_from_activity_name": "The Myth of the Curve"
+  },
+  {
+    "id": "insight_pr327",
+    "name": "Constructivism through Graphic Organisers",
+    "description": "Engaging students in creating graphic organizers like mind-maps and flow charts aligns with constructivist theory, emphasizing that learners actively construct knowledge by organizing and reorganizing information.",
+    "implications_for_tutor": "Tutors can guide students to reflect on how creating graphic organizers helps them make sense of information and deepen their understanding. They can ask about connections students see between different pieces of information and how organizing content impacts their learning process.",
+    "keywords": [
+      "constructivism",
+      "graphic organizers",
+      "mind-maps",
+      "active learning",
+      "knowledge construction",
+      "information processing",
+      "educational psychology"
+    ],
+    "derived_from_activity_id": "PR327",
+    "derived_from_activity_name": "Graphic Organisers"
+  },
+  {
+    "id": "insight_pr227",
+    "name": "Visual Summarization and Cognitive Load Theory",
+    "description": "Utilizing visual aids to condense and organize information aligns with Cognitive Load Theory, which suggests that presenting information in a visually concise format reduces cognitive load and enhances learning.",
+    "implications_for_tutor": "When coaching a student through 'The Nine Box Grid' activity, tutors can discuss how visual summarization can help reduce cognitive overload by presenting information in a more digestible format. They can guide students to reflect on how organizing content visually can aid in information retention and understanding.",
+    "keywords": [
+      "visual aids",
+      "cognitive load theory",
+      "information processing",
+      "learning efficiency",
+      "graphic organizers",
+      "memory retention",
+      "study techniques"
+    ],
+    "derived_from_activity_id": "PR227",
+    "derived_from_activity_name": "The Nine Box Grid"
+  },
+  {
+    "id": "insight_sy327",
+    "name": "Lead Domino Task Prioritization",
+    "description": "Prioritizing tasks based on their potential impact and efficiency, focusing on completing the task that will have the largest number of positive knock-on effects, aligns with productivity strategies and time management research.",
+    "implications_for_tutor": "When coaching a student, tutors can guide them in identifying tasks with high impact and discuss the concept of Lead Domino to help prioritize effectively. Tutors can ask students to list tasks that, when completed, will make other tasks easier or irrelevant, encouraging them to tackle uncomfortable yet important tasks first.",
+    "keywords": [
+      "task prioritization",
+      "efficiency",
+      "impact",
+      "time management",
+      "productivity",
+      "task management",
+      "prioritization strategies"
+    ],
+    "derived_from_activity_id": "SY327",
+    "derived_from_activity_name": "Lead Domino"
+  },
+  {
+    "id": "insight_ef27",
+    "name": "Proactive Clarity Seeking",
+    "description": "Encouraging students to take proactive steps in seeking clarification and understanding can prevent misunderstandings, reduce stress, and enhance learning outcomes.",
+    "implications_for_tutor": "Tutors can guide students to reflect on their understanding regularly, identify areas of confusion, and develop a personalized strategy for seeking clarification. By asking questions like 'What steps can you take to clarify your confusion?' or 'How might seeking clarity early benefit your learning?', tutors can foster proactive clarity-seeking behaviors.",
+    "keywords": [
+      "proactive learning",
+      "clarification strategies",
+      "stress reduction",
+      "student reflection",
+      "understanding enhancement",
+      "information processing"
+    ],
+    "derived_from_activity_id": "EF27",
+    "derived_from_activity_name": "Clarity Countdown"
+  },
+  {
+    "id": "insight_pr228",
+    "name": "Will vs. Skill Balancing",
+    "description": "Balancing motivation (will) and ability (skill) is crucial for effective learning and practice. The concept emphasizes addressing areas where students lack either motivation or proficiency to optimize their growth potential.",
+    "implications_for_tutor": "When coaching students, tutors can help them reflect on their motivation levels and proficiency in different subjects/topics. By guiding students to prioritize areas where they lack either will or skill, tutors can assist in creating tailored study plans that align with their strengths and weaknesses.",
+    "keywords": [
+      "motivation",
+      "skill development",
+      "willpower",
+      "learning optimization",
+      "growth potential",
+      "study habits",
+      "student reflection"
+    ],
+    "derived_from_activity_id": "PR228",
+    "derived_from_activity_name": "Will vs Skill"
+  },
+  {
+    "id": "insight_pr28",
+    "name": "Balanced Study Timetables for Well-being",
+    "description": "Creating study timetables that incorporate moments of joy, relaxation, and social connection alongside study slots is crucial for well-being, motivation, and effective time management.",
+    "implications_for_tutor": "Tutors can guide students in designing timetables that balance study with activities that promote well-being. They can discuss the importance of self-care, social interactions, and relaxation in maintaining motivation and productivity, thus helping students avoid burnout and sustain their study routines.",
+    "keywords": [
+      "study timetables",
+      "well-being",
+      "balance",
+      "time management",
+      "motivation",
+      "self-care",
+      "burnout"
+    ],
+    "derived_from_activity_id": "PR28",
+    "derived_from_activity_name": "Sticky Timetables"
+  },
+  {
+    "id": "insight_at229",
+    "name": "Experiential Learning Cycle",
+    "description": "Experiential learning theory posits that learning is most effective when it involves concrete experiences, reflective observation, abstract conceptualization, and active experimentation, as outlined in Kolb's model of experiential learning.",
+    "implications_for_tutor": "When guiding students through the 'Problem Solving Cycle' activity, tutors can emphasize the importance of engaging in hands-on experiences, reflecting on outcomes, conceptualizing key insights, and testing different solutions. Tutors can ask students to describe their experiences, analyze patterns, connect new knowledge to existing concepts, and encourage them to apply their learnings in real-world scenarios.",
+    "keywords": [
+      "experiential learning",
+      "Kolb",
+      "learning styles",
+      "hands-on experience",
+      "reflective observation",
+      "abstract conceptualization",
+      "active experimentation"
+    ],
+    "derived_from_activity_id": "AT229",
+    "derived_from_activity_name": "Problem Solving Cycle"
+  },
+  {
+    "id": "insight_ef329",
+    "name": "Implementation Intentions",
+    "description": "Implementation intentions involve planning specific 'if-then' scenarios to proactively address obstacles and enhance goal pursuit by preventing self-sabotage.",
+    "implications_for_tutor": "Tutors can guide students to create personalized 'if-then' statements to navigate common study disruptions. They can prompt students to reflect on potential obstacles and develop concrete plans for how to stay focused and motivated when faced with challenges.",
+    "keywords": [
+      "implementation intentions",
+      "goal setting",
+      "obstacle planning",
+      "self-sabotage",
+      "academic success",
+      "proactive strategies",
+      "self-regulation"
+    ],
+    "derived_from_activity_id": "EF329",
+    "derived_from_activity_name": "Power of If/Then Thinking"
+  },
+  {
+    "id": "insight_pr29",
+    "name": "Retrieval Practice and Elaborative Interrogation",
+    "description": "Engaging in retrieval practice, such as verbally summarizing material, and using elaborative interrogation through asking and answering complex questions, are effective cognitive strategies to enhance learning and understanding.",
+    "implications_for_tutor": "Tutors can encourage students to practice retrieval by summarizing key points verbally and then engage them in elaborative interrogation by asking thought-provoking questions about the material. This can help deepen the student's understanding and retention of the content.",
+    "keywords": [
+      "retrieval practice",
+      "active learning",
+      "elaborative interrogation",
+      "cognitive psychology",
+      "understanding",
+      "retention",
+      "questioning techniques"
+    ],
+    "derived_from_activity_id": "PR29",
+    "derived_from_activity_name": "Verbal Recaps"
+  },
+  {
+    "id": "insight_ef330",
+    "name": "Effort and Goal Setting Theory",
+    "description": "Effort and Goal Setting Theory emphasizes the relationship between effort, goal setting, and success. It posits that setting specific, challenging goals and putting in consistent effort towards them leads to higher performance outcomes.",
+    "implications_for_tutor": "Tutors can discuss with students the importance of setting specific and challenging goals related to their study/work hours, similar to high earners and company bosses. By helping students reflect on their current effort levels and encouraging them to increase their efforts gradually towards their goals, tutors can support students in achieving academic and career success.",
+    "keywords": [
+      "effort",
+      "goal setting",
+      "performance outcomes",
+      "work-life balance",
+      "time management",
+      "academic success",
+      "career development"
+    ],
+    "derived_from_activity_id": "EF330",
+    "derived_from_activity_name": "Working Weeks"
+  },
+  {
+    "id": "insight_pr230",
+    "name": "Obstacle Deconstruction and Action",
+    "description": "Breaking down barriers into manageable components and taking immediate action to address them aligns with problem-solving theories such as Root-Cause Analysis and models for preparation before breakthroughs.",
+    "implications_for_tutor": "Tutors can guide students in dissecting complex problems into smaller parts and developing a step-by-step plan of action. By encouraging immediate implementation of solutions, tutors can help students build confidence in their problem-solving abilities and reinforce the importance of proactive problem-solving.",
+    "keywords": [
+      "obstacle deconstruction",
+      "problem-solving",
+      "root-cause analysis",
+      "action planning",
+      "proactive approach",
+      "confidence building",
+      "problem-solving skills"
+    ],
+    "derived_from_activity_id": "PR230",
+    "derived_from_activity_name": "KSPA"
+  },
+  {
+    "id": "insight_vi30",
+    "name": "Goal Setting Theory and Intrinsic Motivation",
+    "description": "Goal Setting Theory posits that setting specific, challenging goals leads to higher performance. When goals align with intrinsic motivations, such as purpose and contribution (Thriver Goals), individuals are more likely to be motivated and successful.",
+    "implications_for_tutor": "Tutors can guide students to set specific, challenging goals that resonate with their personal values and sense of purpose. By exploring the intrinsic motivations behind their goals, tutors can help students cultivate a deeper commitment and enthusiasm towards their academic pursuits.",
+    "keywords": [
+      "goal setting theory",
+      "intrinsic motivation",
+      "thriver goals",
+      "purpose-driven goals",
+      "student motivation",
+      "personal values",
+      "academic success"
+    ],
+    "derived_from_activity_id": "VI30",
+    "derived_from_activity_name": "Diver & Thriver Goals"
+  },
+  {
+    "id": "insight_pr331",
+    "name": "Deliberate Practice",
+    "description": "Deliberate practice involves identifying specific skills, seeking feedback, monitoring progress, and continuous improvement. It is a key principle in skill acquisition and expertise development.",
+    "implications_for_tutor": "Tutors can guide students in setting specific skill-based goals, tracking progress through visual aids like target diagrams, and encouraging seeking feedback from teachers and peers. They can discuss the importance of focused, intentional practice and reflection for skill enhancement.",
+    "keywords": [
+      "deliberate practice",
+      "skill acquisition",
+      "skill development",
+      "goal setting",
+      "feedback",
+      "progress monitoring",
+      "expertise"
+    ],
+    "derived_from_activity_id": "PR331",
+    "derived_from_activity_name": "Know the Skills"
+  },
+  {
+    "id": "insight_pr231",
+    "name": "Spaced Practice for Memory Retention",
+    "description": "The principle of spaced practice involves distributing study sessions over time to enhance memory retention and learning efficiency.",
+    "implications_for_tutor": "Tutors can guide students to create a spaced practice schedule by discussing optimal intervals for review, setting manageable study goals, and encouraging self-reward systems. They can ask students how they currently space out their study sessions, help them identify topics for spaced practice, and emphasize the benefits of long-term retention through this approach.",
+    "keywords": [
+      "spaced practice",
+      "memory retention",
+      "learning efficiency",
+      "study habits",
+      "review intervals",
+      "self-reward",
+      "long-term retention"
+    ],
+    "derived_from_activity_id": "PR231",
+    "derived_from_activity_name": "Spaced Practice"
+  },
+  {
+    "id": "insight_at31",
+    "name": "Cognitive Restructuring for Fear Management",
+    "description": "Cognitive restructuring involves identifying and challenging distorted or exaggerated thoughts, such as fears, to promote more adaptive and realistic thinking patterns. This process helps individuals manage anxiety and develop problem-solving skills.",
+    "implications_for_tutor": "Tutors can guide students through questioning the validity of their worst-case scenarios and encouraging them to reframe these fears in a more realistic and constructive light. By discussing the evidence for and against their fears, tutors can help students develop a more balanced perspective and build resilience in the face of challenges.",
+    "keywords": [
+      "cognitive restructuring",
+      "fear management",
+      "anxiety",
+      "distorted thinking",
+      "problem-solving",
+      "resilience",
+      "cognitive-behavioral therapy"
+    ],
+    "derived_from_activity_id": "AT31",
+    "derived_from_activity_name": "Worst Case Scenarios"
+  },
+  {
+    "id": "insight_pr332",
+    "name": "Interleaved Practice",
+    "description": "Interleaved practice involves mixing different types of practice tasks rather than repeatedly practicing the same task, leading to enhanced long-term retention and transfer of learning.",
+    "implications_for_tutor": "Tutors can encourage students to incorporate interleaved practice in their study routines by alternating between different topics or question types. They can discuss the benefits of this approach in developing flexible thinking and problem-solving skills, preparing students to tackle varied exam questions effectively.",
+    "keywords": [
+      "interleaved practice",
+      "cognitive psychology",
+      "long-term retention",
+      "transfer of learning",
+      "flexible thinking",
+      "problem-solving",
+      "study routines"
+    ],
+    "derived_from_activity_id": "PR332",
+    "derived_from_activity_name": "Mechanical vs Flexible"
+  },
+  {
+    "id": "insight_pr232",
+    "name": "Testing Effect and Active Recall",
+    "description": "The testing effect, supported by research, suggests that actively recalling information through testing enhances memory retention. Active recall, where students retrieve information without cues, strengthens memory pathways and improves long-term learning.",
+    "implications_for_tutor": "When coaching students, tutors can emphasize the benefits of self-testing and active recall to improve memory retention. Tutors can encourage students to engage in regular self-testing sessions, ask open-ended questions to promote active recall, and guide them in creating associations between new and existing knowledge for effective cueing during recall.",
+    "keywords": [
+      "testing effect",
+      "active recall",
+      "memory retention",
+      "self-testing",
+      "long-term learning",
+      "memory pathways",
+      "cueing",
+      "associations"
+    ],
+    "derived_from_activity_id": "PR232",
+    "derived_from_activity_name": "Test Yourself"
+  },
+  {
+    "id": "insight_ef32",
+    "name": "Self-Regulation and Behavior Change",
+    "description": "Self-regulation involves the ability to monitor, control, and direct one's thoughts, emotions, and behaviors towards achieving a desired goal. Behavior change refers to the process of modifying actions, habits, or routines to align with new objectives or standards.",
+    "implications_for_tutor": "Tutors can guide students in recognizing their own patterns of behavior and thought that may hinder academic progress. By discussing strategies for self-monitoring, setting achievable goals, and creating personalized action plans, tutors can support students in developing stronger self-regulation skills to overcome setbacks and maintain motivation.",
+    "keywords": [
+      "self-regulation",
+      "behavior change",
+      "goal setting",
+      "self-awareness",
+      "motivation",
+      "academic habits",
+      "proactive strategies"
+    ],
+    "derived_from_activity_id": "EF32",
+    "derived_from_activity_name": "Red Flag Rescue"
+  },
+  {
+    "id": "insight_vi333",
+    "name": "Mental Contrasting for Goal Achievement",
+    "description": "Mental Contrasting involves vividly imagining desired outcomes, identifying internal obstacles, and creating specific plans to overcome them, aligning aspirations with practical strategies for success.",
+    "implications_for_tutor": "Tutors can guide students to visualize their goals, reflect on potential barriers, and develop actionable plans to address obstacles. They can prompt students to consider 'if...then' scenarios and discuss how self-awareness and proactive problem-solving enhance goal-setting skills.",
+    "keywords": [
+      "mental contrasting",
+      "goal achievement",
+      "visualization",
+      "obstacle identification",
+      "goal-setting",
+      "self-awareness",
+      "proactive problem-solving"
+    ],
+    "derived_from_activity_id": "VI333",
+    "derived_from_activity_name": "Mental Contrasting"
+  },
+  {
+    "id": "insight_vi233",
+    "name": "Circles of Control Principle",
+    "description": "The Circles of Control concept, derived from Stephen Covey's work, helps individuals focus on aspects within their control, influence, and concern, fostering a proactive mindset and effective problem-solving.",
+    "implications_for_tutor": "When coaching students through 'What's Stopping You' activity, tutors can guide them to differentiate between what they can directly control, influence, or have no power over. By discussing strategies to address obstacles within their control and accept those outside, tutors can empower students to take proactive steps towards their goals.",
+    "keywords": [
+      "Circles of Control",
+      "Stephen Covey",
+      "proactive mindset",
+      "problem-solving",
+      "goal achievement",
+      "influence",
+      "personal development"
+    ],
+    "derived_from_activity_id": "VI233",
+    "derived_from_activity_name": "What's Stopping You"
+  },
+  {
+    "id": "insight_pr33",
+    "name": "Retrieval Practice for Enhanced Learning",
+    "description": "Retrieval practice, as demonstrated by the study at the University of Georgia, involves actively recalling information from memory, which has been shown to improve long-term retention and understanding of material.",
+    "implications_for_tutor": "Tutors can guide students to incorporate retrieval practice into their study routines by encouraging them to create self-tests, start with easier questions, progress to more challenging ones, and assess their performance. Tutors can discuss with students how this method strengthens memory retention, self-assessment skills, and overall confidence in their knowledge.",
+    "keywords": [
+      "retrieval practice",
+      "active recall",
+      "memory retention",
+      "self-assessment",
+      "study strategies",
+      "long-term learning",
+      "academic performance"
+    ],
+    "derived_from_activity_id": "PR33",
+    "derived_from_activity_name": "Test Your Future Self"
+  },
+  {
+    "id": "insight_at334",
+    "name": "Cognitive Restructuring for Negative Thoughts",
+    "description": "Cognitive restructuring involves identifying and challenging negative thought patterns to replace them with more positive and rational beliefs, as advocated by Albert Ellis in rational emotive behavior therapy (REBT).",
+    "implications_for_tutor": "Tutors can guide students to recognize their negative thought patterns, question the accuracy and validity of these thoughts, and support them in reframing those thoughts into more constructive and empowering perspectives. They can ask students to consider evidence for and against their negative thoughts, explore alternative interpretations, and encourage the use of positive affirmations.",
+    "keywords": [
+      "cognitive restructuring",
+      "negative thinking",
+      "positive mindset",
+      "rational emotive behavior therapy",
+      "REBT",
+      "thought challenging",
+      "resilience"
+    ],
+    "derived_from_activity_id": "AT334",
+    "derived_from_activity_name": "Stopping Negative Thoughts"
+  },
+  {
+    "id": "insight_pr234",
+    "name": "Flow Theory in Education",
+    "description": "Flow theory posits that individuals experience peak performance and deep engagement when they are in a state of 'flow', characterized by a balance between challenge and skill that leads to heightened focus and intrinsic motivation.",
+    "implications_for_tutor": "Tutors can help students recognize their optimal flow conditions by discussing the importance of finding tasks that match their skill level, setting clear goals, providing immediate feedback, and encouraging a sense of control over their learning environment. Tutors can also guide students to reflect on times when they have experienced flow to identify strategies for replicating this state in their academic pursuits.",
+    "keywords": [
+      "flow theory",
+      "peak performance",
+      "engagement",
+      "challenge-skill balance",
+      "intrinsic motivation",
+      "goal setting",
+      "feedback",
+      "autonomy"
+    ],
+    "derived_from_activity_id": "PR234",
+    "derived_from_activity_name": "Finding Flow"
+  },
+  {
+    "id": "insight_vi34",
+    "name": "Intrinsic Motivation vs Extrinsic Motivation",
+    "description": "Distinguishing between intrinsic motivation (internal drive from the work itself) and extrinsic motivation (external rewards like pay or status) is crucial in understanding one's true career aspirations and job satisfaction.",
+    "implications_for_tutor": "When coaching students through career exploration activities like 'Lifestyle vs Job Envy,' tutors can guide them to reflect on whether their career choices are driven by internal fulfillment or external factors. Tutors can help students delve deeper into what aspects of a job truly inspire them and how aligning with intrinsic motivations can lead to long-term satisfaction and engagement.",
+    "keywords": [
+      "intrinsic motivation",
+      "extrinsic motivation",
+      "job satisfaction",
+      "career aspirations",
+      "self-awareness",
+      "fulfillment",
+      "engagement"
+    ],
+    "derived_from_activity_id": "VI34",
+    "derived_from_activity_name": "Lifestyle vs Job Envy"
+  },
+  {
+    "id": "insight_sy335",
+    "name": "Eisenhower Matrix Time Management",
+    "description": "The Eisenhower Matrix activity leverages the principle of prioritization based on urgency and importance, helping students manage their time effectively by categorizing tasks into quadrants.",
+    "implications_for_tutor": "Tutors can guide students in reflecting on the urgency and importance of their tasks, encouraging them to consider the impact of proper prioritization on their productivity. They can also help students understand the distinction between urgent and important tasks, fostering critical thinking and decision-making skills.",
+    "keywords": [
+      "time management",
+      "task prioritization",
+      "urgency",
+      "importance",
+      "productivity",
+      "decision-making",
+      "critical thinking"
+    ],
+    "derived_from_activity_id": "SY335",
+    "derived_from_activity_name": "Eisenhower Matrix"
+  },
+  {
+    "id": "insight_pr235",
+    "name": "Optimal Learning Environment",
+    "description": "Creating and utilizing an optimal learning environment that supports focus, concentration, and productivity is crucial for enhancing academic performance and study habits.",
+    "implications_for_tutor": "Tutors can guide students in reflecting on their study spaces to identify factors that enhance or hinder their focus, such as noise levels, seating comfort, and lighting. By discussing the impact of environment on learning, tutors can help students proactively design spaces that promote effective studying.",
+    "keywords": [
+      "learning environment",
+      "productivity",
+      "concentration",
+      "study habits",
+      "academic performance",
+      "focus",
+      "environmental psychology"
+    ],
+    "derived_from_activity_id": "PR235",
+    "derived_from_activity_name": "High Flow Spaces"
+  },
+  {
+    "id": "insight_pr35",
+    "name": "Cognitive Engagement for Learning",
+    "description": "Encouraging students to engage cognitively during learning tasks by actively processing information, asking challenging questions, self-testing, and creating meaningful connections leads to deeper understanding, critical thinking, and improved learning outcomes.",
+    "implications_for_tutor": "Tutors can guide students to move beyond passive learning techniques by prompting them to ask questions that require critical thinking, encouraging self-testing, and fostering activities that promote active engagement such as drawing diagrams from memory. By emphasizing the importance of cognitive engagement, tutors can help students develop better study habits and enhance their learning effectiveness.",
+    "keywords": [
+      "cognitive engagement",
+      "active learning",
+      "critical thinking",
+      "self-testing",
+      "deep understanding",
+      "study habits",
+      "learning effectiveness"
+    ],
+    "derived_from_activity_id": "PR35",
+    "derived_from_activity_name": "Cog P vs Cog A"
+  },
+  {
+    "id": "insight_vi236",
+    "name": "Delayed Gratification and Goal Setting",
+    "description": "The principle of delayed gratification emphasizes choosing long-term rewards over immediate pleasures, while goal setting theory focuses on setting specific, achievable objectives to guide behavior and decision-making.",
+    "implications_for_tutor": "Tutors can guide students to reflect on the consequences of their choices in the short and long term, prompting them to prioritize actions aligned with their overarching goals. By discussing the importance of setting clear, measurable objectives, tutors can help students establish a roadmap for success and maintain focus on what truly matters.",
+    "keywords": [
+      "delayed gratification",
+      "self-control",
+      "impulse control",
+      "goal setting",
+      "decision-making",
+      "prioritization",
+      "self-awareness"
+    ],
+    "derived_from_activity_id": "VI236",
+    "derived_from_activity_name": "Now vs Most"
+  },
+  {
+    "id": "insight_pr336",
+    "name": "Metacognition and Self-Regulated Learning",
+    "description": "Metacognition involves understanding one's own learning processes, while self-regulated learning refers to the ability to plan, monitor, and evaluate one's learning strategies. This activity encourages students to reflect on their familiarity with content and adjust their study habits accordingly, promoting metacognitive awareness and self-regulated learning.",
+    "implications_for_tutor": "Tutors can guide students to reflect on why certain material is challenging and help them develop strategies to tackle difficult concepts. By discussing how students can monitor their own learning progress and adjust their study routines based on their understanding, tutors can enhance metacognitive skills and self-regulated learning behaviors.",
+    "keywords": [
+      "metacognition",
+      "self-regulated learning",
+      "study habits",
+      "reflection",
+      "learning strategies",
+      "cognitive monitoring",
+      "study skills"
+    ],
+    "derived_from_activity_id": "PR336",
+    "derived_from_activity_name": "Leitner Box"
+  },
+  {
+    "id": "insight_sy36",
+    "name": "Proactive Time Management",
+    "description": "Proactive time management involves planning and organizing tasks ahead of time to reduce stress, improve productivity, and enhance preparedness for upcoming responsibilities.",
+    "implications_for_tutor": "Tutors can guide students in developing proactive time management skills by encouraging them to engage in weekly planning rituals like 'The Sunday Night Ritual.' Tutors can ask students how they currently plan their week, what challenges they face in managing their time, and how they feel when they have a clear plan in place. By discussing the benefits of proactive planning, tutors can motivate students to adopt similar strategies in their academic lives.",
+    "keywords": [
+      "time management",
+      "organization",
+      "planning",
+      "productivity",
+      "stress reduction",
+      "preparedness",
+      "academic success"
+    ],
+    "derived_from_activity_id": "SY36",
+    "derived_from_activity_name": "The Sunday Night Ritual"
+  },
+  {
+    "id": "insight_sy337",
+    "name": "Project Management and Task Prioritization",
+    "description": "Utilizing project management principles and effective task prioritization strategies can enhance students' organization, time management, and productivity in academic settings.",
+    "implications_for_tutor": "When coaching students, tutors can discuss the importance of breaking down projects into manageable tasks, setting clear priorities, and allocating time effectively. Tutors can guide students in creating visual tools like the Project Progress Chart to track progress, identify areas needing attention, and optimize their workflow.",
+    "keywords": [
+      "project management",
+      "task prioritization",
+      "time management",
+      "organization",
+      "productivity",
+      "academic success",
+      "visual tools"
+    ],
+    "derived_from_activity_id": "SY337",
+    "derived_from_activity_name": "Project Progress Chart"
+  },
+  {
+    "id": "insight_sy237",
+    "name": "Task Prioritization Matrix",
+    "description": "The Task Prioritization Matrix activity aligns with principles of time management, task prioritization, and cognitive load theory by helping students categorize tasks based on impact and effort, enabling efficient allocation of time and mental resources.",
+    "implications_for_tutor": "When coaching students through this activity, tutors can emphasize the importance of identifying high-impact tasks and allocating time accordingly to optimize productivity. Tutors can guide students in reflecting on their task categorization process, discussing strategies for managing cognitive load, and reinforcing the value of effective time management in achieving academic goals.",
+    "keywords": [
+      "task prioritization",
+      "time management",
+      "efficiency",
+      "cognitive load theory",
+      "productivity",
+      "impact assessment",
+      "task categorization"
+    ],
+    "derived_from_activity_id": "SY237",
+    "derived_from_activity_name": "Action Priority Matrix"
+  },
+  {
+    "id": "insight_vi37",
+    "name": "Future Thinking and Narrative Identity",
+    "description": "Engaging in future thinking exercises and exploring alternative life scenarios can help individuals construct their narrative identity and align their goals with personal values and interests.",
+    "implications_for_tutor": "Tutors can guide students in reflecting on how the different future timelines connect to their current choices and values. They can ask questions to help students identify recurring themes and motivations across the timelines, fostering a deeper understanding of their aspirations and decision-making processes.",
+    "keywords": [
+      "future thinking",
+      "narrative identity",
+      "scenario planning",
+      "self-determination theory",
+      "goal setting",
+      "aspirations",
+      "decision-making"
+    ],
+    "derived_from_activity_id": "VI37",
+    "derived_from_activity_name": "Odyssey Planning"
+  },
+  {
+    "id": "insight_at238",
+    "name": "Benefit Finding",
+    "description": "Focusing on the positive benefits and lessons learned from challenging experiences can enhance resilience, coping skills, and personal growth.",
+    "implications_for_tutor": "Tutors can guide students to reflect on setbacks by asking questions that prompt them to identify positive outcomes and lessons learned. Encouraging students to reframe challenges as opportunities for growth can help build resilience and a positive attitude towards setbacks.",
+    "keywords": [
+      "positive psychology",
+      "resilience",
+      "coping skills",
+      "personal growth",
+      "mindset reframing",
+      "setbacks",
+      "challenges"
+    ],
+    "derived_from_activity_id": "AT238",
+    "derived_from_activity_name": "Benefit Finding"
+  },
+  {
+    "id": "insight_pr338",
+    "name": "Deliberate Practice",
+    "description": "Deliberate practice involves focused and intentional practice of specific skills, breaking them down into smaller components to improve performance. It is a key principle in skill development, supported by research in educational psychology.",
+    "implications_for_tutor": "When coaching students, tutors can emphasize the importance of deliberate practice by encouraging them to start with slow, attentive practice before moving on to faster-paced simulations. Tutors can ask students to reflect on their learning process, identify areas for improvement, and set specific goals for targeted practice sessions.",
+    "keywords": [
+      "deliberate practice",
+      "skill development",
+      "focused practice",
+      "intentional learning",
+      "performance improvement",
+      "skill mastery",
+      "educational psychology"
+    ],
+    "derived_from_activity_id": "PR338",
+    "derived_from_activity_name": "Two Slow, One Fast"
+  },
+  {
+    "id": "insight_at38",
+    "name": "Opportunity Awareness and Openness",
+    "description": "Individuals who are open to new experiences and actively seek out opportunities tend to notice and capitalize on them more effectively, leading to increased success and satisfaction.",
+    "implications_for_tutor": "When coaching students, tutors can discuss the importance of being open-minded and curious about their surroundings to discover hidden opportunities. Tutors can encourage students to reflect on how being more observant and proactive can enhance their learning and personal growth. They can also guide students in developing a mindset that embraces uncertainty and novelty, fostering a sense of exploration and readiness to seize chances.",
+    "keywords": [
+      "opportunity awareness",
+      "openness",
+      "curiosity",
+      "proactive mindset",
+      "observant",
+      "exploration",
+      "seizing opportunities"
+    ],
+    "derived_from_activity_id": "AT38",
+    "derived_from_activity_name": "A Dozen Noticeboards"
+  },
+  {
+    "id": "insight_at339",
+    "name": "Positive Visualization and Problem-Solving",
+    "description": "Engaging in positive visualization to enhance mindset and then transitioning to problem-solving promotes cognitive reframing and proactive thinking.",
+    "implications_for_tutor": "When coaching students through 'There and Back' or similar activities, tutors can guide them to reflect on how positive thinking can influence problem-solving abilities. Tutors may ask students to explore how shifting from a positive mindset to solution-focused thinking impacts their approach to challenges and decision-making.",
+    "keywords": [
+      "positive visualization",
+      "problem-solving",
+      "cognitive reframing",
+      "mindset shift",
+      "proactive thinking",
+      "solution-focused",
+      "introspection"
+    ],
+    "derived_from_activity_id": "AT339",
+    "derived_from_activity_name": "There and Back"
+  },
+  {
+    "id": "insight_at239",
+    "name": "Stress Management and Resilience Building",
+    "description": "Developing stress management techniques and building resilience are essential for students to navigate challenging situations effectively and maintain well-being.",
+    "implications_for_tutor": "Tutors can guide students in practicing stress-reducing exercises like box breathing and encourage open conversations about setbacks to foster resilience. By discussing the importance of coping strategies and self-care, tutors can help students enhance their ability to manage stress and bounce back from difficulties.",
+    "keywords": [
+      "stress management",
+      "resilience building",
+      "coping strategies",
+      "well-being",
+      "student support",
+      "mental health",
+      "self-care"
+    ],
+    "derived_from_activity_id": "AT239",
+    "derived_from_activity_name": "First Aid Kit"
+  },
+  {
+    "id": "insight_at39",
+    "name": "Positive Psychology and Well-being",
+    "description": "Focusing on positive events and cultivating gratitude can enhance well-being and happiness, as supported by positive psychology principles.",
+    "implications_for_tutor": "Tutors can discuss with students the impact of focusing on positive aspects of their experiences on their overall well-being and academic performance. They can encourage students to reflect on daily positive moments and how these contribute to their mindset and happiness.",
+    "keywords": [
+      "positive psychology",
+      "well-being",
+      "gratitude",
+      "happiness",
+      "mindset",
+      "positive thinking",
+      "reflection"
+    ],
+    "derived_from_activity_id": "AT39",
+    "derived_from_activity_name": "Think Three Positives"
+  },
+  {
+    "id": "insight_at340",
+    "name": "Embodied Cognition and Power Poses",
+    "description": "Embodied cognition theory suggests that bodily experiences and movements can influence cognitive processes and emotions. Power poses, as researched by Amy Cuddy, can impact confidence, self-esteem, and stress levels through changes in body posture.",
+    "implications_for_tutor": "Tutors can discuss with students how body posture can affect mindset and emotions, linking the physical act of standing tall to psychological states like confidence and reduced stress. They can encourage students to integrate power poses into their study routine as a way to enhance their mental state and performance.",
+    "keywords": [
+      "embodied cognition",
+      "power poses",
+      "Amy Cuddy",
+      "confidence building",
+      "stress reduction",
+      "body posture",
+      "mindset"
+    ],
+    "derived_from_activity_id": "AT340",
+    "derived_from_activity_name": "Stand Tall"
+  },
+  {
+    "id": "insight_ef240",
+    "name": "Decision Fatigue and Pre-Making Decisions",
+    "description": "The concept of decision fatigue suggests that making numerous decisions can lead to a decrease in decision quality. Pre-making decisions helps conserve cognitive resources and ensures thoughtful choices aligning with long-term goals.",
+    "implications_for_tutor": "Tutors can guide students in reflecting on their values, goals, and ideal self-image to pre-make decisions that align with their aspirations. They can discuss strategies to proactively plan responses to challenges, building resilience against impulsive reactions and fostering self-awareness.",
+    "keywords": [
+      "decision fatigue",
+      "pre-making decisions",
+      "cognitive load",
+      "values alignment",
+      "self-reflection",
+      "goal setting",
+      "impulse control"
+    ],
+    "derived_from_activity_id": "EF240",
+    "derived_from_activity_name": "Pre-Making Decisions"
+  },
+  {
+    "id": "insight_pr40",
+    "name": "Sleep and Memory Consolidation",
+    "description": "Sleep plays a crucial role in memory consolidation, protecting memories against decay and interference, and actively reinforcing new memories.",
+    "implications_for_tutor": "Tutors can emphasize the importance of quality sleep for learning and memory retention to students. They can guide students on creating optimal sleep conditions after studying challenging material and encourage them to test their recall the next day to reinforce learning.",
+    "keywords": [
+      "sleep",
+      "memory consolidation",
+      "memory retention",
+      "learning",
+      "study habits",
+      "recall",
+      "cognitive processes"
+    ],
+    "derived_from_activity_id": "PR40",
+    "derived_from_activity_name": "Overnight Boost"
+  },
+  {
+    "id": "insight_sy41",
+    "name": "Energy Management for Productivity",
+    "description": "The principle of managing energy levels to optimize productivity involves identifying tasks that either boost or sap energy, strategically organizing tasks to maintain high energy levels, and understanding how energy impacts task performance and time management.",
+    "implications_for_tutor": "Tutors can guide students to reflect on how different tasks affect their energy levels and help them categorize tasks as boosters or sappers. They can discuss the importance of starting, interspersing, and ending the day with booster tasks to enhance productivity and mental well-being. Tutors can also explore with students how managing energy can lead to improved time management and task prioritization.",
+    "keywords": [
+      "energy management",
+      "productivity",
+      "task organization",
+      "time management",
+      "task prioritization",
+      "performance enhancement",
+      "student well-being"
+    ],
+    "derived_from_activity_id": "SY41",
+    "derived_from_activity_name": "Boosters vs Sappers"
+  }
+]

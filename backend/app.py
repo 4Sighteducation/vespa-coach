@@ -93,6 +93,28 @@ alps_bands_preU = load_json_file('knowledge_base/alpsBands_preU.json')
 alps_bands_ual = load_json_file('knowledge_base/alpsBands_ual.json')
 alps_bands_wjec = load_json_file('knowledge_base/alpsBands_wjec.json')
 
+# --- Load New Knowledge Bases ---
+COACHING_INSIGHTS_DATA = load_json_file('knowledge_base/coaching_insights.json')
+VESPA_ACTIVITIES_DATA = load_json_file('knowledge_base/vespa_activities_kb.json')
+REFLECTIVE_STATEMENTS_DATA = []
+try:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # Adjusted path for 100_statements.txt to be relative to the 'backend' directory, then up one level to 'AIVESPACoach' and then into 'VESPA Contextual Information'
+    # This matches the structure described in the handover: AIVESPACoach/VESPA Contextual Information/100 statements - 2023.txt
+    # The app.py is in AIVESPACoach/backend/
+    statements_file_path = os.path.join(current_dir, '..', 'VESPA Contextual Information', '100 statements - 2023.txt')
+    statements_file_path = os.path.normpath(statements_file_path) # Normalize path
+    app.logger.info(f"Attempting to load 100 statements from: {statements_file_path}")
+    with open(statements_file_path, 'r', encoding='utf-8') as f:
+        # Read lines, strip whitespace, and filter out empty lines
+        REFLECTIVE_STATEMENTS_DATA = [line.strip() for line in f if line.strip()]
+    app.logger.info(f"Successfully loaded {len(REFLECTIVE_STATEMENTS_DATA)} statements from '100 statements - 2023.txt'")
+except FileNotFoundError:
+    app.logger.error(f"'100 statements - 2023.txt' not found at {statements_file_path}.")
+except Exception as e:
+    app.logger.error(f"Error loading '100 statements - 2023.txt': {e}")
+
+
 if not psychometric_question_details:
     app.logger.warning("Psychometric question details KB is empty or failed to load.")
 if not question_id_to_text_mapping:
@@ -109,6 +131,22 @@ if not grade_points_mapping_data:
     app.logger.error("CRITICAL: Grade to Points Mapping (grade_to_points_mapping.json) failed to load. Point calculations will be incorrect.")
 else:
     app.logger.info("Successfully loaded Grade to Points Mapping.")
+
+if not COACHING_INSIGHTS_DATA:
+    app.logger.warning("Coaching Insights KB (coaching_insights.json) is empty or failed to load.")
+else:
+    app.logger.info(f"Successfully loaded {len(COACHING_INSIGHTS_DATA)} records from Coaching Insights KB.")
+
+if not VESPA_ACTIVITIES_DATA:
+    app.logger.warning("VESPA Activities KB (vespa_activities_kb.json) is empty or failed to load.")
+else:
+    app.logger.info(f"Successfully loaded {len(VESPA_ACTIVITIES_DATA)} records from VESPA Activities KB.")
+
+if not REFLECTIVE_STATEMENTS_DATA:
+    app.logger.warning("Reflective Statements (100_statements.txt) is empty or failed to load.")
+else:
+    # Already logged success or failure during loading
+    pass
 
 
 # --- Helper Functions ---
@@ -452,6 +490,7 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
     student_name = student_data_dict.get('student_name', 'Unknown Student')
     current_cycle = student_data_dict.get('current_cycle', 'N/A')
     school_averages = student_data_dict.get('school_vespa_averages') # Expects dict like {"Vision": 7.5, ...}
+    vespa_profile_for_rag = student_data_dict.get('vespa_profile', {}) # Used for RAG
 
     # Construct a detailed prompt for the LLM
     prompt_parts = []
@@ -597,6 +636,70 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
     prompt_parts.append("Format your entire response as a single JSON object with the following EXACT keys: \"student_overview_summary\", \"chart_comparative_insights\", \"most_important_coaching_questions\", \"student_comment_analysis\", \"suggested_student_goals\", \"academic_benchmark_analysis\", \"questionnaire_interpretation_and_reflection_summary\".") # ADDED new key
     prompt_parts.append("Ensure all string values within the JSON are properly escaped.")
 
+    # --- RAG for Coaching Suggestions and Goals (within generate_student_summary_with_llm) ---
+    retrieved_rag_items_for_prompt = []
+    # Simple RAG based on lowest VESPA score
+    lowest_vespa_element = None
+    lowest_score = 11 # Initialize with a score higher than max VESPA score
+    if vespa_profile_for_rag:
+        for element, details in vespa_profile_for_rag.items():
+            if element == "Overall": continue
+            try:
+                score = float(details.get('score_1_to_10', 10))
+                if score < lowest_score:
+                    lowest_score = score
+                    lowest_vespa_element = element
+            except (ValueError, TypeError):
+                pass # Ignore if score is not a number
+
+    if lowest_vespa_element:
+        app.logger.info(f"Lowest VESPA element for RAG: {lowest_vespa_element} (Score: {lowest_score})")
+        # Retrieve from COACHING_INSIGHTS_DATA
+        if COACHING_INSIGHTS_DATA:
+            for insight in COACHING_INSIGHTS_DATA:
+                if lowest_vespa_element.lower() in str(insight.get('keywords', [])).lower() or lowest_vespa_element.lower() in insight.get('name', '').lower():
+                    retrieved_rag_items_for_prompt.append(f"- Consider Insight: '{insight.get('name')}' - {insight.get('description', '')[:70]}...")
+                    if len(retrieved_rag_items_for_prompt) >=1: break # Max 1 for now
+        
+        # Retrieve from VESPA_ACTIVITIES_DATA
+        if VESPA_ACTIVITIES_DATA:
+            activity_count = 0
+            for activity in VESPA_ACTIVITIES_DATA:
+                if lowest_vespa_element.lower() == activity.get('vespa_element', '').lower():
+                    retrieved_rag_items_for_prompt.append(f"- Consider Activity: '{activity.get('name')}' (VESPA: {activity.get('vespa_element')}) - Summary: {activity.get('short_summary', '')[:70]}...")
+                    activity_count += 1
+                    if activity_count >= 1: break # Max 1 for now
+
+        # Retrieve from REFLECTIVE_STATEMENTS_DATA (simple match for now)
+        if REFLECTIVE_STATEMENTS_DATA:
+            statement_count = 0
+            for statement in REFLECTIVE_STATEMENTS_DATA:
+                if lowest_vespa_element.lower() in statement.lower(): # Very basic keyword match
+                    retrieved_rag_items_for_prompt.append(f"- Consider Reflective Statement: '{statement[:100]}...'")
+                    statement_count +=1
+                    if statement_count >= 1: break # Max 1 for now
+    
+    if retrieved_rag_items_for_prompt:
+        prompt_parts.append("\n\n--- Dynamically Retrieved Context (Consider for Questions/Goals) ---")
+        prompt_parts.append("The student\'s lowest VESPA score is in " + lowest_vespa_element + ". Based on this, consider the following:")
+        prompt_parts.extend(retrieved_rag_items_for_prompt)
+        prompt_parts.append("Use these to help formulate more targeted coaching questions and goal suggestions.")
+
+    # --- Include Divers vs. Thrivers insight for comment analysis --- 
+    divers_thrivers_insight_text = ""
+    if COACHING_INSIGHTS_DATA:
+        for insight in COACHING_INSIGHTS_DATA:
+            if insight.get('id') == 'divers_thrivers_loc':
+                divers_thrivers_insight_text = f"When analyzing comments, pay special attention to the 'Divers vs. Thrivers: Locus of Control' insight: {insight.get('description', '')} Implication: {insight.get('implications_for_tutor', '')}"
+                break
+    if divers_thrivers_insight_text:
+        # Add this specifically to the description of the student_comment_analysis task
+        # This requires finding where student_comment_analysis is defined in the prompt_parts for the JSON structure
+        # For now, I'll add it as a general instruction before the JSON output structure definition.
+        prompt_parts.append(f"\n\n--- Special Instruction for Student Comment Analysis ---")
+        prompt_parts.append(divers_thrivers_insight_text)
+
+
     prompt_parts.append("\n\n--- Knowledge Base: Coaching Questions (Excerpt) ---")
     prompt_parts.append("Use these to select questions. Consider student's level, VESPA scores, and academic performance relative to MEGs.") # Added academic context
     # Simplified coaching_kb injection for brevity in prompt - real version would be more selective or summarized
@@ -614,15 +717,14 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
         prompt_parts.append("Coaching questions knowledge base not available for this request.")
 
 
-    prompt_parts.append("\n\n--- Knowledge Base: 100 Student Goal Statements (Excerpt - for inspiration) ---")
+    prompt_parts.append("\n\n--- Knowledge Base: Reflective Statements (Excerpt - for inspiration) ---")
     prompt_parts.append("Use these statements as INSPIRATION when formulating suggested goals. Do not just copy them. Reframe them based on the student's specific context.")
-    if student_goals_statements_text:
-        # Include a small, relevant snippet of the 100 statements
-        # This is a placeholder; a more sophisticated selection might be needed if the text is very long
-        snippet = "\n".join(student_goals_statements_text.split('\n')[:15]) # First 15 lines
+    if REFLECTIVE_STATEMENTS_DATA: # Use the new global variable
+        # Include a small, relevant snippet of the statements
+        snippet = "\n".join(REFLECTIVE_STATEMENTS_DATA[:5]) # First 5 statements, escaped for JSON in prompt
         prompt_parts.append(snippet + "\n...")
     else:
-        prompt_parts.append("Student goal statements knowledge base not available for this request.")
+        prompt_parts.append("Reflective statements knowledge base not available for this request.")
 
     prompt_parts.append("\n\n--- REQUIRED OUTPUT STRUCTURE (JSON Object) ---")
     prompt_parts.append("Please provide your response as a single, valid JSON object. Example:")
@@ -1308,7 +1410,7 @@ def coaching_suggestions():
 
     # Call LLM to get structured insights
     # The coaching_kb (dict) and student_goals_statements_content (string) are passed here
-    llm_structured_output = generate_student_summary_with_llm(student_data_for_llm, coaching_kb, student_goals_statements_content, all_scored_questions_from_object29) # Pass all_scored_questions
+    llm_structured_output = generate_student_summary_with_llm(student_data_for_llm, coaching_kb, REFLECTIVE_STATEMENTS_DATA, all_scored_questions_from_object29) # Pass all_scored_questions
     
     # --- Prepare Final API Response ---
     # The vespa_profile_details for the API response needs more than what LLM got (report_text etc.)
@@ -1574,10 +1676,89 @@ def chat_turn():
             context_preamble += f"- Academic Benchmark Analysis: {initial_ai_context['academic_benchmark_analysis']}\n"
         if initial_ai_context.get('questionnaire_interpretation_and_reflection_summary'):
             context_preamble += f"- Questionnaire Interpretation: {initial_ai_context['questionnaire_interpretation_and_reflection_summary']}\n"
-        context_preamble += "\nGiven this context, and the chat history below, please respond to the tutor's latest message."
-        # Add this preamble as a system-like message before the chat history, or augment the system prompt
-        messages_for_llm.insert(1, {"role": "system", "content": context_preamble}) # Insert after initial system role
-        app.logger.info(f"chat_turn: Added initial_ai_context to LLM prompt: {context_preamble}")
+        
+        # Keyword extraction and RAG for chat_turn
+        retrieved_context_parts = []
+        if current_tutor_message:
+            # Simple keyword extraction (split by space, lowercase, remove common words)
+            # In a real scenario, use a more robust NLP library or technique
+            common_words = {"is", "a", "the", "and", "to", "of", "it", "in", "for", "on", "with", "as", "an", "at", "by", "what", "how", "tell", "me", "about"}
+            keywords = [word for word in current_tutor_message.lower().replace('?', '').replace('.', '').split() if word not in common_words and len(word) > 2]
+            app.logger.info(f"chat_turn RAG: Extracted keywords from tutor message '{current_tutor_message}': {keywords}")
+
+            # Search COACHING_INSIGHTS_DATA
+            if COACHING_INSIGHTS_DATA and keywords:
+                app.logger.info(f"chat_turn RAG: Searching COACHING_INSIGHTS_DATA ({len(COACHING_INSIGHTS_DATA)} items) for keywords: {keywords}")
+                found_insights_count = 0
+                for insight in COACHING_INSIGHTS_DATA:
+                    insight_text_to_search = (str(insight.get('keywords', [])).lower() + 
+                                              str(insight.get('name', '')).lower() + 
+                                              str(insight.get('description', '')).lower())
+                    if any(kw in insight_text_to_search for kw in keywords):
+                        found_insights.append(f"- Insight: {insight.get('name', 'N/A')} (Description: {insight.get('description', 'N/A')[:100]}...)")
+                        found_insights_count += 1
+                        if found_insights_count >= 2: break # Limit to 2 insights
+                if found_insights_count > 0:
+                    retrieved_context_parts.append("\nRelevant Coaching Insights you might consider:")
+                    # Append only the newly found ones, found_insights list accumulates them
+                    retrieved_context_parts.extend(found_insights[-found_insights_count:]) 
+                    app.logger.info(f"chat_turn RAG: Found {found_insights_count} relevant coaching insights.")
+                else:
+                    app.logger.info("chat_turn RAG: No relevant coaching insights found.")
+            else:
+                app.logger.info("chat_turn RAG: Skipped searching COACHING_INSIGHTS_DATA (KB empty or no keywords).")
+            
+            # Search VESPA_ACTIVITIES_DATA
+            if VESPA_ACTIVITIES_DATA and keywords:
+                app.logger.info(f"chat_turn RAG: Searching VESPA_ACTIVITIES_DATA ({len(VESPA_ACTIVITIES_DATA)} items) for keywords: {keywords}")
+                found_activities_count = 0
+                # temp list for this search to avoid extending retrieved_context_parts with already added insight headers
+                current_found_activities = [] 
+                for activity in VESPA_ACTIVITIES_DATA:
+                    activity_text_to_search = (str(activity.get('keywords', [])).lower() +
+                                               str(activity.get('name', '')).lower() +
+                                               str(activity.get('short_summary', '')).lower() +
+                                               str(activity.get('vespa_element', '')).lower())
+                    if any(kw in activity_text_to_search for kw in keywords):
+                        current_found_activities.append(f"- Activity: {activity.get('name', 'N/A')} (VESPA: {activity.get('vespa_element','N/A')}, Summary: {activity.get('short_summary', 'N/A')[:100]}...)")
+                        found_activities_count +=1
+                        if found_activities_count >= 2: break # Limit to 2 activities
+                if current_found_activities: # Check if this specific search yielded results
+                    retrieved_context_parts.append("\nRelevant VESPA Activities you could suggest:")
+                    retrieved_context_parts.extend(current_found_activities)
+                    app.logger.info(f"chat_turn RAG: Found {found_activities_count} relevant VESPA activities.")
+                else:
+                    app.logger.info("chat_turn RAG: No relevant VESPA activities found.")
+            else:
+                app.logger.info("chat_turn RAG: Skipped searching VESPA_ACTIVITIES_DATA (KB empty or no keywords).")
+
+            # Search REFLECTIVE_STATEMENTS_DATA
+            if REFLECTIVE_STATEMENTS_DATA and keywords:
+                app.logger.info(f"chat_turn RAG: Searching REFLECTIVE_STATEMENTS_DATA ({len(REFLECTIVE_STATEMENTS_DATA)} items) for keywords: {keywords}")
+                found_statements_count = 0
+                current_found_statements = [] # temp list for this search
+                for statement in REFLECTIVE_STATEMENTS_DATA:
+                    if any(kw in statement.lower() for kw in keywords):
+                        current_found_statements.append(f"- Statement: \"{statement[:150]}...\"")
+                        found_statements_count += 1
+                        if found_statements_count >= 2: break # Limit to 2 statements
+                if current_found_statements: # Check if this specific search yielded results
+                    retrieved_context_parts.append("\nRelevant Reflective Statements the tutor could adapt:")
+                    retrieved_context_parts.extend(current_found_statements)
+                    app.logger.info(f"chat_turn RAG: Found {found_statements_count} relevant reflective statements.")
+                else:
+                    app.logger.info("chat_turn RAG: No relevant reflective statements found.")
+            else:
+                app.logger.info("chat_turn RAG: Skipped searching REFLECTIVE_STATEMENTS_DATA (KB empty or no keywords).")
+            
+            if retrieved_context_parts:
+                app.logger.info(f"chat_turn RAG: Final retrieved_context_parts before adding to preamble: {retrieved_context_parts}")
+                context_preamble += "\n\nAdditional Context from Knowledge Bases based on your message:"
+                context_preamble += "\n".join(retrieved_context_parts)
+
+        context_preamble += "\n\nGiven this context, and the chat history below, please respond to the tutor's latest message."
+        messages_for_llm.insert(1, {"role": "system", "content": context_preamble}) 
+        app.logger.info(f"chat_turn: Added initial_ai_context and RAG context to LLM prompt. Pre-amble length: {len(context_preamble)}")
 
     # Add existing chat history
     for message in chat_history:
