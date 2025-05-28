@@ -303,39 +303,51 @@ else:
 
 
 # --- Function to Generate Student Summary with LLM (Now with active LLM call) ---
-def generate_student_summary_with_llm(student_data_dict):
+def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, student_goals_statements_text):
     app.logger.info(f"Attempting to generate LLM summary for student: {student_data_dict.get('student_name', 'N/A')}")
     
     if not OPENAI_API_KEY:
         app.logger.error("OpenAI API key is not configured. Cannot generate LLM summary.")
-        # Fallback to a more informative placeholder if API key is missing
-        return f"LLM summary for {student_data_dict.get('student_name', 'N/A')} is unavailable (AI key not configured). Key data would be summarized here."
+        return {
+            "student_overview_summary": f"LLM summary for {student_data_dict.get('student_name', 'N/A')} is unavailable (AI key not configured).",
+            "chart_comparative_insights": "Insights unavailable (AI key not configured).",
+            "most_important_coaching_questions": ["Coaching questions unavailable (AI key not configured)."],
+            "student_comment_analysis": "Comment analysis unavailable (AI key not configured).",
+            "suggested_student_goals": ["Goal suggestions unavailable (AI key not configured)."]
+        }
 
     student_level = student_data_dict.get('student_level', 'N/A')
     student_name = student_data_dict.get('student_name', 'Unknown Student')
     current_cycle = student_data_dict.get('current_cycle', 'N/A')
+    school_averages = student_data_dict.get('school_vespa_averages') # Expects dict like {"Vision": 7.5, ...}
 
     # Construct a detailed prompt for the LLM
     prompt_parts = []
     prompt_parts.append(f"The following data is for student '{student_name}' (Level: {student_level}, Current Cycle: {current_cycle}).")
 
     # VESPA Profile
-    prompt_parts.append("\n--- VESPA Profile (Vision, Effort, Systems, Practice, Attitude) ---")
+    prompt_parts.append("\n--- Student's Current VESPA Profile (Vision, Effort, Systems, Practice, Attitude) ---")
     if student_data_dict.get('vespa_profile'):
         for element, details in student_data_dict['vespa_profile'].items():
+            if element == "Overall": continue # Skip overall for this detailed student section
             prompt_parts.append(f"- {element}: Score {details.get('score_1_to_10', 'N/A')}/10 ({details.get('score_profile_text', 'N/A')})")
-            report_text_raw = details.get('primary_tutor_coaching_comments', '') 
-            if report_text_raw and report_text_raw != "Coaching comments not found.":
-                 report_text_clean = report_text_raw[:150].replace('\n', ' ')
-                 ellipsis = '...' if len(report_text_raw) > 150 else ''
-                 prompt_parts.append(f"  Tutor Note ({element}): {report_text_clean}{ellipsis}")
+            # We will refer to tutor notes/report text later if needed for goal generation, but not for the main summary to LLM
 
-    # Academic Profile
+    # School VESPA Averages (if available)
+    if school_averages:
+        prompt_parts.append("\n--- School's Average VESPA Scores (For Comparison) ---")
+        for element, avg_score in school_averages.items():
+            prompt_parts.append(f"- {element} (School Avg): {avg_score}/10")
+    else:
+        prompt_parts.append("\n--- School's Average VESPA Scores ---")
+        prompt_parts.append("  School-wide average VESPA scores are not available for comparison at this time.")
+
+    # Academic Profile (Briefly)
     prompt_parts.append("\n--- Academic Profile (First 3 Subjects) ---")
     if student_data_dict.get('academic_profile_summary'):
         profile_data = student_data_dict['academic_profile_summary']
         if isinstance(profile_data, list) and profile_data and profile_data[0].get('subject') and not profile_data[0]["subject"].startswith("Academic profile not found") and not profile_data[0]["subject"].startswith("No academic subjects"):
-            for subject_info in profile_data[:3]: # Limit to first 3 subjects for brevity
+            for subject_info in profile_data[:3]:
                 prompt_parts.append(f"- Subject: {subject_info.get('subject', 'N/A')}, Current: {subject_info.get('currentGrade', 'N/A')}, Target: {subject_info.get('targetGrade', 'N/A')}, Effort: {subject_info.get('effortGrade', 'N/A')}")
         else:
             prompt_parts.append("  No detailed academic profile summary available or profile indicates issues.")
@@ -343,33 +355,35 @@ def generate_student_summary_with_llm(student_data_dict):
     # Reflections and Goals (Current Cycle Focus)
     prompt_parts.append("\n--- Student Reflections & Goals (Current Cycle Focus) ---")
     reflections_goals_found = False
+    current_rrc_text = "Not specified"
+    current_goal_text = "Not specified"
     if student_data_dict.get('student_reflections_and_goals'):
         reflections = student_data_dict['student_reflections_and_goals']
-        # current_cycle is already defined from student_data_dict
         current_rrc_key = f"rrc{current_cycle}_comment"
         current_goal_key = f"goal{current_cycle}"
 
         if reflections.get(current_rrc_key) and reflections[current_rrc_key] != "Not specified":
-            rrc_text_clean = str(reflections[current_rrc_key])[:200].replace('\n', ' ')
-            prompt_parts.append(f"- Current Reflection (RRC{current_cycle}): {rrc_text_clean}...")
+            current_rrc_text = str(reflections[current_rrc_key])
+            prompt_parts.append(f"- Current Reflection (RRC{current_cycle}): {current_rrc_text[:300].replace('\n', ' ')}...") # Limit length
             reflections_goals_found = True
         if reflections.get(current_goal_key) and reflections[current_goal_key] != "Not specified":
-            goal_text_clean = str(reflections[current_goal_key])[:200].replace('\n', ' ')
-            prompt_parts.append(f"- Current Goal ({current_goal_key.replace('_',' ').upper()}): {goal_text_clean}...")
+            current_goal_text = str(reflections[current_goal_key])
+            prompt_parts.append(f"- Current Goal ({current_goal_key.replace('_',' ').upper()}): {current_goal_text[:300].replace('\n', ' ')}...") # Limit length
             reflections_goals_found = True
         
-        if not reflections_goals_found:
+        if not reflections_goals_found: # Fallback to RRC1/Goal1 if current cycle ones are not found
             if reflections.get('rrc1_comment') and reflections['rrc1_comment'] != "Not specified":
-                rrc1_text_clean = str(reflections['rrc1_comment'])[:200].replace('\n', ' ')
-                prompt_parts.append(f"- RRC1 Reflection: {rrc1_text_clean}...")
+                current_rrc_text = str(reflections['rrc1_comment'])
+                prompt_parts.append(f"- RRC1 Reflection (Fallback): {current_rrc_text[:300].replace('\n', ' ')}...")
                 reflections_goals_found = True
             if reflections.get('goal1') and reflections['goal1'] != "Not specified":
-                goal1_text_clean = str(reflections['goal1'])[:200].replace('\n', ' ')
-                prompt_parts.append(f"- Goal1: {goal1_text_clean}...")
+                current_goal_text = str(reflections['goal1'])
+                prompt_parts.append(f"- Goal1 (Fallback): {current_goal_text[:300].replace('\n', ' ')}...")
                 reflections_goals_found = True
-
+    
     if not reflections_goals_found:
         prompt_parts.append("  No specific current reflections or goals provided, or no fallback RRC1/Goal1 data.")
+
 
     # Key Insights from Questionnaire (Object_29) - pick a few flagged ones if available
     prompt_parts.append("\n--- Key Questionnaire Insights (Flagged Low Scores from Object_29) ---")
@@ -380,30 +394,24 @@ def generate_student_summary_with_llm(student_data_dict):
             for insight in insights:
                 if isinstance(insight, str) and insight.startswith("FLAG:"):
                     flagged_insights.append(insight.replace('\n', ' '))
-    
     if flagged_insights:
         for i, fi_insight in enumerate(flagged_insights[:2]): # Max 2 flagged insights
             prompt_parts.append(f"  - {fi_insight}")
     else:
         prompt_parts.append("  No specific low-score questionnaire insights flagged from Object_29 data.")
         
-    # NEW: Top and Bottom 3 questions from Object_29
+    # Top and Bottom 3 questions from Object_29
     prompt_parts.append("\n--- Top & Bottom Scoring Questionnaire Questions (Object_29) ---")
     obj29_highlights = student_data_dict.get("object29_question_highlights")
     if obj29_highlights:
-        if obj29_highlights.get("top_3"):
+        if obj29_highlights.get("top_3") and obj29_highlights["top_3"]:
             prompt_parts.append("  Top Scoring Questions (1-5 scale):")
             for q_data in obj29_highlights["top_3"]:
                 prompt_parts.append(f"    - Score {q_data['score']}/5 ({q_data['category']}): \"{q_data['text']}\"")
-        else:
-            prompt_parts.append("  No top scoring questions data available.")
-        
-        if obj29_highlights.get("bottom_3"):
+        if obj29_highlights.get("bottom_3") and obj29_highlights["bottom_3"]:
             prompt_parts.append("  Bottom Scoring Questions (1-5 scale):")
             for q_data in obj29_highlights["bottom_3"]:
                 prompt_parts.append(f"    - Score {q_data['score']}/5 ({q_data['category']}): \"{q_data['text']}\"")
-        else:
-            prompt_parts.append("  No bottom scoring questions data available.")
     else:
         prompt_parts.append("  No top/bottom question highlight data processed for Object_29.")
         
@@ -414,48 +422,150 @@ def generate_student_summary_with_llm(student_data_dict):
         prev_summary_clean = str(prev_summary)[:300].replace('\n', ' ')
         prompt_parts.append(f"  {prev_summary_clean}...")
 
-    prompt_parts.append("\n--- TASK FOR THE AI ACADEMIC MENTOR ---")
-    prompt_parts.append("Based ONLY on the data provided above, provide a concise (2-3 sentences, max 100-120 words) 'AI Student Snapshot' for the student's TUTOR.")
-    prompt_parts.append("This snapshot should highlight 1-2 key strengths and 1-2 primary areas for development or discussion, strongly rooted in the VESPA principles (Vision, Effort, Systems, Practice, Attitude).")
-    prompt_parts.append("Pay close attention to any explicit 'Reflections' (RRC comments) or 'Goals' provided by the student for the current cycle, as these are direct insights into their thinking.") # Emphasized RRC/Goals
+    prompt_parts.append("\n\n--- TASKS FOR THE AI ACADEMIC MENTOR ---")
+    prompt_parts.append("Based ONLY on the data provided above for the student, and the knowledge base excerpts below, provide the following insights for the student's TUTOR. ")
     prompt_parts.append("The tone should be objective, analytical, and supportive, aimed at helping the tutor quickly grasp the student's profile to effectively prepare for a coaching conversation focused on student ownership.")
-    prompt_parts.append("Frame your insights to help the tutor ask open-ended questions (inspired by the style in the `coaching_questions_knowledge_base.json`) and guide the student towards self-assessment and finding their own solutions (e.g., how they compare to the `100 statements - 2023.txt`).")
-    prompt_parts.append("The ultimate aim of the tutor's conversation is to co-create an action plan with the student and use techniques like the 1-10 commitment scale ('How likely are you to stick to these goals?' -> 'What could move that score to an 8 or 9?').")
-    prompt_parts.append("IMPORTANT: Do NOT directly ask questions TO THE STUDENT or give direct advice TO THE STUDENT in this summary. Instead, provide insights and talking points that will help the TUTOR facilitate these conversations effectively. Do not use conversational filler like 'Okay, let's look at...'.")
-    
+    prompt_parts.append("IMPORTANT: Do NOT directly ask questions TO THE STUDENT or give direct advice TO THE STUDENT in your outputs. Instead, provide insights and talking points that will help the TUTOR facilitate these conversations effectively. Do not use conversational filler like 'Okay, let's look at...'.")
+    prompt_parts.append("Format your entire response as a single JSON object with the following EXACT keys: \"student_overview_summary\", \"chart_comparative_insights\", \"most_important_coaching_questions\", \"student_comment_analysis\", \"suggested_student_goals\".")
+    prompt_parts.append("Ensure all string values within the JSON are properly escaped.")
+
+    prompt_parts.append("\n\n--- Knowledge Base: Coaching Questions (Excerpt) ---")
+    prompt_parts.append("Use these to select questions. Consider student's level and VESPA scores.")
+    # Simplified coaching_kb injection for brevity in prompt - real version would be more selective or summarized
+    if coaching_kb_data:
+        general_q = coaching_kb_data.get('generalIntroductoryQuestions', [])
+        if general_q:
+            prompt_parts.append("General Introductory Questions:")
+            for q_text in general_q[:2]: prompt_parts.append(f"- {q_text}") # Limit for prompt
+        
+        vespa_q = coaching_kb_data.get('vespaSpecificCoachingQuestions', {})
+        if vespa_q.get("Vision") and vespa_q["Vision"].get(student_level):
+            prompt_parts.append(f"Vision Questions ({student_level}):")
+            for q_text in vespa_q["Vision"][student_level].get("Low", [])[:1]: prompt_parts.append(f"- {q_text}") # Example
+    else:
+        prompt_parts.append("Coaching questions knowledge base not available for this request.")
+
+
+    prompt_parts.append("\n\n--- Knowledge Base: 100 Student Goal Statements (Excerpt - for inspiration) ---")
+    prompt_parts.append("Use these statements as INSPIRATION when formulating suggested goals. Do not just copy them. Reframe them based on the student's specific context.")
+    if student_goals_statements_text:
+        # Include a small, relevant snippet of the 100 statements
+        # This is a placeholder; a more sophisticated selection might be needed if the text is very long
+        snippet = "\n".join(student_goals_statements_text.split('\n')[:15]) # First 15 lines
+        prompt_parts.append(snippet + "\n...")
+    else:
+        prompt_parts.append("Student goal statements knowledge base not available for this request.")
+
+    prompt_parts.append("\n\n--- REQUIRED OUTPUT STRUCTURE (JSON Object) ---")
+    prompt_parts.append("Please provide your response as a single, valid JSON object. Example:")
+    prompt_parts.append("'''")
+    prompt_parts.append("{")
+    prompt_parts.append("  \"student_overview_summary\": \"Concise 2-3 sentence AI Student Snapshot for the tutor, highlighting 1-2 key strengths and 1-2 primary areas for development, rooted in VESPA principles. Max 100-120 words.\",")
+    prompt_parts.append("  \"chart_comparative_insights\": \"Provide 2-3 bullet points or a short paragraph (max 80 words) analyzing the student's VESPA scores in comparison to school averages (if available). What could these differences or similarities mean?\",")
+    prompt_parts.append("  \"most_important_coaching_questions\": [\"Based on the student's profile (scores, level, comments), list 3-5 most impactful coaching questions selected from the provided Coaching Questions Knowledge Base.\", \"Question 2...\"],")
+    prompt_parts.append("  \"student_comment_analysis\": \"Analyze the student's RRC/Goal comments (text provided: RRC='{RRC_COMMENT_PLACEHOLDER}', Goal='{GOAL_COMMENT_PLACEHOLDER}'). What insights can be gained? Specifically look for language indicating locus of control (e.g., 'receive a grade' vs 'achieve a grade'). Max 100 words.\",")
+    prompt_parts.append("  \"suggested_student_goals\": [\"Based on the analysis, and inspired by the 100 Statements KB, suggest 2-3 S.M.A.R.T. goals for the student, reframed to their context.\", \"Goal 2...\"]")
+    prompt_parts.append("}")
+    prompt_parts.append("'''")
+    prompt_parts.append(f"REMEMBER to replace RRC_COMMENT_PLACEHOLDER with: '{current_rrc_text[:100].replace('\"', '\\\\\"').replace('\n', ' ')}...' and GOAL_COMMENT_PLACEHOLDER with: '{current_goal_text[:100].replace('\"', '\\\\\"').replace('\n', ' ')}...' in your actual student_comment_analysis output.")
+
+
     prompt_to_send = "\n".join(prompt_parts)
+    # Ensure the placeholders are correctly substituted in the final prompt string itself,
+    # rather than just telling the LLM to do it.
+    prompt_to_send = prompt_to_send.replace("'{RRC_COMMENT_PLACEHOLDER}'", f"'{current_rrc_text[:100].replace('\"', '\\\\\"').replace('\n', ' ')}...'")
+    prompt_to_send = prompt_to_send.replace("'{GOAL_COMMENT_PLACEHOLDER}'", f"'{current_goal_text[:100].replace('\"', '\\\\\"').replace('\n', ' ')}...'")
+
+
     app.logger.info(f"Generated LLM Prompt (first 500 chars): {prompt_to_send[:500]}")
     app.logger.info(f"Generated LLM Prompt (last 500 chars): {prompt_to_send[-500:]}")
     app.logger.info(f"Total LLM Prompt length: {len(prompt_to_send)} characters")
 
     system_message_content = (
         f"You are a professional academic mentor with significant experience working with school-age students, "
-        f"specifically at {student_level} (Level 2 is GCSE age 14-16, Level 3 is A-Level/Post-16 age 16-18). "
-        f"Your responses should reflect this understanding. You are assisting a tutor who is preparing for a "
-        f"coaching session with a student, guided by the VESPA (Vision, Effort, Systems, Practice, Attitude) framework. "
+        f"specifically at {student_level}. Your responses should reflect this understanding. You are assisting a tutor "
+        f"who is preparing for a coaching session with {student_name}, guided by the VESPA framework. "
         f"The tutor aims to foster student ownership, encourage self-reflection, and co-create action plans. "
-        f"Your role is to provide a concise data-driven summary to the TUTOR to support this process."
+        f"Your role is to provide concise, data-driven, structured insights to the TUTOR in JSON format."
     )
 
-    try:
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo", 
-            messages=[
-                {"role": "system", "content": system_message_content},
-                {"role": "user", "content": prompt_to_send}
-            ],
-            max_tokens=120, 
-            temperature=0.6, 
-            n=1,
-            stop=None
-        )
-        summary = response.choices[0].message.content.strip()
-        app.logger.info(f"LLM generated summary: {summary}")
-        return summary
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            response = openai.chat.completions.create(
+                model="gpt-3.5-turbo", 
+                messages=[
+                    {"role": "system", "content": system_message_content},
+                    {"role": "user", "content": prompt_to_send}
+                ],
+                # max_tokens set to a higher value to accommodate the detailed JSON structure
+                max_tokens=700, # Increased from 120
+                temperature=0.5, # Slightly lower for more factual JSON
+                n=1,
+                stop=None,
+                # Ensure the model is encouraged to output JSON
+                response_format={"type": "json_object"} 
+            )
+            
+            raw_response_content = response.choices[0].message.content.strip()
+            app.logger.info(f"LLM raw response: {raw_response_content}")
 
-    except Exception as e:
-        app.logger.error(f"Error calling OpenAI API: {e}")
-        return f"Error generating summary from LLM for {student_data_dict.get('student_name', 'N/A')}. Please check API key and logs. (Details: {str(e)[:100]}...)"
+            # Attempt to parse the JSON
+            parsed_llm_outputs = json.loads(raw_response_content)
+            
+            # Validate that all expected keys are in the parsed dictionary
+            expected_keys = ["student_overview_summary", "chart_comparative_insights", "most_important_coaching_questions", "student_comment_analysis", "suggested_student_goals"]
+            if not all(key in parsed_llm_outputs for key in expected_keys):
+                app.logger.error(f"LLM response missing one or more expected keys. Response: {raw_response_content}")
+                # If keys are missing, construct a default error structure for those keys
+                # but keep any keys that *were* successfully returned.
+                default_error_response = {
+                    "student_overview_summary": "Error: LLM did not provide a valid overview.",
+                    "chart_comparative_insights": "Error: LLM did not provide valid chart insights.",
+                    "most_important_coaching_questions": ["Error: LLM did not provide valid questions."],
+                    "student_comment_analysis": "Error: LLM did not provide valid comment analysis.",
+                    "suggested_student_goals": ["Error: LLM did not provide valid goal suggestions."]
+                }
+                # Update with any valid parts from the LLM, then fill missing with errors
+                for key in expected_keys:
+                    if key not in parsed_llm_outputs:
+                        parsed_llm_outputs[key] = default_error_response[key]
+                # No need to raise an exception here, just return the partially error-filled dict
+            
+            app.logger.info(f"LLM generated structured data: {parsed_llm_outputs}")
+            return parsed_llm_outputs
+
+        except json.JSONDecodeError as e:
+            app.logger.error(f"JSONDecodeError from LLM response (Attempt {attempt + 1}/{max_retries}): {e}")
+            app.logger.error(f"Problematic LLM response content: {raw_response_content}")
+            if attempt == max_retries - 1: # Last attempt
+                return {
+                    "student_overview_summary": f"Error: Could not parse LLM summary for {student_name} after multiple attempts. (JSONDecodeError)",
+                    "chart_comparative_insights": "Error parsing LLM response.",
+                    "most_important_coaching_questions": ["Error parsing LLM response."],
+                    "student_comment_analysis": "Error parsing LLM response.",
+                    "suggested_student_goals": ["Error parsing LLM response."]
+                }
+        except Exception as e:
+            app.logger.error(f"Error calling OpenAI API or processing response (Attempt {attempt + 1}/{max_retries}): {e}")
+            if attempt == max_retries - 1: # Last attempt
+                 return {
+                    "student_overview_summary": f"Error generating structured summary for {student_name} from LLM. (Details: {str(e)[:100]}...)",
+                    "chart_comparative_insights": "Error generating insights from LLM.",
+                    "most_important_coaching_questions": ["Error generating questions from LLM."],
+                    "student_comment_analysis": "Error generating analysis from LLM.",
+                    "suggested_student_goals": ["Error generating goals from LLM."]
+                }
+        time.sleep(1) # Wait a second before retrying if an error occurred
+
+    # Fallback if all retries fail (though individual try/excepts should handle returning)
+    return {
+        "student_overview_summary": "Critical error: LLM processing failed after all retries.",
+        "chart_comparative_insights": "Critical error.",
+        "most_important_coaching_questions": ["Critical error."],
+        "student_comment_analysis": "Critical error.",
+        "suggested_student_goals": ["Critical error."]
+    }
 
 
 @app.route('/api/v1/coaching_suggestions', methods=['POST'])
@@ -487,10 +597,17 @@ def coaching_suggestions():
         school_id = school_connection_raw[0].get('id')
         app.logger.info(f"Extracted school_id '{school_id}' from student's Object_10 field_133_raw (list).")
     elif isinstance(school_connection_raw, str):
-        school_id = school_connection_raw
+        school_id = school_connection_raw # Assuming the string itself is the ID
         app.logger.info(f"Extracted school_id '{school_id}' (string) from student's Object_10 field_133_raw.")
     else:
-        app.logger.warning(f"Could not determine school_id from field_133_raw for student {student_obj10_id_from_request}. Data: {school_connection_raw}")
+        # Attempt to get from non-raw field if raw is not helpful
+        school_connection_obj = student_vespa_data.get("field_133")
+        if isinstance(school_connection_obj, list) and school_connection_obj: # Knack connection fields are lists of dicts
+             school_id = school_connection_obj[0].get('id')
+             app.logger.info(f"Extracted school_id '{school_id}' from student's Object_10 field_133 (non-raw object).")
+        else:
+            app.logger.warning(f"Could not determine school_id from field_133_raw or field_133 for student {student_obj10_id_from_request}. Data (raw): {school_connection_raw}, Data (obj): {school_connection_obj}")
+
 
     school_wide_vespa_averages = None
     if school_id:
@@ -507,7 +624,7 @@ def coaching_suggestions():
     student_email = None
     if isinstance(student_email_obj, dict) and 'email' in student_email_obj:
         student_email = student_email_obj['email']
-    elif isinstance(student_email_obj, str):
+    elif isinstance(student_email_obj, str): # If it's already a string
         student_email = student_email_obj
 
     actual_student_object3_id = None
@@ -515,15 +632,14 @@ def coaching_suggestions():
         filters_object3_for_id = [{'field': 'field_70', 'operator': 'is', 'value': student_email}]
         object3_response = get_knack_record("object_3", filters=filters_object3_for_id)
         
-        user_accounts_list = [] # Initialize as an empty list
+        user_accounts_list = [] 
         if object3_response and isinstance(object3_response, dict) and 'records' in object3_response and isinstance(object3_response['records'], list):
             user_accounts_list = object3_response['records']
             app.logger.info(f"Found {len(user_accounts_list)} records in Object_3 for email {student_email}.")
         else:
             app.logger.warning(f"Object_3 response for email {student_email} was not in the expected format or missing 'records' list. Response: {str(object3_response)[:200]}")
 
-        if user_accounts_list: # Check if the list is not empty
-            # Ensure the first item is a dictionary before calling .get()
+        if user_accounts_list: 
             if isinstance(user_accounts_list[0], dict):
                 actual_student_object3_id = user_accounts_list[0].get('id')
                 if actual_student_object3_id:
@@ -537,25 +653,22 @@ def coaching_suggestions():
     else:
         app.logger.warning(f"No student email from Object_10, cannot determine actual_student_object3_id for profile lookup (Student Obj10 ID: {student_obj10_id_from_request}).")
 
-    student_level = student_vespa_data.get("field_568_raw", "N/A") # Ensure student_level is defined here
+    student_level = student_vespa_data.get("field_568_raw", "N/A") 
     current_m_cycle_str = student_vespa_data.get("field_146_raw", "0")
     try:
-        current_m_cycle = int(current_m_cycle_str) if current_m_cycle_str else 0
+        current_m_cycle = int(current_m_cycle_str) if current_m_cycle_str and current_m_cycle_str.isdigit() else 0
     except ValueError:
         app.logger.warning(f"Could not parse current_m_cycle '{current_m_cycle_str}' to int. Defaulting to 0.")
         current_m_cycle = 0
     
-    # Previous interaction summary from field_3271
     previous_interaction_summary = student_vespa_data.get("field_3271", "No previous AI coaching summary found.")
 
-    # Current VESPA scores (1-10 scale)
     vespa_scores = {
         "Vision": student_vespa_data.get("field_147"), "Effort": student_vespa_data.get("field_148"),
         "Systems": student_vespa_data.get("field_149"), "Practice": student_vespa_data.get("field_150"),
         "Attitude": student_vespa_data.get("field_151"), "Overall": student_vespa_data.get("field_152"),
     }
 
-    # Historical Cycle Scores (1-10 scale)
     historical_scores = {
         "cycle1": {
             "Vision": student_vespa_data.get("field_155"), "Effort": student_vespa_data.get("field_156"),
@@ -574,7 +687,6 @@ def coaching_suggestions():
         }
     }
 
-    # Student Reflections & Goals from Object_10
     student_reflections_and_goals = {
         "rrc1_comment": student_vespa_data.get("field_2302"),
         "rrc2_comment": student_vespa_data.get("field_2303"),
@@ -583,7 +695,6 @@ def coaching_suggestions():
         "goal2": student_vespa_data.get("field_2493"),
         "goal3": student_vespa_data.get("field_2494"),
     }
-    # Ensure None values are replaced with a more JSON-friendly "N/A" or "Not specified"
     for key, value in student_reflections_and_goals.items():
         if value is None:
             student_reflections_and_goals[key] = "Not specified"
@@ -591,15 +702,10 @@ def coaching_suggestions():
     app.logger.info(f"Object_10 Reflections and Goals: {student_reflections_and_goals}")
 
 
-    # Fetch and Process Object_29 (Questionnaire Qs) data
-    key_individual_question_insights = ["No questionnaire data processed."] # Default
-    object29_top_bottom_questions = {
-        "top_3": [],
-        "bottom_3": []
-    }
+    key_individual_question_insights = ["No questionnaire data processed."] 
+    object29_top_bottom_questions = { "top_3": [], "bottom_3": [] }
     all_scored_questions_from_object29 = []
 
-    # Ensure student_vespa_data['id'] and current_m_cycle are valid before proceeding
     obj10_id_for_o29 = student_vespa_data.get('id')
     if obj10_id_for_o29 and current_m_cycle > 0:
         app.logger.info(f"Fetching Object_29 for Object_10 ID: {obj10_id_for_o29} and Cycle: {current_m_cycle}")
@@ -609,35 +715,33 @@ def coaching_suggestions():
         ]
         object29_response = get_knack_record("object_29", filters=filters_object29)
         
-        temp_o29_list = [] # Use a temporary list variable
+        temp_o29_list = [] 
         if object29_response and isinstance(object29_response, dict) and 'records' in object29_response and isinstance(object29_response['records'], list):
             temp_o29_list = object29_response['records']
             app.logger.info(f"Found {len(temp_o29_list)} records in Object_29 for student {obj10_id_for_o29} and cycle {current_m_cycle}.")
         else:
             app.logger.warning(f"Object_29 response for student {obj10_id_for_o29} cycle {current_m_cycle} not in expected format or 'records' missing. Response: {str(object29_response)[:200]}")
 
-        if temp_o29_list: # Check if the list is not empty
-            # Ensure the first item is a dictionary before calling methods on it or accessing by index for safety
+        if temp_o29_list: 
             if isinstance(temp_o29_list[0], dict):
-                object29_record = temp_o29_list[0] # Assuming one record per student per cycle
+                object29_record = temp_o29_list[0] 
                 app.logger.info(f"Successfully fetched Object_29 record: {object29_record.get('id')}")
                 
                 parsed_insights = []
-                if psychometric_question_details:
+                if psychometric_question_details: # This KB is loaded globally
                     for q_detail in psychometric_question_details:
                         field_id = q_detail.get('currentCycleFieldId')
                         question_text = q_detail.get('questionText', 'Unknown Question')
                         vespa_category = q_detail.get('vespaCategory', 'N/A')
                         
-                        if not field_id:
-                            continue
+                        if not field_id: continue
 
                         raw_score_value = object29_record.get(field_id)
                         if raw_score_value is None and field_id.startswith("field_"):
                              score_obj = object29_record.get(field_id + '_raw')
                              if isinstance(score_obj, dict):
                                  raw_score_value = score_obj.get('value', 'N/A')
-                             elif score_obj is not None:
+                             elif score_obj is not None: # If score_obj is a direct value (e.g. string, number)
                                  raw_score_value = score_obj
                         
                         score_display = "N/A"
@@ -651,7 +755,7 @@ def coaching_suggestions():
                                 app.logger.warning(f"Could not parse score '{raw_score_value}' for {field_id} to int.")
 
                         insight_text = f"{vespa_category} - '{question_text}': Score {score_display}/5"
-                        if numeric_score is not None and numeric_score <= 2:
+                        if numeric_score is not None and numeric_score <= 2: # Assuming 2 or less is a "FLAG"
                             insight_text = f"FLAG: {insight_text}"
                         parsed_insights.append(insight_text)
                         
@@ -691,167 +795,187 @@ def coaching_suggestions():
         else:
             app.logger.warning(f"No data found in Object_29 for student {obj10_id_for_o29} and cycle {current_m_cycle}.")
             key_individual_question_insights = [f"No questionnaire data found for cycle {current_m_cycle}."]
-            # Ensure object29_top_bottom_questions remains initialized with empty lists
     else:
         app.logger.warning("Missing Object_10 ID or current_m_cycle is 0, skipping Object_29 fetch.")
         key_individual_question_insights = ["Skipped fetching questionnaire data (missing ID or cycle is 0)."]
-        # Ensure object29_top_bottom_questions remains initialized with empty lists
 
-
-    # --- Phase 2: Knowledge Base Lookup & LLM Prompt Construction (Initial Steps) ---
+    # --- Phase 2: Knowledge Base Lookup & Data Structuring for LLM ---
     def get_score_profile_text(score_value):
         if score_value is None: return "N/A"
         try:
-            score = float(score_value)
+            score = float(score_value) # Knack scores are usually numeric but can be strings
             if score >= 8: return "High"
             if score >= 6: return "Medium"
             if score >= 4: return "Low"
-            if score >= 0: return "Very Low"
+            if score >= 0: return "Very Low" # VESPA scores 1-10
             return "N/A"
         except (ValueError, TypeError):
             app.logger.warning(f"Could not convert score '{score_value}' to float for profile text.")
             return "N/A"
 
-    vespa_profile_details = {}
+    vespa_profile_details_for_llm = {} # This will be a part of student_data_for_llm
     for element, score_value in vespa_scores.items():
-        if element == "Overall": continue
+        if element == "Overall": continue # Overall score handled separately if needed by LLM
         score_profile_text = get_score_profile_text(score_value)
-        matching_report_text = None
+        
+        # Find matching report text from report_text_data (Object_33)
+        matching_report_text_record = None
+        if report_text_data: # This KB is loaded globally
+            for record in report_text_data:
+                if (record.get('field_848') == student_level and 
+                    record.get('field_844') == element and 
+                    record.get('field_842') == score_profile_text):
+                    matching_report_text_record = record
+                    break
+        
+        element_specific_insights_from_o29 = []
+        if key_individual_question_insights and isinstance(key_individual_question_insights, list) and not key_individual_question_insights[0].startswith("No questionnaire data") and not key_individual_question_insights[0].startswith("Psychometric question details mapping not loaded") and not key_individual_question_insights[0].startswith("No questionnaire data found for cycle") and not key_individual_question_insights[0].startswith("Skipped fetching questionnaire data"):
+            for insight in key_individual_question_insights:
+                if isinstance(insight, str) and insight.upper().startswith(element.upper()):
+                    element_specific_insights_from_o29.append(insight)
+        
+        vespa_profile_details_for_llm[element] = {
+            "score_1_to_10": score_value if score_value is not None else "N/A",
+            "score_profile_text": score_profile_text,
+            # Primary tutor coaching comments are more for direct display, not LLM summary input unless crucial
+            "primary_tutor_coaching_comments": matching_report_text_record.get('field_853', "Coaching comments not found.") if matching_report_text_record else "Coaching comments not found.",
+            "key_individual_question_insights_from_object29": element_specific_insights_from_o29 if element_specific_insights_from_o29 else ["No specific insights for this category from questionnaire."]
+            # We don't pass all historical scores directly to LLM prompt to save tokens, unless specifically needed for a task
+        }
+
+    # Fetch Academic Profile Data (Object_112)
+    academic_profile_summary_data = get_academic_profile(actual_student_object3_id, student_name_for_profile_lookup, student_obj10_id_from_request)
+    
+    # Data structure to pass to the LLM
+    student_data_for_llm = {
+        "student_name": student_name_for_profile_lookup,
+        "student_level": student_level,
+        "current_cycle": current_m_cycle,
+        "vespa_profile": vespa_profile_details_for_llm, # Uses the processed details
+        "school_vespa_averages": school_wide_vespa_averages, # Pass school averages to LLM
+        "academic_profile_summary": academic_profile_summary_data,
+        "student_reflections_and_goals": student_reflections_and_goals,
+        "object29_question_highlights": object29_top_bottom_questions,
+        "previous_interaction_summary": previous_interaction_summary
+        # key_individual_question_insights is indirectly included via vespa_profile_details_for_llm
+    }
+    
+    # Load full KBs here to pass to LLM function (or relevant parts)
+    # coaching_kb is already loaded globally
+    # Load 100 statements text
+    statements_file_path = os.path.join(os.path.dirname(__file__), 'knowledge_base', '100 statements - 2023.txt')
+    # Corrected path relative to app.py
+    alt_statements_file_path = os.path.join(os.path.dirname(__file__), '..', 'VESPA Contextual Information', '100 statements - 2023.txt')
+    # Normalise path for OS compatibility
+    alt_statements_file_path = os.path.normpath(alt_statements_file_path)
+
+    student_goals_statements_content = None
+    try:
+        app.logger.info(f"Attempting to load 100 statements from: {alt_statements_file_path}")
+        with open(alt_statements_file_path, 'r', encoding='utf-8') as f:
+            student_goals_statements_content = f.read()
+        app.logger.info("Successfully loaded '100 statements - 2023.txt'")
+    except FileNotFoundError:
+        app.logger.error(f"'100 statements - 2023.txt' not found at {alt_statements_file_path}. Also tried {statements_file_path}")
+    except Exception as e:
+        app.logger.error(f"Error loading '100 statements - 2023.txt': {e}")
+
+
+    # Call LLM to get structured insights
+    # The coaching_kb (dict) and student_goals_statements_content (string) are passed here
+    llm_structured_output = generate_student_summary_with_llm(student_data_for_llm, coaching_kb, student_goals_statements_content)
+    
+    # --- Prepare Final API Response ---
+    # The vespa_profile_details for the API response needs more than what LLM got (report_text etc.)
+    # So, we rebuild it here for the API response.
+    final_vespa_profile_details_for_api = {}
+    for element, score_value in vespa_scores.items(): # Iterate over original vespa_scores
+        score_profile_text = get_score_profile_text(score_value)
+        matching_report_text_rec = None
         if report_text_data:
             for record in report_text_data:
                 if (record.get('field_848') == student_level and 
                     record.get('field_844') == element and 
                     record.get('field_842') == score_profile_text):
-                    matching_report_text = record
+                    matching_report_text_rec = record
                     break
         
-        vespa_profile_details[element] = {
-            "score_1_to_10": score_value if score_value is not None else "N/A",
-            "score_profile_text": score_profile_text,
-            "report_text_for_student": matching_report_text.get('field_845', "Content not found.") if matching_report_text else "Content not found.",
-            "report_questions_for_student": matching_report_text.get('field_846', "Questions not found.") if matching_report_text else "Questions not found.",
-            "report_suggested_tools_for_student": matching_report_text.get('field_847', "Tools not found.") if matching_report_text else "Tools not found.",
-            "primary_tutor_coaching_comments": matching_report_text.get('field_853', "Coaching comments not found.") if matching_report_text else "Coaching comments not found.",
-            "supplementary_tutor_questions": [], # Initialize as empty list
-            "key_individual_question_insights_from_object29": [], # Initialize as empty list
-            "historical_summary_scores": {} 
-        }
-        # Populate historical_summary_scores for each element
-        for cycle_num_str, cycle_data in historical_scores.items():
-            cycle_key = f"cycle{cycle_num_str[-1]}" # e.g. "cycle1"
-            score = cycle_data.get(element)
-            vespa_profile_details[element]["historical_summary_scores"][cycle_key] = score if score is not None else "N/A"
-        
-        # Assign specific insights for this VESPA element
-        element_specific_insights = []
-        if key_individual_question_insights and isinstance(key_individual_question_insights, list) and key_individual_question_insights[0] != "No questionnaire data processed." and key_individual_question_insights[0] != "Psychometric question details mapping not loaded. Cannot process Object_29 data." and not key_individual_question_insights[0].startswith("No questionnaire data found for cycle") and not key_individual_question_insights[0].startswith("Skipped fetching questionnaire data"):
-            for insight in key_individual_question_insights:
-                 # Ensure insight is a string before calling .startswith()
-                if isinstance(insight, str) and insight.upper().startswith(element.upper()): # Case-insensitive match on element
-                    element_specific_insights.append(insight)
-        vespa_profile_details[element]["key_individual_question_insights_from_object29"] = element_specific_insights if element_specific_insights else ["No specific insights for this category from questionnaire."]
-
-        # Populate supplementary_tutor_questions from coaching_kb
-        supplementary_questions = []
+        # Get supplementary questions (already prepared for LLM, reuse logic slightly)
+        supplementary_questions_for_api = []
         if coaching_kb and coaching_kb.get('vespaSpecificCoachingQuestions'):
             element_data = coaching_kb['vespaSpecificCoachingQuestions'].get(element, {})
-            if element_data: # Check if the element itself exists
-                level_specific_questions = element_data.get(student_level, {}) # Get questions for student's level
-                if not level_specific_questions and student_level == "Level 3": # Fallback for Level 3 if specific L3 not found but L2 might exist
-                    app.logger.info(f"No Level 3 specific questions for {element}, trying Level 2 as fallback.")
-                    level_specific_questions = element_data.get("Level 2", {})
-                elif not level_specific_questions and student_level == "Level 2": # Fallback for Level 2 if specific L2 not found but L3 might exist
-                    app.logger.info(f"No Level 2 specific questions for {element}, trying Level 3 as fallback.")
-                    level_specific_questions = element_data.get("Level 3", {})
-                
-                # score_profile_text is "High", "Medium", "Low", "Very Low"
+            if element_data:
+                level_specific_questions = element_data.get(student_level, {})
+                if not level_specific_questions and student_level == "Level 3":
+                    level_specific_questions = element_data.get("Level 2", {}) # Fallback
+                elif not level_specific_questions and student_level == "Level 2":
+                    level_specific_questions = element_data.get("Level 3", {}) # Fallback
                 profile_questions = level_specific_questions.get(score_profile_text, [])
-                supplementary_questions.extend(profile_questions)
-        
-        vespa_profile_details[element]["supplementary_tutor_questions"] = supplementary_questions if supplementary_questions else ["No supplementary questions found for this profile."]
+                supplementary_questions_for_api.extend(profile_questions)
 
+        hist_scores_for_api = {}
+        for cycle_num_str, cycle_data_hist in historical_scores.items():
+            cycle_key = f"cycle{cycle_num_str[-1]}"
+            hist_score = cycle_data_hist.get(element)
+            hist_scores_for_api[cycle_key] = hist_score if hist_score is not None else "N/A"
 
-    overall_score_value = vespa_scores.get("Overall")
-    overall_score_profile_text = get_score_profile_text(overall_score_value)
-    matching_overall_report_text = None
-    if report_text_data:
-        for record in report_text_data:
-            if (record.get('field_848') == student_level and 
-                record.get('field_844') == "Overall" and 
-                record.get('field_842') == overall_score_profile_text):
-                matching_overall_report_text = record
-                break
-    
-    vespa_profile_details["Overall"] = {
-        "score_1_to_10": overall_score_value if overall_score_value is not None else "N/A",
-        "score_profile_text": overall_score_profile_text,
-        "report_text_for_student": matching_overall_report_text.get('field_845', "Content not found.") if matching_overall_report_text else "Content not found.",
-        "primary_tutor_coaching_comments": matching_overall_report_text.get('field_853', "Coaching comments not found.") if matching_overall_report_text else "Coaching comments not found.",
-        "historical_summary_scores": {} 
-    }
-    # Populate historical_summary_scores for Overall
-    for cycle_num_str, cycle_data in historical_scores.items():
-        cycle_key = f"cycle{cycle_num_str[-1]}"
-        score = cycle_data.get("Overall")
-        vespa_profile_details["Overall"]["historical_summary_scores"][cycle_key] = score if score is not None else "N/A"
+        final_vespa_profile_details_for_api[element] = {
+            "score_1_to_10": score_value if score_value is not None else "N/A",
+            "score_profile_text": score_profile_text,
+            "report_text_for_student": matching_report_text_rec.get('field_845', "Content not found.") if matching_report_text_rec else "Content not found.",
+            "report_questions_for_student": matching_report_text_rec.get('field_846', "Questions not found.") if matching_report_text_rec else "Questions not found.",
+            "report_suggested_tools_for_student": matching_report_text_rec.get('field_847', "Tools not found.") if matching_report_text_rec else "Tools not found.",
+            "primary_tutor_coaching_comments": matching_report_text_rec.get('field_853', "Coaching comments not found.") if matching_report_text_rec else "Coaching comments not found.",
+            "supplementary_tutor_questions": supplementary_questions_for_api if supplementary_questions_for_api else ["No supplementary questions found for this profile."],
+            # key_individual_question_insights_from_object29 is not directly placed here in API response, but used by LLM
+            "historical_summary_scores": hist_scores_for_api
+        }
+        # For "Overall", we only need a subset of these fields, especially if it was handled by llm_structured_output already
+        if element == "Overall":
+             final_vespa_profile_details_for_api[element].pop("supplementary_tutor_questions", None)
+             final_vespa_profile_details_for_api[element].pop("report_questions_for_student", None)
+             final_vespa_profile_details_for_api[element].pop("report_suggested_tools_for_student", None)
 
-    
-    # Fetch Academic Profile Data (Object_112)
-    academic_profile_summary_data = get_academic_profile(actual_student_object3_id, student_name_for_profile_lookup, student_obj10_id_from_request)
 
     # Populate general introductory questions and overall framing statement from coaching_kb
     general_intro_questions = ["No general introductory questions found."]
     if coaching_kb and coaching_kb.get('generalIntroductoryQuestions'):
         general_intro_questions = coaching_kb['generalIntroductoryQuestions']
-        if not general_intro_questions: # Ensure it's not an empty list from KB
-            general_intro_questions = ["No general introductory questions found in KB."]
+        if not general_intro_questions: general_intro_questions = ["No general introductory questions found in KB."]
     
     overall_framing_statement = {"id": "default_framing", "statement": "No specific framing statement matched or available."}
     if coaching_kb and coaching_kb.get('conditionalFramingStatements'):
-        # Basic logic: use the first one if available, or implement conditionLogic if defined
-        # For now, let's take the first one as a default if any exist, or a specific one by ID if needed.
-        # The README implies `conditionLogic` needs evaluation - this is a placeholder for that.
-        # Defaulting to a "default_response" or the first available conditional statement.
-        
         default_statement_found = False
         for stmt in coaching_kb['conditionalFramingStatements']:
-            if stmt.get('id') == 'default_response': # As per example in README API response
+            if stmt.get('id') == 'default_response':
                 overall_framing_statement = {"id": stmt['id'], "statement": stmt.get('statement', "Default statement text missing.")}
-                default_statement_found = True
-                break
+                default_statement_found = True; break
         if not default_statement_found and coaching_kb['conditionalFramingStatements']:
-            # Fallback to the first conditional statement if default_response is not found
             first_stmt = coaching_kb['conditionalFramingStatements'][0]
             overall_framing_statement = {"id": first_stmt.get('id', 'unknown_conditional'), "statement": first_stmt.get('statement', "Conditional statement text missing.")}
-        elif not coaching_kb['conditionalFramingStatements']:
-            app.logger.info("No conditional framing statements found in KB.")
-            # Keep the initial default if none are in KB
 
-    # --- Prepare Response ---
     response_data = {
         "student_name": student_name_for_profile_lookup,
         "student_level": student_level,
         "current_cycle": current_m_cycle,
-        "vespa_profile": vespa_profile_details,
-        "academic_profile_summary": academic_profile_summary_data, # Use fetched data
+        "vespa_profile": final_vespa_profile_details_for_api, # Use the fully detailed one for API
+        "academic_profile_summary": academic_profile_summary_data,
         "student_reflections_and_goals": student_reflections_and_goals,
-        "object29_question_highlights": object29_top_bottom_questions, # NEWLY ADDED
-        "overall_framing_statement_for_tutor": overall_framing_statement, # Use populated statement
-        "general_introductory_questions_for_tutor": general_intro_questions, # Use populated questions
-        "llm_generated_summary_and_suggestions": {
-            "conversation_openers": ["Let's talk about your VESPA scores. (Placeholder)"],
-            "key_discussion_points": ["Consider your VESPA profile. (Placeholder)"],
-            "suggested_next_steps_for_tutor": ["Discuss strategies based on the profile. (Placeholder)"]
-        },
+        "object29_question_highlights": object29_top_bottom_questions,
+        "overall_framing_statement_for_tutor": overall_framing_statement,
+        "general_introductory_questions_for_tutor": general_intro_questions,
+        "llm_generated_insights": llm_structured_output, # This now holds the structured data
         "previous_interaction_summary": previous_interaction_summary,
-        "school_vespa_averages": school_wide_vespa_averages # Add school averages to response
+        "school_vespa_averages": school_wide_vespa_averages
     }
+    
+    # For backward compatibility with old frontend's "llm_generated_summary_and_suggestions.student_overview_summary"
+    # We can also add the student_overview_summary at the top level of llm_generated_insights if it's not already there.
+    # The new llm_structured_output should already contain "student_overview_summary" as a key.
+    # If frontend expects "llm_generated_summary_and_suggestions", we might need to adapt.
+    # For now, sending "llm_generated_insights" as the main holder of new structured data.
 
-    # Add LLM-generated summary (placeholder for now)
-    llm_student_overview = generate_student_summary_with_llm(response_data) 
-    response_data["llm_generated_summary_and_suggestions"]["student_overview_summary"] = llm_student_overview
-
-    app.logger.info(f"Successfully prepared response for student_object10_record_id: {student_obj10_id_from_request}")
+    app.logger.info(f"Successfully prepared API response for student_object10_record_id: {student_obj10_id_from_request}")
     return jsonify(response_data)
 
 # --- Function to get School VESPA Averages ---
@@ -893,7 +1017,7 @@ def get_school_vespa_averages(school_id):
     vespa_elements = {
         "Vision": "field_147", "Effort": "field_148",
         "Systems": "field_149", "Practice": "field_150",
-        "Attitude": "field_151"
+        "Attitude": "field_151", "Overall": "field_152",
     }
     sums = {key: 0 for key in vespa_elements}
     counts = {key: 0 for key in vespa_elements}
@@ -950,25 +1074,25 @@ def get_all_knack_records(object_key, filters=None, max_pages=20):
                 all_records.extend(records_on_page) # Add records from current page to the main list
                 app.logger.info(f"Fetched {len(records_on_page)} records from page {current_page} for {object_key}. Total so far: {len(all_records)}.")
             else:
-                app.logger.warning(f"'records' key in response_data for {object_key} page {current_page} is not a list as expected. Type: {type(records_on_page)}. Stopping pagination.")
+                app.logger.warning(f"'records' key in response_data for {object_key} page {current_page} is not a list as expected. Type: {type(records_on_page)}. Response (first 200 chars): {str(response_data)[:200]}. Stopping pagination.")
                 break 
             
-            # Update total_pages from the first successful response that contains it
-            # This ensures we only set it once and use the value from the API if available
-            if current_page == 1 and 'total_pages' in response_data:
+            # Update total_pages from the API response (usually present on each page)
+            # More robustly get total_pages, ensuring it's an int
+            new_total_pages = response_data.get('total_pages')
+            if new_total_pages is not None:
                 try:
-                    total_pages = int(response_data['total_pages'])
-                    app.logger.info(f"Total pages for {object_key} identified: {total_pages}")
+                    total_pages = int(new_total_pages)
+                    if current_page == 1: # Log only on first discovery
+                       app.logger.info(f"Total pages for {object_key} identified from API: {total_pages}")
                 except (ValueError, TypeError):
-                    app.logger.warning(f"Could not parse 'total_pages' from response for {object_key}: {response_data.get('total_pages')}. Assuming 1 page if not already set higher.")
-                    # If total_pages couldn't be parsed, and it's still the initial 1, keep it as 1 or decide on a fallback.
-                    # If we already got a valid total_pages, this won't override it.
-                    if total_pages == 1: # only if it was not updated by a previous valid response
-                         total_pages = 1 # Or consider current_page if records_on_page < rows_per_page implies it's the last one
+                    app.logger.warning(f"Could not parse 'total_pages' ('{new_total_pages}') from response for {object_key} on page {current_page}. Will rely on record count or max_pages.")
+                    # If parsing fails, and total_pages was just the initial 1, it might indicate only one page.
+                    # If records_on_page < rows_per_page, that's a stronger indicator of the last page.
             
-            # Check if this was the last page based on records fetched or if total_pages is reached
-            if not records_on_page or len(records_on_page) < 1000 or current_page == total_pages:
-                app.logger.info(f"Last page likely reached for {object_key} on page {current_page} (fetched {len(records_on_page)} records, total_pages: {total_pages}).")
+            # Check if this was the last page
+            if not records_on_page or len(records_on_page) < 1000 or current_page >= total_pages:
+                app.logger.info(f"Last page likely reached for {object_key} on page {current_page} (fetched {len(records_on_page)} records, total pages from API: {total_pages}).")
                 break
             current_page += 1
         else:
