@@ -242,14 +242,14 @@ if (window.aiCoachLauncherInitialized) {
                 top: 0;
                 right: 0;
                 height: 100vh;
-                background-color: #f4f6f8;
+                background-color: #f4f6f8; /* Main panel background */
                 border-left: 1px solid #ddd;
                 padding: 20px;
                 box-sizing: border-box;
                 overflow-y: auto;
                 z-index: 1050;
                 transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s;
-                font-family: Arial, sans-serif; /* Added a default font */
+                font-family: Arial, sans-serif; 
             }
             body.ai-coach-active #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} {
                 width: 450px; /* Increased panel width */
@@ -267,6 +267,7 @@ if (window.aiCoachLauncherInitialized) {
             #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-header h3 {
                 margin: 0;
                 font-size: 1.3em;
+                color: #333; /* Darker text for header */
             }
             #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-close-btn {
                 background: none;
@@ -274,18 +275,50 @@ if (window.aiCoachLauncherInitialized) {
                 font-size: 1.6em;
                 cursor: pointer;
                 padding: 5px;
+                color: #555; /* Darker color for close button */
             }
-            #aiCoachLauncherButtonContainer {
+            #aiCoachLauncherButtonContainer { /* This is for the main Activate AI Coach button if used from config */
                  text-align: center; 
                  padding: 20px; 
                  border-top: 1px solid #eee;
             }
+            .ai-coach-section-toggles {
+                display: flex; /* Make buttons appear in a row */
+                flex-direction: row; /* Explicitly row */
+                justify-content: space-between; /* Distribute space */
+                gap: 8px; /* Space between buttons */
+                margin: 10px 0 15px 0 !important; /* Ensure margin is applied */
+            }
+            .ai-coach-section-toggles .p-button {
+                flex-grow: 1; /* Allow buttons to grow and share space */
+                padding: 10px 5px !important; /* Adjust padding */
+                font-size: 0.85em !important; /* Slightly smaller font for row layout */
+                border: none; /* Remove existing p-button border if any */
+                color: white !important; /* Text color */
+                border-radius: 4px;
+                transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            }
+            .ai-coach-section-toggles .p-button:hover {
+                opacity: 0.85;
+                transform: translateY(-1px);
+            }
+            #aiCoachToggleVespaButton {
+                background-color: #79A6DC !important; /* Vespa Blue */
+            }
+            #aiCoachToggleAcademicButton {
+                background-color: #77DD77 !important; /* Academic Green */
+            }
+            #aiCoachToggleQuestionButton {
+                background-color: #C3B1E1 !important; /* Question Purple */
+            }
+
             .ai-coach-section {
                 margin-bottom: 20px;
                 padding: 15px;
-                background-color: #fff;
+                background-color: #fff; /* White background for content sections */
                 border: 1px solid #e0e0e0;
                 border-radius: 5px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             }
             .ai-coach-section h4 {
                 font-size: 1.1em;
@@ -294,6 +327,12 @@ if (window.aiCoachLauncherInitialized) {
                 color: #333;
                 border-bottom: 1px solid #eee;
                 padding-bottom: 5px;
+            }
+            .ai-coach-section h5 {
+                font-size: 1em; /* For sub-headings within sections */
+                color: #444;
+                margin-top: 15px;
+                margin-bottom: 8px;
             }
             .ai-coach-section p, .ai-coach-section ul, .ai-coach-section li {
                 font-size: 0.9em;
@@ -316,6 +355,12 @@ if (window.aiCoachLauncherInitialized) {
             @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
+            }
+            /* Style for chart containers if Chart.js fails or data is missing */
+            #vespaComparisonChartContainer p,
+            #questionScoresChartContainer p {
+                color: #777;
+                font-style: italic;
             }
         `;
         const styleElement = document.createElement('style');
