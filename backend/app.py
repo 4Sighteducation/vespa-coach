@@ -445,30 +445,27 @@ def coaching_suggestions():
     app.logger.info(f"Processing request for student_object10_record_id: {student_obj10_id_from_request}")
 
     # --- Phase 1: Data Gathering ---
-    # Fetch Object_10 record (VESPA Results)
     student_vespa_data_response = get_knack_record("object_10", record_id=student_obj10_id_from_request)
 
     if not student_vespa_data_response:
         app.logger.error(f"Could not retrieve data for student_object10_record_id: {student_obj10_id_from_request} from Knack Object_10.")
         return jsonify({"error": f"Could not retrieve data for student {student_obj10_id_from_request}"}), 404
     
-    # For a single record fetch, the response IS the record, not a dict with a 'records' key
     student_vespa_data = student_vespa_data_response 
     app.logger.info(f"Successfully fetched Object_10 data for ID {student_obj10_id_from_request}")
 
     # Determine School ID for the student
     school_id = None
-    school_connection_raw = student_vespa_data.get("field_133_raw") # School connection field
+    school_connection_raw = student_vespa_data.get("field_133_raw")
     if isinstance(school_connection_raw, list) and school_connection_raw:
         school_id = school_connection_raw[0].get('id')
-        app.logger.info(f"Extracted school_id '{school_id}' from student's Object_10 field_133_raw.")
-    elif isinstance(school_connection_raw, str): # If it's just a string ID
+        app.logger.info(f"Extracted school_id '{school_id}' from student's Object_10 field_133_raw (list).")
+    elif isinstance(school_connection_raw, str):
         school_id = school_connection_raw
         app.logger.info(f"Extracted school_id '{school_id}' (string) from student's Object_10 field_133_raw.")
     else:
         app.logger.warning(f"Could not determine school_id from field_133_raw for student {student_obj10_id_from_request}. Data: {school_connection_raw}")
 
-    # Get School-wide VESPA Averages
     school_wide_vespa_averages = None
     if school_id:
         school_wide_vespa_averages = get_school_vespa_averages(school_id)
@@ -479,33 +476,41 @@ def coaching_suggestions():
     else:
         app.logger.warning("Cannot fetch school-wide VESPA averages as school_id is unknown.")
 
-
     student_name_for_profile_lookup = student_vespa_data.get("field_187_raw", {}).get("full", "N/A")
-    # Extract student email from Object_10 for linking to Object_3
     student_email_obj = student_vespa_data.get("field_197_raw") 
     student_email = None
     if isinstance(student_email_obj, dict) and 'email' in student_email_obj:
         student_email = student_email_obj['email']
-    elif isinstance(student_email_obj, str): 
+    elif isinstance(student_email_obj, str):
         student_email = student_email_obj
 
-    # Get the actual Object_3 ID for the student making the request
     actual_student_object3_id = None
     if student_email:
         filters_object3_for_id = [{'field': 'field_70', 'operator': 'is', 'value': student_email}]
-        user_accounts_for_id = get_knack_record("object_3", filters=filters_object3_for_id)
-        if user_accounts_for_id:
-            actual_student_object3_id = user_accounts_for_id[0].get('id')
-            app.logger.info(f"Determined actual Object_3 ID for current student ({student_name_for_profile_lookup}, {student_email}): {actual_student_object3_id}")
-        else:
-            app.logger.warning(f"Could not find Object_3 record for email {student_email} to get actual_student_object3_id.")
-    else:
-        app.logger.warning(f"No student email from Object_10, cannot determine actual_student_object3_id for profile lookup.")
+        object3_response = get_knack_record("object_3", filters=filters_object3_for_id)
         
-    if not student_email: # This log was here before, keeping it for context if email is missing
-        app.logger.warning(f"Student email (field_197_raw) not found or in unexpected format in Object_10 ID: {student_obj10_id_from_request}.")
+        user_accounts_list = [] # Initialize as an empty list
+        if object3_response and isinstance(object3_response, dict) and 'records' in object3_response and isinstance(object3_response['records'], list):
+            user_accounts_list = object3_response['records']
+            app.logger.info(f"Found {len(user_accounts_list)} records in Object_3 for email {student_email}.")
+        else:
+            app.logger.warning(f"Object_3 response for email {student_email} was not in the expected format or missing 'records' list. Response: {str(object3_response)[:200]}")
 
-    student_level = student_vespa_data.get("field_568_raw", "N/A")
+        if user_accounts_list: # Check if the list is not empty
+            # Ensure the first item is a dictionary before calling .get()
+            if isinstance(user_accounts_list[0], dict):
+                actual_student_object3_id = user_accounts_list[0].get('id')
+                if actual_student_object3_id:
+                    app.logger.info(f"Determined actual Object_3 ID for student ({student_name_for_profile_lookup}, {student_email}): {actual_student_object3_id}")
+                else:
+                    app.logger.warning(f"Found Object_3 record for {student_email}, but it has no 'id' attribute: {str(user_accounts_list[0])[:100]}")
+            else:
+                app.logger.warning(f"First item in user_accounts_list for {student_email} is not a dictionary: {type(user_accounts_list[0])} - {str(user_accounts_list[0])[:100]}")
+        else:
+            app.logger.warning(f"Could not find any Object_3 records for email {student_email} to get actual_student_object3_id.")
+    else:
+        app.logger.warning(f"No student email from Object_10, cannot determine actual_student_object3_id for profile lookup (Student Obj10 ID: {student_obj10_id_from_request}).")
+
     current_m_cycle_str = student_vespa_data.get("field_146_raw", "0")
     try:
         current_m_cycle = int(current_m_cycle_str) if current_m_cycle_str else 0
