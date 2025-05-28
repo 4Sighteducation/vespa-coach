@@ -511,6 +511,7 @@ def coaching_suggestions():
     else:
         app.logger.warning(f"No student email from Object_10, cannot determine actual_student_object3_id for profile lookup (Student Obj10 ID: {student_obj10_id_from_request}).")
 
+    student_level = student_vespa_data.get("field_568_raw", "N/A") # Ensure student_level is defined here
     current_m_cycle_str = student_vespa_data.get("field_146_raw", "0")
     try:
         current_m_cycle = int(current_m_cycle_str) if current_m_cycle_str else 0
