@@ -861,8 +861,9 @@ if (window.aiCoachLauncherInitialized) {
             let questionHtml = '';
             const questionContainer = document.getElementById('aiCoachQuestionAnalysisContainer');
             if (questionContainer) {
-                questionHtml += '<div class="ai-coach-section"><h4>Questionnaire Statement Analysis (Object_29)</h4>';
-                questionHtml += '<p style="font-size:0.8em; margin-bottom:10px;">(Scale: 1=Strongly Disagree, 2=Disagree, 3=Neutral, 4=Agree, 5=Strongly Agree)</p>';
+                // Incorporate user's latest text changes for title and scale description
+                questionHtml += '<div class="ai-coach-section"><h4>VESPA Questionnaire Analysis</h4>';
+                questionHtml += '<p style="font-size:0.8em; margin-bottom:10px;">(Response Scale: 1=Strongly Disagree, 2=Disagree, 3=Neutral, 4=Agree, 5=Strongly Agree)</p>';
 
                 if (data.object29_question_highlights && (data.object29_question_highlights.top_3 || data.object29_question_highlights.bottom_3)) {
                     const highlights = data.object29_question_highlights;
@@ -884,29 +885,27 @@ if (window.aiCoachLauncherInitialized) {
                     questionHtml += "<p>No specific top/bottom statement response highlights processed from Object_29.</p>";
                 }
 
-                // Placeholder for the new Pie Chart
-                questionHtml += '<div id="questionnaireResponseDistributionChartContainer" style="height: 300px; margin-top:20px; margin-bottom: 20px; background: #f9f9f9; display:flex; align-items:center; justify-content:center;"><p>Questionnaire Response Distribution Chart Area</p></div>';
+                questionHtml += '<div id="questionnaireResponseDistributionChartContainer" style="height: 300px; margin-top:20px; margin-bottom: 20px; background: #f9f9f9; display:flex; align-items:center; justify-content:center;"><p>Chart loading...</p></div>';
 
-                // New AI summary section
                 if (data.llm_generated_insights && data.llm_generated_insights.questionnaire_interpretation_and_reflection_summary) {
-                    questionHtml += `<div style='margin-top:15px;'><h5>AI Interpretation of Questionnaire Responses & Reflections</h5><p>${data.llm_generated_insights.questionnaire_interpretation_and_reflection_summary}</p></div>`;
+                    questionHtml += `<div style='margin-top:15px;'><h5>Reflections on the VESPA Questionnaire</h5><p>${data.llm_generated_insights.questionnaire_interpretation_and_reflection_summary}</p></div>`;
                 } else {
-                    questionHtml += "<div style='margin-top:15px;'><h5>AI Interpretation of Questionnaire Responses & Reflections</h5><p><em>AI analysis of questionnaire responses and reflections is currently unavailable.</em></p></div>";
+                    questionHtml += "<div style='margin-top:15px;'><h5>Reflections on the VESPA Questionnaire</h5><p><em>AI analysis of questionnaire responses and reflections is currently unavailable.</em></p></div>";
                 }
-                questionHtml += '</div>';
+                questionHtml += '</div>'; // Close ai-coach-section for Questionnaire Analysis
                 questionContainer.innerHTML = questionHtml;
 
-                // Call to render the new chart if data is available
-                if (data.all_scored_questionnaire_statements && typeof Chart !== 'undefined') {
-                    ensureChartJsLoaded(() => {
+                // Corrected logic for rendering the pie chart:
+                const chartDiv = document.getElementById('questionnaireResponseDistributionChartContainer');
+                if (data.all_scored_questionnaire_statements && data.all_scored_questionnaire_statements.length > 0) {
+                    ensureChartJsLoaded(() => { // Always use ensureChartJsLoaded
                         renderQuestionnaireDistributionChart(data.all_scored_questionnaire_statements);
                     });
-                } else if (typeof Chart === 'undefined') {
-                    const chartDiv = document.getElementById('questionnaireResponseDistributionChartContainer');
-                    if (chartDiv) chartDiv.innerHTML = '<p style="color:red; text-align:center;">Chart library not loaded.</p>';
                 } else {
-                    const chartDiv = document.getElementById('questionnaireResponseDistributionChartContainer');
-                    if (chartDiv) chartDiv.innerHTML = '<p style="text-align:center;">Questionnaire statement data not available for chart.</p>';
+                    if (chartDiv) {
+                        chartDiv.innerHTML = '<p style="text-align:center;">Questionnaire statement data not available for chart.</p>';
+                        logAICoach("Questionnaire chart not rendered: all_scored_questionnaire_statements is missing or empty.", data.all_scored_questionnaire_statements);
+                    }
                 }
             }
         } else {
@@ -1200,6 +1199,12 @@ if (window.aiCoachLauncherInitialized) {
 
         logAICoach("Adding chat interface...");
 
+        // Remove existing chat container if it exists to prevent duplicates on re-render
+        const oldChatContainer = document.getElementById('aiCoachChatContainer');
+        if (oldChatContainer) {
+            oldChatContainer.remove();
+        }
+
         const chatContainer = document.createElement('div');
         chatContainer.id = 'aiCoachChatContainer';
         chatContainer.className = 'ai-coach-section'; // Use existing class for styling consistency
@@ -1208,42 +1213,125 @@ if (window.aiCoachLauncherInitialized) {
         chatContainer.innerHTML = `
             <h4>AI Chat with ${studentNameForContext}</h4>
             <div id="aiCoachChatDisplay" style="height: 200px; border: 1px solid #ccc; overflow-y: auto; padding: 10px; margin-bottom: 10px; background-color: #fff;">
-                <p class="ai-chat-message ai-chat-message-bot"><em>AI Coach:</em> Hello! How can I help you with ${studentNameForContext} today? (Chat functionality is under development)</p>
+                <p class="ai-chat-message ai-chat-message-bot"><em>AI Coach:</em> Hello! How can I help you with ${studentNameForContext} today?</p>
             </div>
             <div style="display: flex;">
                 <input type="text" id="aiCoachChatInput" style="flex-grow: 1; padding: 8px; border: 1px solid #ccc;" placeholder="Type your message...">
                 <button id="aiCoachChatSendButton" class="p-button p-component" style="margin-left: 10px; padding: 8px 15px;">Send</button>
             </div>
+            <div id="aiCoachChatThinkingIndicator" style="font-size:0.8em; color: #777; text-align:center; margin-top:5px; display:none;">AI Coach is thinking...</div>
         `;
         panelContentElement.appendChild(chatContainer);
 
         const chatInput = document.getElementById('aiCoachChatInput');
         const chatSendButton = document.getElementById('aiCoachChatSendButton');
         const chatDisplay = document.getElementById('aiCoachChatDisplay');
+        const thinkingIndicator = document.getElementById('aiCoachChatThinkingIndicator');
 
-        function sendChatMessage() {
-            if (!chatInput || !chatDisplay) return;
+        async function sendChatMessage() {
+            if (!chatInput || !chatDisplay || !thinkingIndicator) return;
             const messageText = chatInput.value.trim();
             if (messageText === '') return;
+
+            const currentStudentId = lastFetchedStudentId; // Use the ID from the last successful main data fetch
+            if (!currentStudentId) {
+                logAICoach("Cannot send chat message: student ID not available.");
+                // Optionally display an error to the user in the chat window
+                const errorMessageElement = document.createElement('p');
+                errorMessageElement.className = 'ai-chat-message ai-chat-message-bot';
+                errorMessageElement.innerHTML = `<em>AI Coach:</em> Sorry, I can't process this message as the student context is missing. Please ensure student data is loaded.`;
+                chatDisplay.appendChild(errorMessageElement);
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                return;
+            }
 
             // Display user message
             const userMessageElement = document.createElement('p');
             userMessageElement.className = 'ai-chat-message ai-chat-message-user';
+            userMessageElement.setAttribute('data-role', 'user'); // For history reconstruction
             userMessageElement.textContent = `You: ${messageText}`;
             chatDisplay.appendChild(userMessageElement);
-
+            const originalInput = chatInput.value; // Keep original input for history
             chatInput.value = ''; // Clear input
-            chatDisplay.scrollTop = chatDisplay.scrollHeight; // Scroll to bottom
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            thinkingIndicator.style.display = 'block';
+            chatSendButton.disabled = true;
+            chatInput.disabled = true;
 
-            // Placeholder for LLM response
-            // In the future, this will involve an API call
-            setTimeout(() => {
+            // Construct chat history from displayed messages
+            const chatHistory = [];
+            const messages = chatDisplay.querySelectorAll('.ai-chat-message');
+            messages.forEach(msgElement => {
+                // Don't include the user message we just added to the DOM in the history sent to API
+                // as it's sent separately as current_tutor_message.
+                // Only include messages *before* the one just sent by the user.
+                if (msgElement === userMessageElement) return; 
+
+                let role = msgElement.getAttribute('data-role');
+                let content = '';
+
+                if (!role) { // Infer role if data-role is not set (e.g. initial bot message)
+                    if (msgElement.classList.contains('ai-chat-message-bot')) {
+                         role = 'assistant';
+                         content = msgElement.innerHTML.replace(/<em>AI Coach:<\/em>\\s*/, '');
+                    } else if (msgElement.classList.contains('ai-chat-message-user')) {
+                         role = 'user';
+                         content = msgElement.textContent.replace(/You:\\s*/, '');
+                    } else {
+                        return; // Skip if role cannot be determined
+                    }
+                } else {
+                     content = msgElement.textContent.replace(/^(You:|<em>AI Coach:\\s*)/, '');
+                }
+                chatHistory.push({ role: role, content: content });
+            });
+            // The user's current message isn't part of displayed history yet for the API call
+            // It will be added to the LLM prompt as the latest user message on the backend.
+
+            logAICoach("Sending chat turn with history:", chatHistory);
+            logAICoach("Current tutor message for API:", originalInput);
+
+            try {
+                const response = await fetch(`${HEROKU_API_URL}/chat_turn`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        student_object10_record_id: currentStudentId,
+                        chat_history: chatHistory, // Send previously displayed messages
+                        current_tutor_message: originalInput // Send the new message
+                    }),
+                });
+
+                thinkingIndicator.style.display = 'none';
+                chatSendButton.disabled = false;
+                chatInput.disabled = false;
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: "An unknown error occurred communicating with the AI chat."}));
+                    throw new Error(errorData.error || `Chat API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
                 const botMessageElement = document.createElement('p');
                 botMessageElement.className = 'ai-chat-message ai-chat-message-bot';
-                botMessageElement.innerHTML = `<em>AI Coach:</em> Thinking... (response for \"${messageText}\" will appear here)`;
+                botMessageElement.setAttribute('data-role', 'assistant'); // For history reconstruction
+                botMessageElement.innerHTML = `<em>AI Coach:</em> ${data.ai_response}`;
                 chatDisplay.appendChild(botMessageElement);
-                chatDisplay.scrollTop = chatDisplay.scrollHeight; // Scroll to bottom
-            }, 500);
+
+            } catch (error) {
+                logAICoach("Error sending chat message:", error);
+                const errorMessageElement = document.createElement('p');
+                errorMessageElement.className = 'ai-chat-message ai-chat-message-bot';
+                // Don't set data-role for error messages not from AI assistant proper
+                errorMessageElement.innerHTML = `<em>AI Coach:</em> Sorry, I couldn't get a response. ${error.message}`;
+                chatDisplay.appendChild(errorMessageElement);
+                thinkingIndicator.style.display = 'none';
+                chatSendButton.disabled = false;
+                chatInput.disabled = false;
+            }
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
         }
 
         if (chatSendButton) {
@@ -1440,11 +1528,11 @@ if (window.aiCoachLauncherInitialized) {
 
         const chartData = {
             labels: [
-                'Response 1 (Strongly Disagree)',
-                'Response 2 (Disagree)',
-                'Response 3 (Neutral)',
-                'Response 4 (Agree)',
-                'Response 5 (Strongly Agree)'
+                'Strongly Disagree',
+                'Disagree',
+                'Neutral',
+                'Agree',
+                'Strongly Agree'
             ],
             datasets: [{
                 label: 'Questionnaire Response Distribution',
@@ -1493,6 +1581,8 @@ if (window.aiCoachLauncherInitialized) {
                         position: 'bottom',
                     },
                     tooltip: {
+                        yAlign: 'bottom', // Position tooltip above the mouse point
+                        caretPadding: 15, // Add more space between cursor and tooltip
                         callbacks: {
                             label: function(context) {
                                 let label = context.label || '';

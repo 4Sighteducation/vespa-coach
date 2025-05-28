@@ -1529,6 +1529,120 @@ def get_all_knack_records(object_key, filters=None, max_pages=20):
     app.logger.info(f"Completed paginated fetch for {object_key}. Total records retrieved: {len(all_records)}.")
     return all_records # This should NOW be a flat list of record dictionaries
 
+# --- API Endpoint for AI Chat Turn ---
+@app.route('/api/v1/chat_turn', methods=['POST'])
+def chat_turn():
+    data = request.get_json()
+    app.logger.info(f"Received request for /api/v1/chat_turn with data: {str(data)[:200]}...") # Log snippet of data
+
+    student_object10_id = data.get('student_object10_record_id')
+    chat_history = data.get('chat_history', []) # List of dicts: {"role": "user/assistant", "content": "..."}
+    current_tutor_message = data.get('current_tutor_message')
+
+    if not student_object10_id or not current_tutor_message:
+        app.logger.error("chat_turn: Missing student_object10_record_id or current_tutor_message.")
+        return jsonify({"error": "Missing student_object10_record_id or current_tutor_message"}), 400
+    
+    if not OPENAI_API_KEY:
+        app.logger.error("chat_turn: OpenAI API key not configured.")
+        # Save tutor message even if AI can't respond
+        save_chat_message_to_knack(student_object10_id, "Tutor", current_tutor_message)
+        return jsonify({"ai_response": "I am currently unable to respond (AI not configured). Your message has been logged."}), 200
+
+    # 1. Save Tutor's message to Knack
+    tutor_message_saved_id = save_chat_message_to_knack(student_object10_id, "Tutor", current_tutor_message)
+    if not tutor_message_saved_id:
+        app.logger.error(f"chat_turn: Failed to save tutor's message to Knack for student {student_object10_id}.")
+        # Decide if we should still try to get an AI response or return an error
+        # For now, let's attempt to proceed but the frontend should be aware of potential save failures.
+
+    # 2. Prepare prompt for LLM (Simplified for now, will need student context later)
+    # TODO: Fetch student context (name, key VESPA scores, initial AI summary) to provide to LLM
+    # For now, just use the history and current message.
+    
+    messages_for_llm = [
+        {"role": "system", "content": "You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. The tutor will ask you questions based on the student's data. Keep your responses concise and focused on the student being discussed."}
+    ]
+    # Add existing chat history
+    for message in chat_history:
+        messages_for_llm.append(message)
+    # Add current tutor message
+    messages_for_llm.append({"role": "user", "content": current_tutor_message})
+
+    ai_response_text = "An error occurred while generating my response."
+    try:
+        app.logger.info(f"chat_turn: Sending to LLM: {messages_for_llm}")
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages_for_llm,
+            max_tokens=250, # Adjust as needed
+            temperature=0.7,
+            n=1,
+            stop=None
+        )
+        ai_response_text = response.choices[0].message.content.strip()
+        app.logger.info(f"chat_turn: LLM raw response: {ai_response_text}")
+
+    except Exception as e:
+        app.logger.error(f"chat_turn: Error calling OpenAI API: {e}")
+        # ai_response_text will remain the default error message
+
+    # 3. Save AI's response to Knack
+    ai_message_saved_id = save_chat_message_to_knack(student_object10_id, "AI Coach", ai_response_text)
+    if not ai_message_saved_id:
+        app.logger.error(f"chat_turn: Failed to save AI's response to Knack for student {student_object10_id}.")
+        # Frontend should be resilient to this.
+
+    return jsonify({"ai_response": ai_response_text})
+
+
+def save_chat_message_to_knack(student_obj10_id, sender, message_text):
+    """Saves a chat message to the new Object_118 in Knack."""
+    if not student_obj10_id or not sender or not message_text:
+        app.logger.error("save_chat_message_to_knack: Missing required parameters.")
+        return None
+
+    # --- Knack Field Mappings for Object_118 (AIChatLog) ---
+    # Object Key: object_118
+    # field_3275: Tutor Report Conversation (Connection to Object_10)
+    # field_3276: Message Timestamp (Date/Time) -> Knack handles this on creation usually, or we can set explicitly.
+    # field_3273: Author (Short Text) -> Sender
+    # field_3277: Conversation Log (Paragraph Text) -> MessageText
+    # field_3278: Log Sequence (Auto Increment) -> Knack handles this.
+    # field_3274: Student (Connection to Student Object) -> Optional, can be auto-linked if Object_10 is linked to Student.
+
+    knack_object_key_chatlog = "object_118"
+    payload = {
+        "field_3275": student_obj10_id, # Link to Object_10
+        "field_3273": sender,
+        "field_3277": message_text
+        # Knack should auto-populate Timestamp (field_3276) and Log Sequence (field_3278)
+        # If field_3274 (Student connection) needs to be set, it might require fetching the student_id from student_obj10_id first.
+    }
+
+    headers = {
+        'X-Knack-Application-Id': KNACK_APP_ID,
+        'X-Knack-REST-API-Key': KNACK_API_KEY,
+        'Content-Type': 'application/json'
+    }
+    url = f"{KNACK_BASE_URL}/{knack_object_key_chatlog}/records"
+
+    try:
+        app.logger.info(f"Saving chat message to Knack ({knack_object_key_chatlog}). Payload: {payload}")
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        saved_record = response.json()
+        app.logger.info(f"Successfully saved chat message to Knack. Record ID: {saved_record.get('id')}")
+        return saved_record.get('id')
+    except requests.exceptions.HTTPError as e:
+        app.logger.error(f"HTTP error saving chat message to Knack: {e}")
+        app.logger.error(f"Response content: {response.content}")
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Request exception saving chat message to Knack: {e}")
+    except json.JSONDecodeError:
+        app.logger.error(f"JSON decode error for Knack response when saving chat. Response: {response.text}")
+    return None
+
 if __name__ == '__main__':
     # Ensure the FLASK_ENV is set to development for debug mode if not using `flask run`
     # For Heroku, Gunicorn will be used as specified in Procfile
