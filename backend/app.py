@@ -310,10 +310,10 @@ def get_academic_profile(actual_student_obj3_id, student_name_for_fallback, stud
                 subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
                 if not subjects_summary or (len(subjects_summary) == 1 and subjects_summary[0]["subject"].startswith("No academic subjects")):
                     app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3064) yielded no valid subjects. Will try other methods.")
-                    academic_profile_record = None 
+                    academic_profile_record = None # Keep it None to fall through
                 else:
                     app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3064) has valid subjects. Using this profile.")
-                    return subjects_summary
+                    return {"subjects": subjects_summary, "profile_record": academic_profile_record} # MODIFIED RETURN
             else:
                 app.logger.warning(f"Attempt 1: First item in profiles_via_field3064 is not a dict: {type(temp_profiles_list_attempt1[0])}")
         else:
@@ -343,10 +343,10 @@ def get_academic_profile(actual_student_obj3_id, student_name_for_fallback, stud
                 subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
                 if not subjects_summary or (len(subjects_summary) == 1 and subjects_summary[0]["subject"].startswith("No academic subjects")):
                     app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3070) yielded no valid subjects. Will try name fallback.")
-                    academic_profile_record = None 
+                    academic_profile_record = None # Keep it None to fall through
                 else:
                     app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via field_3070) has valid subjects. Using this profile.")
-                    return subjects_summary
+                    return {"subjects": subjects_summary, "profile_record": academic_profile_record} # MODIFIED RETURN
             else:
                 app.logger.warning(f"Attempt 2: First item in profiles_via_field3070 is not a dict: {type(temp_profiles_list_attempt2[0])}")
         else:
@@ -371,16 +371,18 @@ def get_academic_profile(actual_student_obj3_id, student_name_for_fallback, stud
                 subjects_summary = parse_subjects_from_profile_record(academic_profile_record)
                 if not subjects_summary or (len(subjects_summary) == 1 and subjects_summary[0]["subject"].startswith("No academic subjects")):
                     app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via name fallback) yielded no valid subjects.")
+                    # Fall through to the final default return
                 else:
                     app.logger.info(f"Object_112 ID {academic_profile_record.get('id')} (via name fallback) has valid subjects. Using this profile.")
-                    return subjects_summary
+                    return {"subjects": subjects_summary, "profile_record": academic_profile_record} # MODIFIED RETURN
             else:
                 app.logger.warning(f"Attempt 3: First item in homepage_profiles_name_search is not a dict: {type(temp_profiles_list_attempt3[0])}")
         else:
             app.logger.warning(f"Attempt 3 FAILED (empty list): Fallback search: No Object_112 found for student name: '{student_name_for_fallback}'.")
     
     app.logger.warning(f"All attempts to fetch Object_112 failed (Student's Obj3 ID: '{actual_student_obj3_id}', Fallback name: '{student_name_for_fallback}').")
-    return [{"subject": "Academic profile not found by any method.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A"}]
+    default_subjects = [{"subject": "Academic profile not found by any method.", "currentGrade": "N/A", "targetGrade": "N/A", "effortGrade": "N/A", "examType": "N/A"}]
+    return {"subjects": default_subjects, "profile_record": None} # MODIFIED RETURN
 
 
 # Helper function to parse subjects from a given academic_profile_record
@@ -1088,33 +1090,40 @@ def coaching_suggestions():
         }
 
     # Fetch Academic Profile Data (Object_112)
-    academic_profile_summary_data = get_academic_profile(actual_student_object3_id, student_name_for_profile_lookup, student_obj10_id_from_request)
+    # academic_profile_summary_data = get_academic_profile(actual_student_object3_id, student_name_for_profile_lookup, student_obj10_id_from_request)
+    academic_profile_response = get_academic_profile(actual_student_object3_id, student_name_for_profile_lookup, student_obj10_id_from_request)
+    academic_profile_summary_data = academic_profile_response.get("subjects")
+    object112_profile_record = academic_profile_response.get("profile_record") # This is the Object_112 record
     
-    # --- Fetch Student's GCSE Prior Attainment Score from Object_113 ---
+    # --- Extract Student's GCSE Prior Attainment Score from Object_112.field_3272 ---
     prior_attainment_score = None
-    if actual_student_object3_id: 
-        app.logger.info(f"Fetching Object_113 for student (Obj3 ID: {actual_student_object3_id}) to get prior attainment score.")
-        filters_obj113 = [{'field': 'field_3130', 'operator': 'is', 'value': actual_student_object3_id}]
-        # Use get_all_knack_records as there might be multiple, though score should be consistent
-        obj113_records_all = get_all_knack_records("object_113", filters=filters_obj113, max_pages=1) # Max_pages=1 for efficiency if expecting one or few
-
-        if obj113_records_all:
-            # Take the score from the first record found, assuming it's consistent for the student
-            prior_attainment_score_raw = obj113_records_all[0].get('field_3123') 
-            if prior_attainment_score_raw is not None:
+    if object112_profile_record:
+        # Try to get from _raw first, then the direct field if _raw is not present or not a direct value
+        prior_attainment_raw = object112_profile_record.get('field_3272_raw')
+        # Check if _raw is a direct value; if it's a dict (like connection), it's not the score itself
+        if isinstance(prior_attainment_raw, (str, int, float)) and str(prior_attainment_raw).strip() != '':
+            try:
+                prior_attainment_score = float(prior_attainment_raw)
+                app.logger.info(f"Successfully extracted prior attainment score: {prior_attainment_score} from Object_112.field_3272_raw.")
+            except (ValueError, TypeError):
+                app.logger.warning(f"Could not convert prior attainment score '{prior_attainment_raw}' from Object_112.field_3272_raw to float. Trying non-raw field.")
+                prior_attainment_raw = None # Fallback to non-raw
+        
+        if prior_attainment_score is None: # If _raw wasn't useful or conversion failed
+            prior_attainment_direct = object112_profile_record.get('field_3272')
+            if isinstance(prior_attainment_direct, (str, int, float)) and str(prior_attainment_direct).strip() != '':
                 try:
-                    prior_attainment_score = float(prior_attainment_score_raw)
-                    app.logger.info(f"Successfully fetched and converted prior attainment score: {prior_attainment_score} from Object_113 record {obj113_records_all[0].get('id')}.")
+                    prior_attainment_score = float(prior_attainment_direct)
+                    app.logger.info(f"Successfully extracted prior attainment score: {prior_attainment_score} from Object_112.field_3272.")
                 except (ValueError, TypeError):
-                    app.logger.warning(f"Could not convert prior attainment score '{prior_attainment_score_raw}' from Object_113.field_3123 to float.")
-            else:
-                app.logger.warning(f"Prior attainment score (field_3123) is missing in Object_113 record: {obj113_records_all[0].get('id')}.")
-            if len(obj113_records_all) > 1:
-                app.logger.info(f"Found {len(obj113_records_all)} records in Object_113 for student {actual_student_object3_id}. Using prior attainment from the first one.")
-        else:
-            app.logger.warning(f"No records found in Object_113 for student {actual_student_object3_id} using filter on field_3130.")
+                    app.logger.warning(f"Could not convert prior attainment score '{prior_attainment_direct}' from Object_112.field_3272 to float.")
+            elif prior_attainment_direct is not None: # Log if it exists but isn't a direct value
+                 app.logger.warning(f"Prior attainment score from Object_112.field_3272 ('{prior_attainment_direct}') is not a direct string/numeric value.")
+
+        if prior_attainment_score is None:
+             app.logger.warning(f"Prior attainment score (field_3272 or field_3272_raw) is missing or invalid in Object_112 record: {object112_profile_record.get('id')}.")
     else:
-        app.logger.warning("Cannot fetch prior attainment score from Object_113 as actual_student_object3_id is missing.")
+        app.logger.warning("Cannot extract prior attainment score as Object_112 profile record is missing.")
 
     # --- Calculate MEGs for different percentiles ---
     academic_megs_data = {
