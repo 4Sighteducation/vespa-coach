@@ -364,21 +364,27 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
 
         if reflections.get(current_rrc_key) and reflections[current_rrc_key] != "Not specified":
             current_rrc_text = str(reflections[current_rrc_key])
-            prompt_parts.append(f"- Current Reflection (RRC{current_cycle}): {current_rrc_text[:300].replace('\n', ' ')}...") # Limit length
+            # Clean text before using in f-string
+            cleaned_rrc_text_for_prompt = current_rrc_text[:300].replace('\n', ' ')
+            prompt_parts.append(f"- Current Reflection (RRC{current_cycle}): {cleaned_rrc_text_for_prompt}...")
             reflections_goals_found = True
         if reflections.get(current_goal_key) and reflections[current_goal_key] != "Not specified":
             current_goal_text = str(reflections[current_goal_key])
-            prompt_parts.append(f"- Current Goal ({current_goal_key.replace('_',' ').upper()}): {current_goal_text[:300].replace('\n', ' ')}...") # Limit length
+            # Clean text before using in f-string
+            cleaned_goal_text_for_prompt = current_goal_text[:300].replace('\n', ' ')
+            prompt_parts.append(f"- Current Goal ({current_goal_key.replace('_',' ').upper()}): {cleaned_goal_text_for_prompt}...")
             reflections_goals_found = True
         
         if not reflections_goals_found: # Fallback to RRC1/Goal1 if current cycle ones are not found
             if reflections.get('rrc1_comment') and reflections['rrc1_comment'] != "Not specified":
                 current_rrc_text = str(reflections['rrc1_comment'])
-                prompt_parts.append(f"- RRC1 Reflection (Fallback): {current_rrc_text[:300].replace('\n', ' ')}...")
+                cleaned_rrc_text_for_prompt = current_rrc_text[:300].replace('\n', ' ')
+                prompt_parts.append(f"- RRC1 Reflection (Fallback): {cleaned_rrc_text_for_prompt}...")
                 reflections_goals_found = True
             if reflections.get('goal1') and reflections['goal1'] != "Not specified":
                 current_goal_text = str(reflections['goal1'])
-                prompt_parts.append(f"- Goal1 (Fallback): {current_goal_text[:300].replace('\n', ' ')}...")
+                cleaned_goal_text_for_prompt = current_goal_text[:300].replace('\n', ' ')
+                prompt_parts.append(f"- Goal1 (Fallback): {cleaned_goal_text_for_prompt}...")
                 reflections_goals_found = True
     
     if not reflections_goals_found:
@@ -463,18 +469,21 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
     prompt_parts.append("  \"student_overview_summary\": \"Concise 2-3 sentence AI Student Snapshot for the tutor, highlighting 1-2 key strengths and 1-2 primary areas for development, rooted in VESPA principles. Max 100-120 words.\",")
     prompt_parts.append("  \"chart_comparative_insights\": \"Provide 2-3 bullet points or a short paragraph (max 80 words) analyzing the student's VESPA scores in comparison to school averages (if available). What could these differences or similarities mean?\",")
     prompt_parts.append("  \"most_important_coaching_questions\": [\"Based on the student's profile (scores, level, comments), list 3-5 most impactful coaching questions selected from the provided Coaching Questions Knowledge Base.\", \"Question 2...\"],")
-    prompt_parts.append("  \"student_comment_analysis\": \"Analyze the student's RRC/Goal comments (text provided: RRC='{RRC_COMMENT_PLACEHOLDER}', Goal='{GOAL_COMMENT_PLACEHOLDER}'). What insights can be gained? Specifically look for language indicating locus of control (e.g., 'receive a grade' vs 'achieve a grade'). Max 100 words.\",")
+    prompt_parts.append("  \"student_comment_analysis\": \"Analyze the student\\'s RRC/Goal comments (text provided: RRC='{RRC_COMMENT_PLACEHOLDER}', Goal='{GOAL_COMMENT_PLACEHOLDER}'). What insights can be gained? Specifically look for language indicating locus of control (e.g., 'receive a grade' vs 'achieve a grade'). Max 100 words.\",")
     prompt_parts.append("  \"suggested_student_goals\": [\"Based on the analysis, and inspired by the 100 Statements KB, suggest 2-3 S.M.A.R.T. goals for the student, reframed to their context.\", \"Goal 2...\"]")
     prompt_parts.append("}")
     prompt_parts.append("'''")
-    prompt_parts.append(f"REMEMBER to replace RRC_COMMENT_PLACEHOLDER with: '{current_rrc_text[:100].replace('\"', '\\\\\"').replace('\n', ' ')}...' and GOAL_COMMENT_PLACEHOLDER with: '{current_goal_text[:100].replace('\"', '\\\\\"').replace('\n', ' ')}...' in your actual student_comment_analysis output.")
+    # Prepare cleaned versions of current_rrc_text and current_goal_text for the prompt placeholder replacement
+    cleaned_rrc_placeholder = current_rrc_text[:100].replace('\n', ' ').replace("'", "\\'").replace('"', '\\"')
+    cleaned_goal_placeholder = current_goal_text[:100].replace('\n', ' ').replace("'", "\\'").replace('"', '\\"')
+    prompt_parts.append(f"REMEMBER to replace RRC_COMMENT_PLACEHOLDER with: '{cleaned_rrc_placeholder}...' and GOAL_COMMENT_PLACEHOLDER with: '{cleaned_goal_placeholder}...' in your actual student_comment_analysis output.")
 
 
     prompt_to_send = "\n".join(prompt_parts)
-    # Ensure the placeholders are correctly substituted in the final prompt string itself,
-    # rather than just telling the LLM to do it.
-    prompt_to_send = prompt_to_send.replace("'{RRC_COMMENT_PLACEHOLDER}'", f"'{current_rrc_text[:100].replace('\"', '\\\\\"').replace('\n', ' ')}...'")
-    prompt_to_send = prompt_to_send.replace("'{GOAL_COMMENT_PLACEHOLDER}'", f"'{current_goal_text[:100].replace('\"', '\\\\\"').replace('\n', ' ')}...'")
+    # Ensure the placeholders are correctly substituted in the final prompt string itself.
+    # The placeholders in the prompt_to_send string are 'RRC_COMMENT_PLACEHOLDER' and 'GOAL_COMMENT_PLACEHOLDER'
+    prompt_to_send = prompt_to_send.replace("'{RRC_COMMENT_PLACEHOLDER}'", f"'{cleaned_rrc_placeholder}...'")
+    prompt_to_send = prompt_to_send.replace("'{GOAL_COMMENT_PLACEHOLDER}'", f"'{cleaned_goal_placeholder}...'")
 
 
     app.logger.info(f"Generated LLM Prompt (first 500 chars): {prompt_to_send[:500]}")
