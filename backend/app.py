@@ -838,31 +838,19 @@ def get_school_vespa_averages(school_id):
 
     app.logger.info(f"Calculating school VESPA averages for school_id: {school_id}")
     
-    filters_school_students = [{'field': 'field_133_raw.id', 'operator': 'is', 'value': school_id}]
-    # Knack's connection field `field_133_raw` might store the ID directly or in an array of objects [{id: 'actual_id'}].
-    # If it's directly the ID, the filter above might work if Knack allows querying text field part of a connection this way.
-    # A more robust way if field_133 is a connection to Object_2 (Schools):
-    # filters_school_students = [{'field': 'field_133', 'operator': 'is', 'value': school_id}] 
-    # We'll stick to `field_133_raw.id` as indicated by inspection of CopyofstaffHomepage4d.js's patterns, 
-    # but this might need adjustment based on how Object_10.field_133 is structured and queryable.
-    # For now, let's try with the direct 'is' on the connection field ID (field_133 is connection to object_2 - schools)
     filters_school_students_alt = [{'field': 'field_133', 'operator': 'is', 'value': school_id}]
 
-    # Try the more direct connection filter first
     school_student_records = get_knack_record("object_10", filters=filters_school_students_alt)
 
     if not school_student_records:
-        app.logger.warning(f"No student records found for school_id {school_id} using field_133 direct filter. Trying field_133_raw.id filter.")
-        # Fallback to _raw.id filter if direct one fails (less likely to work for 'is' operator but worth trying)
-        # This assumes field_133_raw is an object with an 'id' key and Knack allows querying this sub-property directly with 'is'.
-        # This is unlikely. A 'contains' on field_133_raw (if it's a string of the ID) or different filter structure might be needed.
-        # For simplicity of this step, we'll log the failure and proceed if it still fails.
-        # A more robust filter might be needed here based on actual Knack data structure of field_133_raw.
+        app.logger.warning(f"No student records found for school_id {school_id} using field_133 direct filter. Trying field_133_raw contains filter.")
+        # Fallback to a 'contains' filter on field_133_raw which might be a string representation or part of a text field.
+        # This is less precise and depends on how school IDs might be stored in field_133_raw if it's not a direct connection id.
         school_student_records = get_knack_record("object_10", filters=[{'field': 'field_133_raw', 'operator': 'contains', 'value': school_id}])
         if not school_student_records:
             app.logger.error(f"Could not retrieve any student records for school_id: {school_id} using multiple filter attempts. Cannot calculate averages.")
             return None
-        app.logger.info(f"Retrieved {len(school_student_records)} student records for school_id {school_id} using fallback filter.")
+        app.logger.info(f"Retrieved {len(school_student_records)} student records for school_id {school_id} using fallback filter on field_133_raw.")
     else:
         app.logger.info(f"Retrieved {len(school_student_records)} student records for school_id {school_id} using direct field_133 filter.")
 
@@ -875,6 +863,11 @@ def get_school_vespa_averages(school_id):
     counts = {key: 0 for key in vespa_elements}
 
     for record in school_student_records:
+        # Ensure record is a dictionary before trying to .get() from it
+        if not isinstance(record, dict):
+            app.logger.warning(f"Skipping a record in school_student_records because it is not a dictionary: {type(record)} - Content: {str(record)[:100]}...")
+            continue # Skip this iteration if record is not a dict
+
         for element_name, field_key in vespa_elements.items():
             score_value = record.get(field_key)
             if score_value is not None:
@@ -883,7 +876,7 @@ def get_school_vespa_averages(school_id):
                     sums[element_name] += score
                     counts[element_name] += 1
                 except (ValueError, TypeError):
-                    app.logger.debug(f"Could not convert score '{score_value}' for {element_name} in record {record.get('id')} to float.")
+                    app.logger.debug(f"Could not convert score '{score_value}' for {element_name} in record {record.get('id', 'N/A')} to float.")
     
     averages = {}
     for element_name in vespa_elements:
