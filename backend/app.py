@@ -49,7 +49,226 @@ if OPENAI_API_KEY:
 else:
     app.logger.warning("OPENAI_API_KEY not found in environment variables. LLM features will be disabled.")
 
+# --- Load Knowledge Bases (before helper functions that might use them indirectly, or ensure app context) ---
+# These paths are relative to the 'backend' directory where app.py is located.
+psychometric_question_details = load_json_file('knowledge_base/psychometric_question_details.json')
+question_id_to_text_mapping = load_json_file('knowledge_base/question_id_to_text_mapping.json')
+report_text_data = load_json_file('knowledge_base/reporttext.json') # Object_33 content
+coaching_kb = load_json_file('knowledge_base/coaching_questions_knowledge_base.json')
+grade_points_mapping_data = load_json_file('knowledge_base/grade_to_points_mapping.json')
+
+# Load Academic Benchmark Data (ALPS Bands for A-Levels)
+alps_bands_aLevel_60 = load_json_file('knowledge_base/alpsBands_aLevel_60.json')
+alps_bands_aLevel_75 = load_json_file('knowledge_base/alpsBands_aLevel_75.json')
+alps_bands_aLevel_90 = load_json_file('knowledge_base/alpsBands_aLevel_90.json')
+alps_bands_aLevel_100 = load_json_file('knowledge_base/alpsBands_aLevel_100.json')
+
+# Load Academic Benchmark Data for other qualifications
+alps_bands_btec2010 = load_json_file('knowledge_base/alpsBands_btec2010_main.json')
+alps_bands_btec2016 = load_json_file('knowledge_base/alpsBands_btec2016_main.json')
+alps_bands_cache = load_json_file('knowledge_base/alpsBands_cache.json')
+alps_bands_ib = load_json_file('knowledge_base/alpsBands_ib.json')
+alps_bands_preU = load_json_file('knowledge_base/alpsBands_preU.json')
+alps_bands_ual = load_json_file('knowledge_base/alpsBands_ual.json')
+alps_bands_wjec = load_json_file('knowledge_base/alpsBands_wjec.json')
+
+if not psychometric_question_details:
+    app.logger.warning("Psychometric question details KB is empty or failed to load.")
+if not question_id_to_text_mapping:
+    app.logger.warning("Question ID to text mapping KB is empty or failed to load.")
+if not report_text_data:
+    # This will now be a list of records if loaded correctly, or None/empty if not.
+    app.logger.warning("Report text data (Object_33 from reporttext.json) is empty or failed to load.")
+else:
+    app.logger.info(f"Loaded {len(report_text_data)} records from reporttext.json")
+
+if not coaching_kb:
+    app.logger.warning("Coaching Questions Knowledge Base (coaching_questions_knowledge_base.json) is empty or failed to load.")
+else:
+    app.logger.info("Successfully loaded Coaching Questions Knowledge Base.")
+
+if not grade_points_mapping_data:
+    app.logger.error("CRITICAL: Grade to Points Mapping (grade_to_points_mapping.json) failed to load. Point calculations will be incorrect.")
+else:
+    app.logger.info("Successfully loaded Grade to Points Mapping.")
+
+
 # --- Helper Functions ---
+
+def normalize_qualification_type(exam_type_str):
+    if not exam_type_str:
+        return "A Level" # Default if empty
+    
+    lower_exam_type = exam_type_str.lower()
+
+    # A-Level variations
+    if "a level" in lower_exam_type or "alevel" in lower_exam_type:
+        return "A Level"
+    if "as level" in lower_exam_type or "aslevel" in lower_exam_type:
+        return "AS Level"
+
+    # BTEC (with default to Extended Certificate)
+    if "btec" in lower_exam_type:
+        if "extended diploma" in lower_exam_type or "ext dip" in lower_exam_type:
+            return "BTEC Level 3 Extended Diploma"
+        if "diploma" in lower_exam_type and "subsidiary" not in lower_exam_type and "found" not in lower_exam_type and "extended" not in lower_exam_type: # Avoid matching subsidiary/foundation/extended
+            return "BTEC Level 3 Diploma"
+        if "subsidiary diploma" in lower_exam_type or "sub dip" in lower_exam_type:
+            return "BTEC Level 3 Subsidiary Diploma"
+        # Default BTEC to Extended Certificate if specific size not clearly identified by diploma type keywords
+        return "BTEC Level 3 Extended Certificate" 
+
+    # WJEC (default to Certificate)
+    if "wjec" in lower_exam_type:
+        if "diploma" in lower_exam_type or "dip" in lower_exam_type:
+            return "WJEC Level 3 Diploma"
+        return "WJEC Level 3 Certificate"
+
+    # CACHE (default to Certificate)
+    if "cache" in lower_exam_type:
+        if "extended diploma" in lower_exam_type or "ext dip" in lower_exam_type:
+            return "CACHE Level 3 Extended Diploma"
+        if "diploma" in lower_exam_type: # Check before award/cert
+            return "CACHE Level 3 Diploma"
+        if "award" in lower_exam_type:
+            return "CACHE Level 3 Award"
+        return "CACHE Level 3 Certificate"
+
+    # UAL (default to Diploma)
+    if "ual" in lower_exam_type:
+        if "extended diploma" in lower_exam_type or "ext dip" in lower_exam_type:
+            return "UAL Level 3 Extended Diploma"
+        return "UAL Level 3 Diploma"
+    
+    # IB - needs HL/SL distinction if possible from original string
+    if "ib" in lower_exam_type:
+        if "hl" in lower_exam_type or "higher" in lower_exam_type: return "IB HL"
+        if "sl" in lower_exam_type or "standard" in lower_exam_type: return "IB SL"
+        app.logger.warning(f"IB qualification type '{exam_type_str}' did not specify HL/SL. Defaulting to 'IB HL'.")
+        return "IB HL" # Default IB to HL if not specified
+
+    # Pre-U
+    if "pre-u" in lower_exam_type or "preu" in lower_exam_type:
+        if "short course" in lower_exam_type or "sc" in lower_exam_type:
+             return "Pre-U Short Course"
+        return "Pre-U Principal Subject"
+
+    # Fallback if no specific type identified after checking all known patterns
+    # Ensure app context is available for logger, or pass logger as an argument
+    # For now, using a print statement if app.logger might not be available in this scope during definition
+    # Depending on how Flask app is structured, app.logger might require app context.
+    # Consider passing logger: def normalize_qualification_type(exam_type_str, logger):
+    try:
+        app.logger.warning(f"Could not normalize qualification type: '{exam_type_str}', defaulting to 'A Level'.")
+    except RuntimeError: # Outside of application context
+        print(f"WARNING (normalize_qualification_type): Could not normalize qualification type: '{exam_type_str}', defaulting to 'A Level'. Logger unavailable.")
+    return "A Level" # Fallback default
+
+def extract_qual_details(exam_type_str, normalized_qual_type, app_logger):
+    """
+    Extracts specific details (like BTEC year/size, IB level) from the raw exam_type_str
+    based on the normalized_qual_type.
+    Returns a dictionary with details or None.
+    """
+    if not exam_type_str or not normalized_qual_type:
+        return None
+
+    lower_exam_type = exam_type_str.lower()
+    details = {}
+
+    if normalized_qual_type == "IB HL":
+        details['ib_level'] = "HL"
+        return details
+    if normalized_qual_type == "IB SL":
+        details['ib_level'] = "SL"
+        return details
+
+    if "BTEC" in normalized_qual_type:
+        # Determine Year
+        if "2010" in lower_exam_type: details['year'] = "2010"
+        elif "2016" in lower_exam_type: details['year'] = "2016"
+        else:
+            details['year'] = "2016" # Default BTEC year if not specified
+            app_logger.info(f"BTEC year not specified in '{exam_type_str}', defaulting to {details['year']} for MEG lookup.")
+
+        # Determine Size for MEG key mapping (should align with get_meg_for_prior_attainment keys)
+        if normalized_qual_type == "BTEC Level 3 Extended Diploma": details['size'] = "EXTDIP"
+        elif normalized_qual_type == "BTEC Level 3 Diploma": details['size'] = "DIP"
+        elif normalized_qual_type == "BTEC Level 3 Subsidiary Diploma": details['size'] = "SUBDIP"
+        elif normalized_qual_type == "BTEC Level 3 Extended Certificate":
+            # BTEC 2016 "Extended Certificate" (360 GLH) might use 'EXTCERT' or 'CERT' in ALPS tables.
+            # BTEC 2010 "Certificate" (180 GLH / 30 credits) uses 'CERT'.
+            # Assuming 'EXTCERT' for 2016 default and 'CERT' for 2010 if it's an Extended Certificate normalized type.
+            if details['year'] == "2010":
+                details['size'] = "CERT" # 2010 Certificate (smallest BTEC L3)
+            else: # Default to 2016 Extended Certificate if year is 2016 or not specified
+                details['size'] = "EXTCERT"
+        # Add more specific BTEC size mappings if needed, e.g. for "Foundation Diploma", "90 Credit Diploma"
+        elif "foundation diploma" in lower_exam_type : details['size'] = "FOUNDDIP" # typically 2016
+        elif "90 credit diploma" in lower_exam_type or "90cr" in lower_exam_type : details['size'] = "NINETY_CR" # typically 2010
+        
+        if not details.get('size'):
+             app_logger.warning(f"Could not determine BTEC size for MEG key from '{exam_type_str}' (Normalized: '{normalized_qual_type}'). MEG lookup might fail.")
+        return details
+
+    if normalized_qual_type == "Pre-U Principal Subject":
+        details['pre_u_type'] = "FULL"
+        return details
+    if normalized_qual_type == "Pre-U Short Course":
+        details['pre_u_type'] = "SC"
+        return details
+
+    if "WJEC" in normalized_qual_type:
+        if normalized_qual_type == "WJEC Level 3 Diploma": details['wjec_size'] = "DIP"
+        elif normalized_qual_type == "WJEC Level 3 Certificate": details['wjec_size'] = "CERT"
+        else:
+            details['wjec_size'] = "CERT" # Default for WJEC
+            app_logger.info(f"WJEC size not clearly diploma/certificate from '{normalized_qual_type}', defaulting to CERT for MEG lookup.")
+        return details
+    
+    # No specific details needed for A Level, AS Level, UAL, CACHE for get_meg_for_prior_attainment beyond normalized type
+    return None
+
+def get_points(normalized_qual_type, grade_str, grade_points_map_data, app_logger):
+    """
+    Safely converts a grade string to points using the grade_points_mapping_data.
+    Logs warnings if mappings are missing.
+    Returns 0 if points cannot be determined.
+    """
+    if not grade_points_map_data:
+        app_logger.error("get_points: grade_points_mapping_data is not loaded.")
+        return 0
+    if not normalized_qual_type:
+        app_logger.warning("get_points: normalized_qual_type is missing.")
+        return 0
+    if grade_str is None: # Allow empty string for 'U' or similar if that's how data comes
+        app_logger.warning(f"get_points: grade_str is None for qualification '{normalized_qual_type}'.")
+        grade_str = "U" # Attempt to map None as 'U' or a zero-point grade
+
+    qual_map = grade_points_map_data.get(normalized_qual_type)
+    if not qual_map:
+        app_logger.warning(f"get_points: No grade point mapping found for qualification type: '{normalized_qual_type}'.")
+        return 0
+    
+    # Handle potential variations in grade string, e.g. "A*" vs "A* "
+    grade_str_cleaned = str(grade_str).strip()
+
+    points = qual_map.get(grade_str_cleaned)
+    
+    if points is None:
+        # Attempt common fallbacks like 'Dist*' for 'D*' or 'Pass' for 'P' if not directly found
+        # This could be expanded based on observed data variations
+        if grade_str_cleaned == "Dist*": points = qual_map.get("D*")
+        elif grade_str_cleaned == "Dist": points = qual_map.get("D")
+        elif grade_str_cleaned == "Merit": points = qual_map.get("M")
+        elif grade_str_cleaned == "Pass": points = qual_map.get("P")
+
+        if points is None: # If still not found after fallbacks
+            app_logger.warning(f"get_points: No points found for grade '{grade_str_cleaned}' (original: '{grade_str}') in qualification '{normalized_qual_type}'. Available grades: {list(qual_map.keys())}. Returning 0 points.")
+            return 0
+            
+    return int(points)
+
 
 def load_json_file(file_path):
     """Loads a JSON file from the specified path."""
@@ -258,7 +477,8 @@ def parse_subjects_from_profile_record(academic_profile_record):
                     "subject": subject_data.get("subject") or subject_data.get("subject_name") or subject_data.get("subjectName") or subject_data.get("name", "N/A"),
                     "currentGrade": subject_data.get("currentGrade") or subject_data.get("current_grade") or subject_data.get("cg") or subject_data.get("currentgrade", "N/A"),
                     "targetGrade": subject_data.get("targetGrade") or subject_data.get("target_grade") or subject_data.get("tg") or subject_data.get("targetgrade", "N/A"),
-                    "effortGrade": subject_data.get("effortGrade") or subject_data.get("effort_grade") or subject_data.get("eg") or subject_data.get("effortgrade", "N/A")
+                    "effortGrade": subject_data.get("effortGrade") or subject_data.get("effort_grade") or subject_data.get("eg") or subject_data.get("effortgrade", "N/A"),
+                    "examType": subject_data.get("examType") or subject_data.get("exam_type") or subject_data.get("qualificationType", "N/A") # Added examType
                 }
                 if summary_entry["subject"] != "N/A" and summary_entry["subject"] is not None:
                     subjects_summary.append(summary_entry)
@@ -285,6 +505,22 @@ question_id_to_text_mapping = load_json_file('knowledge_base/question_id_to_text
 # Changed from reporttext.csv to reporttext.json
 report_text_data = load_json_file('knowledge_base/reporttext.json') # Object_33 content
 coaching_kb = load_json_file('knowledge_base/coaching_questions_knowledge_base.json')
+grade_points_mapping_data = load_json_file('knowledge_base/grade_to_points_mapping.json')
+
+# Load Academic Benchmark Data (ALPS Bands for A-Levels)
+alps_bands_aLevel_60 = load_json_file('knowledge_base/alpsBands_aLevel_60.json')
+alps_bands_aLevel_75 = load_json_file('knowledge_base/alpsBands_aLevel_75.json')
+alps_bands_aLevel_90 = load_json_file('knowledge_base/alpsBands_aLevel_90.json')
+alps_bands_aLevel_100 = load_json_file('knowledge_base/alpsBands_aLevel_100.json')
+
+# Load Academic Benchmark Data for other qualifications
+alps_bands_btec2010 = load_json_file('knowledge_base/alpsBands_btec2010_main.json')
+alps_bands_btec2016 = load_json_file('knowledge_base/alpsBands_btec2016_main.json')
+alps_bands_cache = load_json_file('knowledge_base/alpsBands_cache.json')
+alps_bands_ib = load_json_file('knowledge_base/alpsBands_ib.json')
+alps_bands_preU = load_json_file('knowledge_base/alpsBands_preU.json')
+alps_bands_ual = load_json_file('knowledge_base/alpsBands_ual.json')
+alps_bands_wjec = load_json_file('knowledge_base/alpsBands_wjec.json')
 
 if not psychometric_question_details:
     app.logger.warning("Psychometric question details KB is empty or failed to load.")
@@ -300,6 +536,11 @@ if not coaching_kb:
     app.logger.warning("Coaching Questions Knowledge Base (coaching_questions_knowledge_base.json) is empty or failed to load.")
 else:
     app.logger.info("Successfully loaded Coaching Questions Knowledge Base.")
+
+if not grade_points_mapping_data:
+    app.logger.error("CRITICAL: Grade to Points Mapping (grade_to_points_mapping.json) failed to load. Point calculations will be incorrect.")
+else:
+    app.logger.info("Successfully loaded Grade to Points Mapping.")
 
 
 # --- Function to Generate Student Summary with LLM (Now with active LLM call) ---
@@ -343,14 +584,28 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
         prompt_parts.append("  School-wide average VESPA scores are not available for comparison at this time.")
 
     # Academic Profile (Briefly)
-    prompt_parts.append("\n--- Academic Profile (First 3 Subjects) ---")
+    prompt_parts.append("\n--- Academic Profile (First 3 Subjects with 75th Percentile MEG) ---")
     if student_data_dict.get('academic_profile_summary'):
         profile_data = student_data_dict['academic_profile_summary']
         if isinstance(profile_data, list) and profile_data and profile_data[0].get('subject') and not profile_data[0]["subject"].startswith("Academic profile not found") and not profile_data[0]["subject"].startswith("No academic subjects"):
             for subject_info in profile_data[:3]:
-                prompt_parts.append(f"- Subject: {subject_info.get('subject', 'N/A')}, Current: {subject_info.get('currentGrade', 'N/A')}, Target: {subject_info.get('targetGrade', 'N/A')}, Effort: {subject_info.get('effortGrade', 'N/A')}")
+                meg_75th_text = f", MEG (75th Pct): {subject_info.get('meg_75th', 'N/A')}" if subject_info.get('meg_75th') else ""
+                prompt_parts.append(f"- Subject: {subject_info.get('subject', 'N/A')}, Current: {subject_info.get('currentGrade', 'N/A')}, Target: {subject_info.get('targetGrade', 'N/A')}{meg_75th_text}, Effort: {subject_info.get('effortGrade', 'N/A')}")
         else:
             prompt_parts.append("  No detailed academic profile summary available or profile indicates issues.")
+    
+    # Student's Prior Attainment and MEGs
+    if student_data_dict.get('academic_megs'):
+        meg_data = student_data_dict['academic_megs']
+        prompt_parts.append("\n--- Student's Academic Benchmarks (MEGs based on Prior Attainment) ---")
+        prompt_parts.append(f"  GCSE Prior Attainment Score: {meg_data.get('prior_attainment_score', 'N/A')}")
+        prompt_parts.append(f"  MEG @ 60th Percentile: {meg_data.get('meg_60th', 'N/A')}")
+        prompt_parts.append(f"  MEG @ 75th Percentile (Standard Target): {meg_data.get('meg_75th', 'N/A')}")
+        prompt_parts.append(f"  MEG @ 90th Percentile: {meg_data.get('meg_90th', 'N/A')}")
+        prompt_parts.append(f"  MEG @ 100th Percentile: {meg_data.get('meg_100th', 'N/A')}")
+    else:
+        prompt_parts.append("\n--- Student's Academic Benchmarks (MEGs based on Prior Attainment) ---")
+        prompt_parts.append("  Prior attainment score or MEG data not available.")
 
     # Reflections and Goals (Current Cycle Focus)
     prompt_parts.append("\n--- Student Reflections & Goals (Current Cycle Focus) ---")
@@ -432,11 +687,11 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
     prompt_parts.append("Based ONLY on the data provided above for the student, and the knowledge base excerpts below, provide the following insights for the student's TUTOR. ")
     prompt_parts.append("The tone should be objective, analytical, and supportive, aimed at helping the tutor quickly grasp the student's profile to effectively prepare for a coaching conversation focused on student ownership.")
     prompt_parts.append("IMPORTANT: Do NOT directly ask questions TO THE STUDENT or give direct advice TO THE STUDENT in your outputs. Instead, provide insights and talking points that will help the TUTOR facilitate these conversations effectively. Do not use conversational filler like 'Okay, let's look at...'.")
-    prompt_parts.append("Format your entire response as a single JSON object with the following EXACT keys: \"student_overview_summary\", \"chart_comparative_insights\", \"most_important_coaching_questions\", \"student_comment_analysis\", \"suggested_student_goals\".")
+    prompt_parts.append("Format your entire response as a single JSON object with the following EXACT keys: \"student_overview_summary\", \"chart_comparative_insights\", \"most_important_coaching_questions\", \"student_comment_analysis\", \"suggested_student_goals\", \"academic_benchmark_analysis\".")
     prompt_parts.append("Ensure all string values within the JSON are properly escaped.")
 
     prompt_parts.append("\n\n--- Knowledge Base: Coaching Questions (Excerpt) ---")
-    prompt_parts.append("Use these to select questions. Consider student's level and VESPA scores.")
+    prompt_parts.append("Use these to select questions. Consider student's level, VESPA scores, and academic performance relative to MEGs.") # Added academic context
     # Simplified coaching_kb injection for brevity in prompt - real version would be more selective or summarized
     if coaching_kb_data:
         general_q = coaching_kb_data.get('generalIntroductoryQuestions', [])
@@ -467,10 +722,11 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
     prompt_parts.append("'''")
     prompt_parts.append("{")
     prompt_parts.append("  \"student_overview_summary\": \"Concise 2-3 sentence AI Student Snapshot for the tutor, highlighting 1-2 key strengths and 1-2 primary areas for development, rooted in VESPA principles. Max 100-120 words.\",")
-    prompt_parts.append("  \"chart_comparative_insights\": \"Provide 2-3 bullet points or a short paragraph (max 80 words) analyzing the student's VESPA scores in comparison to school averages (if available). What could these differences or similarities mean?\",")
-    prompt_parts.append("  \"most_important_coaching_questions\": [\"Based on the student's profile (scores, level, comments), list 3-5 most impactful coaching questions selected from the provided Coaching Questions Knowledge Base.\", \"Question 2...\"],")
+    prompt_parts.append("  \"chart_comparative_insights\": \"Provide 2-3 bullet points or a short paragraph (max 80 words) analyzing the student\\'s VESPA scores in comparison to school averages (if available). What could these differences or similarities mean?\",")
+    prompt_parts.append("  \"most_important_coaching_questions\": [\"Based on the student\\'s profile (scores, level, comments, academic performance vs MEGs), list 3-5 most impactful coaching questions selected from the provided Coaching Questions Knowledge Base.\", \"Question 2...\"],")
     prompt_parts.append("  \"student_comment_analysis\": \"Analyze the student\\'s RRC/Goal comments (text provided: RRC='{RRC_COMMENT_PLACEHOLDER}', Goal='{GOAL_COMMENT_PLACEHOLDER}'). What insights can be gained? Specifically look for language indicating locus of control (e.g., 'receive a grade' vs 'achieve a grade'). Max 100 words.\",")
-    prompt_parts.append("  \"suggested_student_goals\": [\"Based on the analysis, and inspired by the 100 Statements KB, suggest 2-3 S.M.A.R.T. goals for the student, reframed to their context.\", \"Goal 2...\"]")
+    prompt_parts.append("  \"suggested_student_goals\": [\"Based on the analysis, and inspired by the 100 Statements KB, suggest 2-3 S.M.A.R.T. goals for the student, reframed to their context.\", \"Goal 2...\"]," )
+    prompt_parts.append("  \"academic_benchmark_analysis\": \"Provide a brief analysis (max 100 words) of the student's academic performance (current grades, target grades) in relation to their 75th percentile MEG for each subject. What does this comparison suggest for the tutor to discuss with the student regarding their expectations and potential? Consider the provided explanation of MEGs.\"")
     prompt_parts.append("}")
     prompt_parts.append("'''")
     # Prepare cleaned versions of current_rrc_text and current_goal_text for the prompt placeholder replacement
@@ -523,7 +779,7 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
             parsed_llm_outputs = json.loads(raw_response_content)
             
             # Validate that all expected keys are in the parsed dictionary
-            expected_keys = ["student_overview_summary", "chart_comparative_insights", "most_important_coaching_questions", "student_comment_analysis", "suggested_student_goals"]
+            expected_keys = ["student_overview_summary", "chart_comparative_insights", "most_important_coaching_questions", "student_comment_analysis", "suggested_student_goals", "academic_benchmark_analysis"]
             if not all(key in parsed_llm_outputs for key in expected_keys):
                 app.logger.error(f"LLM response missing one or more expected keys. Response: {raw_response_content}")
                 # If keys are missing, construct a default error structure for those keys
@@ -533,7 +789,8 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
                     "chart_comparative_insights": "Error: LLM did not provide valid chart insights.",
                     "most_important_coaching_questions": ["Error: LLM did not provide valid questions."],
                     "student_comment_analysis": "Error: LLM did not provide valid comment analysis.",
-                    "suggested_student_goals": ["Error: LLM did not provide valid goal suggestions."]
+                    "suggested_student_goals": ["Error: LLM did not provide valid goal suggestions."],
+                    "academic_benchmark_analysis": "Error: LLM did not provide valid academic benchmark analysis."
                 }
                 # Update with any valid parts from the LLM, then fill missing with errors
                 for key in expected_keys:
@@ -553,7 +810,8 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
                     "chart_comparative_insights": "Error parsing LLM response.",
                     "most_important_coaching_questions": ["Error parsing LLM response."],
                     "student_comment_analysis": "Error parsing LLM response.",
-                    "suggested_student_goals": ["Error parsing LLM response."]
+                    "suggested_student_goals": ["Error parsing LLM response."],
+                    "academic_benchmark_analysis": "Error parsing LLM response."
                 }
         except Exception as e:
             app.logger.error(f"Error calling OpenAI API or processing response (Attempt {attempt + 1}/{max_retries}): {e}")
@@ -563,7 +821,8 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
                     "chart_comparative_insights": "Error generating insights from LLM.",
                     "most_important_coaching_questions": ["Error generating questions from LLM."],
                     "student_comment_analysis": "Error generating analysis from LLM.",
-                    "suggested_student_goals": ["Error generating goals from LLM."]
+                    "suggested_student_goals": ["Error generating goals from LLM."],
+                    "academic_benchmark_analysis": "Error generating academic benchmark analysis from LLM."
                 }
         time.sleep(1) # Wait a second before retrying if an error occurred
 
@@ -573,9 +832,96 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
         "chart_comparative_insights": "Critical error.",
         "most_important_coaching_questions": ["Critical error."],
         "student_comment_analysis": "Critical error.",
-        "suggested_student_goals": ["Critical error."]
+        "suggested_student_goals": ["Critical error."],
+        "academic_benchmark_analysis": "Critical error."
     }
 
+
+# --- Helper function to get MEG from prior attainment ---
+def get_meg_for_prior_attainment(prior_attainment_score, benchmark_table_data, normalized_qualification_type, qual_details=None, app_logger=app.logger):
+    """Looks up MEG aspiration from a given ALPS band table based on prior attainment score, normalized qualification type, and specific qualification details."""
+    if benchmark_table_data is None or prior_attainment_score is None:
+        app_logger.debug(f"MEG lookup: Benchmark data or prior score is None. Score: {prior_attainment_score}, NormQual: {normalized_qualification_type}")
+        return "N/A"
+    try:
+        score = float(prior_attainment_score)
+        # table_to_use is already the specific, correct table passed as benchmark_table_data
+
+        for band_info in benchmark_table_data:
+            # Accommodate different key names for min/max scores found in various ALPS tables
+            min_score_val = None
+            max_score_val = None
+            possible_min_keys = ["gcseMinScore", "gcseMin", "Avg GCSE score Min", "Prior Attainment Min"]
+            possible_max_keys = ["gcseMaxScore", "gcseMax", "Avg GCSE score Max", "Prior Attainment Max"]
+
+            for key in possible_min_keys:
+                if key in band_info:
+                    min_score_val = band_info[key]
+                    break
+            for key in possible_max_keys:
+                if key in band_info:
+                    max_score_val = band_info[key]
+                    break
+            
+            meg_aspiration = "N/A" # Default MEG
+
+            # Determine MEG key based on normalized_qualification_type and qual_details
+            if normalized_qualification_type in ["A Level", "AS Level"]:
+                meg_aspiration = band_info.get("megAspiration", band_info.get("MEG Aspiration", "N/A"))
+            elif normalized_qualification_type == "IB HL":
+                meg_aspiration = band_info.get("hlMeg", band_info.get("HL MEG Aspiration", "N/A"))
+            elif normalized_qualification_type == "IB SL":
+                meg_aspiration = band_info.get("slMeg", band_info.get("SL MEG Aspiration", "N/A"))
+            elif normalized_qualification_type == "Pre-U Principal Subject":
+                meg_aspiration = band_info.get("fullMeg", band_info.get("Principal Subject MEG", "N/A"))
+            elif normalized_qualification_type == "Pre-U Short Course":
+                meg_aspiration = band_info.get("scMeg", band_info.get("Short Course MEG", "N/A"))
+            elif "BTEC" in normalized_qualification_type and qual_details:
+                btec_year = qual_details.get('year', "2016") # Default to 2016 if year not in details
+                btec_size = qual_details.get('size')
+                
+                # MEG keys can vary significantly between 2010 and 2016 BTEC tables
+                if btec_year == "2016":
+                    if btec_size == "EXTCERT": meg_aspiration = band_info.get("extCertMeg", band_info.get("Ext Cert MEG", "N/A"))
+                    elif btec_size == "DIP": meg_aspiration = band_info.get("dipMeg", band_info.get("Diploma MEG", "N/A"))
+                    elif btec_size == "EXTDIP": meg_aspiration = band_info.get("extDipMeg", band_info.get("Ext Dip MEG", "N/A"))
+                    elif btec_size == "CERT": meg_aspiration = band_info.get("certMeg", band_info.get("Certificate MEG", "N/A")) # e.g. BTEC L3 Nat Cert (1 yr)
+                    elif btec_size == "FOUNDDIP": meg_aspiration = band_info.get("foundDipMeg", band_info.get("Found Dip MEG", "N/A"))
+                    else: app_logger.warning(f"BTEC 2016: Unknown size '{btec_size}' for MEG lookup in {normalized_qualification_type}")
+                elif btec_year == "2010":
+                    if btec_size == "CERT": meg_aspiration = band_info.get("certMEG", "N/A")         # L3 Cert (30 cred)
+                    elif btec_size == "SUBDIP": meg_aspiration = band_info.get("subDipMEG", "N/A")    # L3 Sub Dip (60 cred)
+                    elif btec_size == "NINETY_CR": meg_aspiration = band_info.get("ninetyCrMEG", "N/A") # L3 90-Credit Dip
+                    elif btec_size == "DIP": meg_aspiration = band_info.get("dipMEG", "N/A")          # L3 Dip (120 cred)
+                    elif btec_size == "EXTDIP": meg_aspiration = band_info.get("extDipMEG", "N/A")   # L3 Ext Dip (180 cred)
+                    else: app_logger.warning(f"BTEC 2010: Unknown size '{btec_size}' for MEG lookup in {normalized_qualification_type}")
+                else:
+                    app_logger.warning(f"Unknown BTEC year '{btec_year}' for MEG lookup.")
+            elif "UAL" in normalized_qualification_type:
+                 meg_aspiration = band_info.get("megGrade", band_info.get("MEG", "N/A"))
+            elif "WJEC" in normalized_qualification_type and qual_details:
+                 wjec_size = qual_details.get('wjec_size', "CERT") # Default to CERT if not specified
+                 if wjec_size == "CERT": meg_aspiration = band_info.get("certMeg", band_info.get("Certificate MEG", "N/A"))
+                 elif wjec_size == "DIP": meg_aspiration = band_info.get("dipMegAsp", band_info.get("Diploma MEG", "N/A"))
+                 else: app_logger.warning(f"WJEC: Unknown size '{wjec_size}' for MEG lookup.")
+            elif "CACHE" in normalized_qualification_type:
+                 # CACHE tables might use "megGrade" or similar generic keys like UAL
+                 meg_aspiration = band_info.get("megGrade", band_info.get("MEG Aspiration", "N/A"))
+            else: 
+                # Fallback for any other types or if details are missing for complex types
+                meg_aspiration = band_info.get("megAspiration", band_info.get("megGrade", band_info.get("MEG", "N/A")))
+                app_logger.info(f"MEG lookup for '{normalized_qualification_type}' using default MEG key ('megAspiration' or 'megGrade' or 'MEG').")
+
+            if isinstance(min_score_val, (int, float)):
+                # Ensure max_score_val is treated correctly if it represents an inclusive upper bound or exclusive
+                # Standard ALPS tables are usually [min_score, max_score) - min inclusive, max exclusive
+                if score >= min_score_val and (max_score_val is None or score < float(max_score_val)):
+                    return meg_aspiration
+        app_logger.debug(f"MEG lookup: Score {score} not in any band for NormQual: {normalized_qualification_type}. Table (first 200 chars): {str(benchmark_table_data)[:200]}...")
+        return "N/A"
+    except (ValueError, TypeError) as e:
+        app.logger.warning(f"MEG lookup error: Could not process prior attainment score '{prior_attainment_score}' or table for {normalized_qualification_type}. Error: {e}")
+        return "N/A"
 
 @app.route('/api/v1/coaching_suggestions', methods=['POST'])
 def coaching_suggestions():
@@ -857,6 +1203,146 @@ def coaching_suggestions():
     # Fetch Academic Profile Data (Object_112)
     academic_profile_summary_data = get_academic_profile(actual_student_object3_id, student_name_for_profile_lookup, student_obj10_id_from_request)
     
+    # --- Fetch Student's GCSE Prior Attainment Score from Object_113 ---
+    prior_attainment_score = None
+    if actual_student_object3_id: 
+        app.logger.info(f"Fetching Object_113 for student (Obj3 ID: {actual_student_object3_id}) to get prior attainment score.")
+        filters_obj113 = [{'field': 'field_3130', 'operator': 'is', 'value': actual_student_object3_id}]
+        # Use get_all_knack_records as there might be multiple, though score should be consistent
+        obj113_records_all = get_all_knack_records("object_113", filters=filters_obj113, max_pages=1) # Max_pages=1 for efficiency if expecting one or few
+
+        if obj113_records_all:
+            # Take the score from the first record found, assuming it's consistent for the student
+            prior_attainment_score_raw = obj113_records_all[0].get('field_3123') 
+            if prior_attainment_score_raw is not None:
+                try:
+                    prior_attainment_score = float(prior_attainment_score_raw)
+                    app.logger.info(f"Successfully fetched and converted prior attainment score: {prior_attainment_score} from Object_113 record {obj113_records_all[0].get('id')}.")
+                except (ValueError, TypeError):
+                    app.logger.warning(f"Could not convert prior attainment score '{prior_attainment_score_raw}' from Object_113.field_3123 to float.")
+            else:
+                app.logger.warning(f"Prior attainment score (field_3123) is missing in Object_113 record: {obj113_records_all[0].get('id')}.")
+            if len(obj113_records_all) > 1:
+                app.logger.info(f"Found {len(obj113_records_all)} records in Object_113 for student {actual_student_object3_id}. Using prior attainment from the first one.")
+        else:
+            app.logger.warning(f"No records found in Object_113 for student {actual_student_object3_id} using filter on field_3130.")
+    else:
+        app.logger.warning("Cannot fetch prior attainment score from Object_113 as actual_student_object3_id is missing.")
+
+    # --- Calculate MEGs for different percentiles ---
+    academic_megs_data = {
+        "prior_attainment_score": prior_attainment_score if prior_attainment_score is not None else "N/A",
+        "aLevel_meg_grade_60th": "N/A", "aLevel_meg_points_60th": 0,
+        "aLevel_meg_grade_75th": "N/A", "aLevel_meg_points_75th": 0,
+        "aLevel_meg_grade_90th": "N/A", "aLevel_meg_points_90th": 0,
+        "aLevel_meg_grade_100th": "N/A", "aLevel_meg_points_100th": 0
+    }
+    app.logger.info(f"Initial Academic MEGs data: {academic_megs_data}")
+
+    # Calculate overall A-Level MEGs if prior attainment is available
+    if prior_attainment_score is not None:
+        if alps_bands_aLevel_60:
+            meg_60_grade = get_meg_for_prior_attainment(prior_attainment_score, alps_bands_aLevel_60, "A Level", None, app.logger)
+            academic_megs_data["aLevel_meg_grade_60th"] = meg_60_grade
+            academic_megs_data["aLevel_meg_points_60th"] = get_points("A Level", meg_60_grade, grade_points_mapping_data, app.logger)
+        if alps_bands_aLevel_75:
+            meg_75_grade = get_meg_for_prior_attainment(prior_attainment_score, alps_bands_aLevel_75, "A Level", None, app.logger)
+            academic_megs_data["aLevel_meg_grade_75th"] = meg_75_grade
+            academic_megs_data["aLevel_meg_points_75th"] = get_points("A Level", meg_75_grade, grade_points_mapping_data, app.logger)
+        if alps_bands_aLevel_90:
+            meg_90_grade = get_meg_for_prior_attainment(prior_attainment_score, alps_bands_aLevel_90, "A Level", None, app.logger)
+            academic_megs_data["aLevel_meg_grade_90th"] = meg_90_grade
+            academic_megs_data["aLevel_meg_points_90th"] = get_points("A Level", meg_90_grade, grade_points_mapping_data, app.logger)
+        if alps_bands_aLevel_100:
+            meg_100_grade = get_meg_for_prior_attainment(prior_attainment_score, alps_bands_aLevel_100, "A Level", None, app.logger)
+            academic_megs_data["aLevel_meg_grade_100th"] = meg_100_grade
+            academic_megs_data["aLevel_meg_points_100th"] = get_points("A Level", meg_100_grade, grade_points_mapping_data, app.logger)
+        app.logger.info(f"Populated overall A-Level MEGs: {academic_megs_data}")
+
+
+    # Process each subject in academic_profile_summary_data for MEG and points
+    if isinstance(academic_profile_summary_data, list) and prior_attainment_score is not None:
+        for subject_summary in academic_profile_summary_data:
+            if isinstance(subject_summary, dict) and subject_summary.get("subject") and not subject_summary["subject"].startswith("Academic profile not found") and not subject_summary["subject"].startswith("No academic subjects parsed"):
+                raw_exam_type = subject_summary.get("examType", "A Level") # Default to A Level if examType missing
+                current_grade = subject_summary.get("currentGrade")
+
+                normalized_qual = normalize_qualification_type(raw_exam_type)
+                qual_details = extract_qual_details(raw_exam_type, normalized_qual, app.logger)
+                
+                subject_summary['normalized_qualification_type'] = normalized_qual # Add for context
+                subject_summary['currentGradePoints'] = get_points(normalized_qual, current_grade, grade_points_mapping_data, app.logger)
+                subject_summary['standard_meg'] = "N/A"
+                subject_summary['standardMegPoints'] = 0
+                
+                # Select the correct benchmark table
+                benchmark_table_for_subject = None
+                if normalized_qual == "A Level": # For A-Levels, standard MEG is 75th percentile
+                    benchmark_table_for_subject = alps_bands_aLevel_75
+                elif normalized_qual == "AS Level": # AS Level also uses A Level 75th as a common proxy if no specific AS table
+                    benchmark_table_for_subject = alps_bands_aLevel_75 
+                    app.logger.info(f"Using A-Level 75th percentile benchmark for AS Level subject: {subject_summary.get('subject')}")
+                elif normalized_qual == "IB HL" or normalized_qual == "IB SL":
+                    benchmark_table_for_subject = alps_bands_ib
+                elif "BTEC" in normalized_qual:
+                    # Determine BTEC year from qual_details, default to 2016 if not found
+                    btec_year = qual_details.get('year', "2016") if qual_details else "2016"
+                    if btec_year == "2010": benchmark_table_for_subject = alps_bands_btec2010
+                    else: benchmark_table_for_subject = alps_bands_btec2016 # Default to 2016 BTEC table
+                elif "Pre-U" in normalized_qual:
+                    benchmark_table_for_subject = alps_bands_preU
+                elif "UAL" in normalized_qual:
+                    benchmark_table_for_subject = alps_bands_ual
+                elif "WJEC" in normalized_qual:
+                    benchmark_table_for_subject = alps_bands_wjec
+                elif "CACHE" in normalized_qual:
+                    benchmark_table_for_subject = alps_bands_cache
+                else:
+                    app.logger.warning(f"No specific ALPS benchmark table configured for normalized qualification: \'{normalized_qual}\' for subject \'{subject_summary.get('subject')}\'. MEG will be N/A.")
+
+                if benchmark_table_for_subject:
+                    standard_meg_grade = get_meg_for_prior_attainment(prior_attainment_score, benchmark_table_for_subject, normalized_qual, qual_details, app.logger)
+                    subject_summary['standard_meg'] = standard_meg_grade
+                    subject_summary['standardMegPoints'] = get_points(normalized_qual, standard_meg_grade, grade_points_mapping_data, app.logger)
+                    app.logger.info(f"Subject: {subject_summary.get('subject')} ({normalized_qual}), Prior Att: {prior_attainment_score}, Raw ExamType: '{raw_exam_type}', Details: {qual_details}, MEG Grade: {standard_meg_grade}, MEG Points: {subject_summary['standardMegPoints']}")
+
+                    # For A-Levels, also add specific percentile points
+                    if normalized_qual == "A Level":
+                        # Standard MEG (75th) points already calculated
+                        subject_summary['megPoints75'] = subject_summary['standardMegPoints']
+                        
+                        meg60_grade_alvl = get_meg_for_prior_attainment(prior_attainment_score, alps_bands_aLevel_60, "A Level", None, app.logger)
+                        subject_summary['megPoints60'] = get_points("A Level", meg60_grade_alvl, grade_points_mapping_data, app.logger)
+                        
+                        meg90_grade_alvl = get_meg_for_prior_attainment(prior_attainment_score, alps_bands_aLevel_90, "A Level", None, app.logger)
+                        subject_summary['megPoints90'] = get_points("A Level", meg90_grade_alvl, grade_points_mapping_data, app.logger)
+
+                        meg100_grade_alvl = get_meg_for_prior_attainment(prior_attainment_score, alps_bands_aLevel_100, "A Level", None, app.logger)
+                        subject_summary['megPoints100'] = get_points("A Level", meg100_grade_alvl, grade_points_mapping_data, app.logger)
+                else:
+                     app.logger.warning(f"Could not determine benchmark table for subject: {subject_summary.get('subject')} with normalized type: {normalized_qual}. Standard MEG will remain N/A.")
+            else:
+                if isinstance(subject_summary, dict): # Log if it's a dict but doesn't meet criteria
+                    app.logger.info(f"Skipping MEG/point calculation for subject entry: {str(subject_summary)[:100]}... (Invalid subject or profile not found message)")
+
+    elif prior_attainment_score is None:
+        app.logger.warning("Prior attainment score is missing. Cannot calculate subject-specific MEGs or points accurately.")
+        if isinstance(academic_profile_summary_data, list): # Still add default keys if profile exists
+             for subject_summary in academic_profile_summary_data:
+                if isinstance(subject_summary, dict):
+                    subject_summary['currentGradePoints'] = 0
+                    subject_summary['standard_meg'] = "N/A (No PA)"
+                    subject_summary['standardMegPoints'] = 0
+                    # Check if examType indicates A-Level more carefully by normalizing first
+                    raw_exam_type_for_default = subject_summary.get("examType", "")
+                    normalized_qual_for_default = normalize_qualification_type(raw_exam_type_for_default) if raw_exam_type_for_default else ""
+                    if normalized_qual_for_default == "A Level":
+                         subject_summary['megPoints60'] = 0
+                         subject_summary['megPoints75'] = 0
+                         subject_summary['megPoints90'] = 0
+                         subject_summary['megPoints100'] = 0
+
+
     # Data structure to pass to the LLM
     student_data_for_llm = {
         "student_name": student_name_for_profile_lookup,
@@ -867,7 +1353,8 @@ def coaching_suggestions():
         "academic_profile_summary": academic_profile_summary_data,
         "student_reflections_and_goals": student_reflections_and_goals,
         "object29_question_highlights": object29_top_bottom_questions,
-        "previous_interaction_summary": previous_interaction_summary
+        "previous_interaction_summary": previous_interaction_summary,
+        "academic_megs": academic_megs_data # Add MEGs to data for LLM
         # key_individual_question_insights is indirectly included via vespa_profile_details_for_llm
     }
     
@@ -985,7 +1472,8 @@ def coaching_suggestions():
         "general_introductory_questions_for_tutor": general_intro_questions,
         "llm_generated_insights": llm_structured_output, # This now holds the structured data
         "previous_interaction_summary": previous_interaction_summary,
-        "school_vespa_averages": school_wide_vespa_averages
+        "school_vespa_averages": school_wide_vespa_averages,
+        "academic_megs": academic_megs_data # Add MEGs to API response
     }
     
     # For backward compatibility with old frontend's "llm_generated_summary_and_suggestions.student_overview_summary"

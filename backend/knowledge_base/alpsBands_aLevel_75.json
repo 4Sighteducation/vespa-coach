@@ -1,0 +1,14 @@
+[
+  { "gcseMinScore": 7.75, "gcseMaxScore": null, "alpsBand": 1, "minExpectedPoints": 124.00, "megAspiration": "A+" },
+  { "gcseMinScore": 7.00, "gcseMaxScore": 7.75, "alpsBand": 2, "minExpectedPoints": 109.82, "megAspiration": "A/B" },
+  { "gcseMinScore": 6.55, "gcseMaxScore": 7.00, "alpsBand": 3, "minExpectedPoints": 101.33, "megAspiration": "B" },
+  { "gcseMinScore": 6.10, "gcseMaxScore": 6.55, "alpsBand": 4, "minExpectedPoints": 95.00, "megAspiration": "B-" },
+  { "gcseMinScore": 5.65, "gcseMaxScore": 6.10, "alpsBand": 5, "minExpectedPoints": 89.52, "megAspiration": "C+" },
+  { "gcseMinScore": 5.21, "gcseMaxScore": 5.65, "alpsBand": 6, "minExpectedPoints": 83.75, "megAspiration": "C" },
+  { "gcseMinScore": 4.77, "gcseMaxScore": 5.21, "alpsBand": 7, "minExpectedPoints": 79.00, "megAspiration": "C-" },
+  { "gcseMinScore": 4.37, "gcseMaxScore": 4.77, "alpsBand": 8, "minExpectedPoints": 74.89, "megAspiration": "C" },
+  { "gcseMinScore": 3.79, "gcseMaxScore": 4.37, "alpsBand": 9, "minExpectedPoints": 70.00, "megAspiration": "C/D" },
+  { "gcseMinScore": 3.05, "gcseMaxScore": 3.79, "alpsBand": 10, "minExpectedPoints": 65.71, "megAspiration": "D+" },
+  { "gcseMinScore": 0.00, "gcseMaxScore": 3.05, "alpsBand": 11, "minExpectedPoints": 70.77, "megAspiration": "D" }
+]
+

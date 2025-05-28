@@ -657,26 +657,73 @@ if (window.aiCoachLauncherInitialized) {
             let academicHtml = '';
             const academicContainer = document.getElementById('aiCoachAcademicProfileContainer');
             if (academicContainer) {
-                academicHtml += `
-                    <div class="ai-coach-section">
-                        <h4>Student Overview</h4>
-                        <p><strong>Name:</strong> ${data.student_name || 'N/A'}</p>
-                        <p><strong>Level:</strong> ${data.student_level || 'N/A'}</p>
-                        <p><strong>Current VESPA Cycle:</strong> ${data.current_cycle || 'N/A'}</p>
-                    </div>
-                `;
+                // Area 1: Comparative Benchmark Table & Overall MEGs
+                academicHtml += '<div class="ai-coach-section"><h4>Academic Benchmark Comparison</h4>';
+                academicHtml += '<div id="academicBenchmarkTableContainer">';
+
+                // Display overall MEGs first
+                if (data.academic_megs) {
+                    academicHtml += `<p><strong>Student GCSE Prior Attainment Score:</strong> ${data.academic_megs.prior_attainment_score || 'N/A'}</p>`;
+                    academicHtml += '<ul>';
+                    academicHtml += `<li>MEG @ 60th Percentile: <strong>${data.academic_megs.meg_60th || 'N/A'}</strong></li>`;
+                    academicHtml += `<li>MEG @ 75th Percentile (Standard): <strong>${data.academic_megs.meg_75th || 'N/A'}</strong></li>`;
+                    academicHtml += `<li>MEG @ 90th Percentile: <strong>${data.academic_megs.meg_90th || 'N/A'}</strong></li>`;
+                    academicHtml += `<li>MEG @ 100th Percentile: <strong>${data.academic_megs.meg_100th || 'N/A'}</strong></li>`;
+                    academicHtml += '</ul><hr style="margin: 10px 0;">';
+                } else {
+                    academicHtml += '<p><em>Overall MEG data not available.</em></p><hr style="margin: 10px 0;">';
+                }
+
+                // Display subject-specific table (Current Grade, Target Grade, 75th MEG)
+                academicHtml += '<h5>Subject Performance vs. 75th Percentile MEG:</h5>';
                 if (data.academic_profile_summary && data.academic_profile_summary.length > 0 && 
                     !(data.academic_profile_summary.length === 1 && data.academic_profile_summary[0].subject.includes("not found")) &&
                     !(data.academic_profile_summary.length === 1 && data.academic_profile_summary[0].subject.includes("No academic subjects parsed"))) {
-                    academicHtml += '<div class="ai-coach-section"><h4>Academic Profile</h4><ul>';
+                    academicHtml += '<table style="width:100%; border-collapse: collapse;">';
+                    academicHtml += '<thead><tr><th style="text-align:left; border-bottom:1px solid #ddd; padding:5px;">Subject</th><th style="text-align:left; border-bottom:1px solid #ddd; padding:5px;">Current</th><th style="text-align:left; border-bottom:1px solid #ddd; padding:5px;">Target</th><th style="text-align:left; border-bottom:1px solid #ddd; padding:5px;">MEG (75th)</th></tr></thead><tbody>';
+                    data.academic_profile_summary.forEach(subject => {
+                        academicHtml += '<tr>';
+                        academicHtml += `<td style="border-bottom:1px solid #eee; padding:5px;"><strong>${subject.subject || 'N/A'}</strong></td>`;
+                        academicHtml += `<td style="border-bottom:1px solid #eee; padding:5px;">${subject.currentGrade || 'N/A'}</td>`;
+                        academicHtml += `<td style="border-bottom:1px solid #eee; padding:5px;">${subject.targetGrade || 'N/A'}</td>`;
+                        academicHtml += `<td style="border-bottom:1px solid #eee; padding:5px;">${subject.meg_75th || 'N/A'}</td>`; // Display MEG from profile summary
+                        academicHtml += '</tr>';
+                    });
+                    academicHtml += '</tbody></table>';
+                } else {
+                    academicHtml += '<p><em>No detailed academic subject profile available to compare against MEGs.</em></p>';
+                }
+                academicHtml += '</div></div>'; // End benchmarkTableContainer and its ai-coach-section
+
+                // Area 2: AI Analysis of Academic Data
+                academicHtml += '<div class="ai-coach-section" style="margin-top: 15px;"><h4>AI Analysis: Academic Performance & Benchmarks</h4>';
+                if (data.llm_generated_insights && data.llm_generated_insights.academic_benchmark_analysis) {
+                    academicHtml += `<p>${data.llm_generated_insights.academic_benchmark_analysis}</p>`;
+                } else {
+                    academicHtml += '<p><em>AI analysis of academic benchmarks will appear here.</em></p>'; // Placeholder
+                }
+                academicHtml += '</div>';
+
+                // Original student overview (Name, Level, Cycle) - can be kept or integrated differently
+                academicHtml += '<div class="ai-coach-section" style="margin-top: 15px;">';
+                academicHtml += '<h5>Student Overview (from Academic Profile)</h5>'; // Clarified title
+                academicHtml += `<p><strong>Name:</strong> ${data.student_name || 'N/A'}</p>`;
+                academicHtml += `<p><strong>Level:</strong> ${data.student_level || 'N/A'}</p>`;
+                academicHtml += `<p><strong>Current VESPA Cycle:</strong> ${data.current_cycle || 'N/A'}</p>`;
+                academicHtml += '</div>';
+
+                // Original Academic Profile Summary (Subjects list) - can be kept or integrated differently
+                if (data.academic_profile_summary && data.academic_profile_summary.length > 0 && 
+                    !(data.academic_profile_summary.length === 1 && data.academic_profile_summary[0].subject.includes("not found")) &&
+                    !(data.academic_profile_summary.length === 1 && data.academic_profile_summary[0].subject.includes("No academic subjects parsed"))) {
+                    academicHtml += '<div class="ai-coach-section" style="margin-top: 15px;"><h5>Academic Profile Summary (Subjects)</h5><ul>'; // Clarified title
                     data.academic_profile_summary.forEach(subject => {
                         academicHtml += `<li><strong>${subject.subject || 'N/A'}:</strong> Grade ${subject.currentGrade || 'N/A'} (Target: ${subject.targetGrade || 'N/A'}, Effort: ${subject.effortGrade || 'N/A'})</li>`;
                     });
                     academicHtml += '</ul></div>';
                 } else {
-                    academicHtml += '<div class="ai-coach-section"><h4>Academic Profile</h4><p>No detailed academic profile available or profile not found.</p></div>';
+                    academicHtml += '<div class="ai-coach-section" style="margin-top: 15px;"><h5>Academic Profile Summary (Subjects)</h5><p>No detailed academic profile available or profile not found.</p></div>';
                 }
-                academicHtml += '<div class="ai-coach-section"><h4>AI Analysis: Linking VESPA to Academics</h4><p><em>(AI will analyze non-cognitive factors affecting academic performance here)</em></p></div>';
                 academicContainer.innerHTML = academicHtml;
             }
 
@@ -1066,7 +1113,7 @@ if (window.aiCoachLauncherInitialized) {
             setTimeout(() => {
                 const botMessageElement = document.createElement('p');
                 botMessageElement.className = 'ai-chat-message ai-chat-message-bot';
-                botMessageElement.innerHTML = `<em>AI Coach:</em> Thinking... (response for \"${messageText}\" will appear here)`;
+                botMessageElement.innerHTML = `<em>AI Coach:</em> Thinking... (response for "${messageText}" will appear here)`;
                 chatDisplay.appendChild(botMessageElement);
                 chatDisplay.scrollTop = chatDisplay.scrollHeight; // Scroll to bottom
             }, 500);

@@ -1,0 +1,13 @@
+[
+  { "band": 1, "gcseMin": 6.60, "gcseMax": null, "awardPts": 32.50, "certPts": 65.00, "dipPts": 130.00, "extDipPts": 195.00, "megGrade": "A*/A" },
+  { "band": 2, "gcseMin": 6.17, "gcseMax": 6.60, "awardPts": 32.50, "certPts": 65.00, "dipPts": 130.00, "extDipPts": 195.00, "megGrade": "A*/A" },
+  { "band": 3, "gcseMin": 5.67, "gcseMax": 6.17, "awardPts": 32.50, "certPts": 65.00, "dipPts": 130.00, "extDipPts": 195.00, "megGrade": "A*/A" },
+  { "band": 4, "gcseMin": 5.23, "gcseMax": 5.67, "awardPts": 30.00, "certPts": 60.00, "dipPts": 120.00, "extDipPts": 180.00, "megGrade": "A" },
+  { "band": 5, "gcseMin": 4.76, "gcseMax": 5.23, "awardPts": 30.00, "certPts": 60.00, "dipPts": 120.00, "extDipPts": 180.00, "megGrade": "A" },
+  { "band": 6, "gcseMin": 4.38, "gcseMax": 4.76, "awardPts": 28.22, "certPts": 56.43, "dipPts": 112.86, "extDipPts": 169.29, "megGrade": "A/B" },
+  { "band": 7, "gcseMin": 3.75, "gcseMax": 4.38, "awardPts": 26.36, "certPts": 52.73, "dipPts": 105.45, "extDipPts": 158.18, "megGrade": "A/B" },
+  { "band": 8, "gcseMin": 3.31, "gcseMax": 3.75, "awardPts": 24.17, "certPts": 48.34, "dipPts": 96.67, "extDipPts": 145.01, "megGrade": "B" },
+  { "band": 9, "gcseMin": 3.00, "gcseMax": 3.31, "awardPts": 23.75, "certPts": 47.50, "dipPts": 95.00, "extDipPts": 142.50, "megGrade": "B" },
+  { "band": 10, "gcseMin": 2.58, "gcseMax": 3.00, "awardPts": 22.73, "certPts": 45.46, "dipPts": 90.91, "extDipPts": 136.37, "megGrade": "B/C" },
+  { "band": 11, "gcseMin": 0.00, "gcseMax": 2.58, "awardPts": 20.00, "certPts": 40.00, "dipPts": 80.00, "extDipPts": 120.00, "megGrade": "C" }
+]

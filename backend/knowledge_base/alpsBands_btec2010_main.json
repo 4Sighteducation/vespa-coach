@@ -1,0 +1,13 @@
+[
+  { "band": 1, "gcseMin": 6.60, "gcseMax": null, "certMEG": "D*", "subDipMEG": "D*", "ninetyCrMEG": "D*D*", "dipMEG": "D*D*", "extDipMEG": "D*D*D*" },
+  { "band": 2, "gcseMin": 6.17, "gcseMax": 6.60, "certMEG": "D*", "subDipMEG": "D*", "ninetyCrMEG": "D*D*", "dipMEG": "D*D*", "extDipMEG": "D*D*D*" },
+  { "band": 3, "gcseMin": 5.67, "gcseMax": 6.17, "certMEG": "D*", "subDipMEG": "D*", "ninetyCrMEG": "D*D*", "dipMEG": "D*D*", "extDipMEG": "D*D*D*" },
+  { "band": 4, "gcseMin": 5.23, "gcseMax": 5.67, "certMEG": "D*", "subDipMEG": "D*", "ninetyCrMEG": "D*D/DD", "dipMEG": "D*D/DD", "extDipMEG": "D*D*D*/D*D*D" },
+  { "band": 5, "gcseMin": 4.76, "gcseMax": 5.23, "certMEG": "D*", "subDipMEG": "D*/D", "ninetyCrMEG": "DD", "dipMEG": "DD", "extDipMEG": "D*D*D" },
+  { "band": 6, "gcseMin": 4.38, "gcseMax": 4.76, "certMEG": "Dis", "subDipMEG": "Dis", "ninetyCrMEG": "D*/D", "dipMEG": "D*/D", "extDipMEG": "D*DD" },
+  { "band": 7, "gcseMin": 3.75, "gcseMax": 4.38, "certMEG": "Dis", "subDipMEG": "Dis", "ninetyCrMEG": "D", "dipMEG": "D", "extDipMEG": "DDD" },
+  { "band": 8, "gcseMin": 3.31, "gcseMax": 3.75, "certMEG": "Dis", "subDipMEG": "D/M", "ninetyCrMEG": "DM", "dipMEG": "DM", "extDipMEG": "DDD" },
+  { "band": 9, "gcseMin": 3.00, "gcseMax": 3.31, "certMEG": "D/M", "subDipMEG": "DM", "ninetyCrMEG": "DM/MM", "dipMEG": "DM/MM", "extDipMEG": "DDM" },
+  { "band": 10, "gcseMin": 2.58, "gcseMax": 3.00, "certMEG": "D/M", "subDipMEG": "DM", "ninetyCrMEG": "MM", "dipMEG": "MM", "extDipMEG": "DDM/DMM" },
+  { "band": 11, "gcseMin": 0.00, "gcseMax": 2.58, "certMEG": "M", "subDipMEG": "M", "ninetyCrMEG": "DM/MM", "dipMEG": "DM/MM", "extDipMEG": "DMM" }
+]

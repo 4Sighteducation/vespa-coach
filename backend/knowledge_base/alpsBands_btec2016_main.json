@@ -1,0 +1,12 @@
+[
+  { "gcseMin": 6.00, "gcseMax": null, "extCertPoints": 132.50, "extCertMeg": "D*", "dipPoints": 273.33, "dipMeg": "D*D*", "extDipPoints": 395.00, "extDipMeg": "D*D*D", "btecAlpsBand": 1 },
+  { "gcseMin": 5.28, "gcseMax": 6.00, "extCertPoints": 120.00, "extCertMeg": "Dis", "dipPoints": 265.00, "dipMeg": "D*D*/D*D", "extDipPoints": 380.00, "extDipMeg": "D*DD", "btecAlpsBand": 2 },
+  { "gcseMin": 4.90, "gcseMax": 5.28, "extCertPoints": 113.33, "extCertMeg": "Dis", "dipPoints": 253.33, "dipMeg": "D*D", "extDipPoints": 365.00, "extDipMeg": "D*DD/DDD", "btecAlpsBand": 3 },
+  { "gcseMin": 4.62, "gcseMax": 4.90, "extCertPoints": 106.67, "extCertMeg": "Dis", "dipPoints": 250.00, "dipMeg": "D*D/DD", "extDipPoints": 355.00, "extDipMeg": "DDD", "btecAlpsBand": 4 },
+  { "gcseMin": 4.37, "gcseMax": 4.62, "extCertPoints": 100.00, "extCertMeg": "D/M", "dipPoints": 240.00, "dipMeg": "DD", "extDipPoints": 350.00, "extDipMeg": "DDD", "btecAlpsBand": 5 },
+  { "gcseMin": 4.13, "gcseMax": 4.37, "extCertPoints": 95.00, "extCertMeg": "D/M", "dipPoints": 226.67, "dipMeg": "DD", "extDipPoints": 333.33, "extDipMeg": "DDD/DDM", "btecAlpsBand": 6 },
+  { "gcseMin": 3.89, "gcseMax": 4.13, "extCertPoints": 90.00, "extCertMeg": "D/M", "dipPoints": 225.00, "dipMeg": "DD", "extDipPoints": 320.00, "extDipMeg": "DDM", "btecAlpsBand": 7 },
+  { "gcseMin": 3.62, "gcseMax": 3.89, "extCertPoints": 84.80, "extCertMeg": "M", "dipPoints": 220.00, "dipMeg": "DD/DM", "extDipPoints": 310.00, "extDipMeg": "DDM", "btecAlpsBand": 8 },
+  { "gcseMin": 3.20, "gcseMax": 3.62, "extCertPoints": 80.00, "extCertMeg": "M", "dipPoints": 205.00, "dipMeg": "DM", "extDipPoints": 293.33, "extDipMeg": "DDM/DMM", "btecAlpsBand": 9 },
+  { "gcseMin": 0.00, "gcseMax": 3.20, "extCertPoints": 64.00, "extCertMeg": "M/P", "dipPoints": 186.67, "dipMeg": "DM/MM", "extDipPoints": 275.00, "extDipMeg": "DMM", "btecAlpsBand": 10 }
+]

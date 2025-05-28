@@ -1,0 +1,11 @@
+[
+  { "gcseMin": 8.50, "gcseMax": null, "fullPoints": 81.57, "fullMeg": "D1/D2", "scPoints": 40.79, "scMeg": "D1/D2", "preUAlpsBand": 1 },
+  { "gcseMin": 8.22, "gcseMax": 8.50, "fullPoints": 78.18, "fullMeg": "D2", "scPoints": 39.09, "scMeg": "D2", "preUAlpsBand": 2 },
+  { "gcseMin": 8.05, "gcseMax": 8.22, "fullPoints": 76.67, "fullMeg": "D2/D3", "scPoints": 38.34, "scMeg": "D2/D3", "preUAlpsBand": 3 },
+  { "gcseMin": 7.83, "gcseMax": 8.05, "fullPoints": 74.29, "fullMeg": "D2/D3", "scPoints": 36.96, "scMeg": "D2/D3", "preUAlpsBand": 4 },
+  { "gcseMin": 7.55, "gcseMax": 7.83, "fullPoints": 70.83, "fullMeg": "D3", "scPoints": 35.00, "scMeg": "D3", "preUAlpsBand": 5 },
+  { "gcseMin": 7.17, "gcseMax": 7.55, "fullPoints": 68.26, "fullMeg": "D3", "scPoints": 34.13, "scMeg": "D3", "preUAlpsBand": 6 },
+  { "gcseMin": 6.68, "gcseMax": 7.17, "fullPoints": 66.67, "fullMeg": "D3/M1", "scPoints": 33.34, "scMeg": "D3/M1", "preUAlpsBand": 7 },
+  { "gcseMin": 5.95, "gcseMax": 6.68, "fullPoints": 60.00, "fullMeg": "M1", "scPoints": 30.00, "scMeg": "M1", "preUAlpsBand": 8 },
+  { "gcseMin": 0.00, "gcseMax": 5.95, "fullPoints": 51.82, "fullMeg": "M2", "scPoints": 25.91, "scMeg": "M2", "preUAlpsBand": 9 }
+]

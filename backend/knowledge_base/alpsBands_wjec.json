@@ -1,0 +1,12 @@
+[
+  { "band": 1, "gcseMin": 6.00, "gcseMax": null, "certPoints": 54.44, "certMeg": "A*/A", "dipPoints": 132.50, "dipMegAsp": "D*" },
+  { "band": 2, "gcseMin": 5.28, "gcseMax": 6.00, "certPoints": 49.55, "certMeg": "A/B", "dipPoints": 120.00, "dipMegAsp": "Dis" },
+  { "band": 3, "gcseMin": 4.90, "gcseMax": 5.28, "certPoints": 44.29, "certMeg": "B", "dipPoints": 113.33, "dipMegAsp": "Dis" },
+  { "band": 4, "gcseMin": 4.62, "gcseMax": 4.90, "certPoints": 40.00, "certMeg": "B/C", "dipPoints": 106.67, "dipMegAsp": "Dis" },
+  { "band": 5, "gcseMin": 4.37, "gcseMax": 4.62, "certPoints": 37.50, "certMeg": "B/C", "dipPoints": 100.00, "dipMegAsp": "D/M" },
+  { "band": 6, "gcseMin": 4.13, "gcseMax": 4.37, "certPoints": 36.92, "certMeg": "C", "dipPoints": 95.00, "dipMegAsp": "D/M" },
+  { "band": 7, "gcseMin": 3.89, "gcseMax": 4.13, "certPoints": 33.33, "certMeg": "C/D", "dipPoints": 90.00, "dipMegAsp": "D/M" },
+  { "band": 8, "gcseMin": 3.62, "gcseMax": 3.89, "certPoints": 30.00, "certMeg": "C/D", "dipPoints": 84.80, "dipMegAsp": "M" },
+  { "band": 9, "gcseMin": 3.20, "gcseMax": 3.62, "certPoints": 30.00, "certMeg": "Dis", "dipPoints": 80.00, "dipMegAsp": "M" },
+  { "band": 10, "gcseMin": 0.00, "gcseMax": 3.20, "certPoints": 0, "certMeg": "Dis", "dipPoints": 64.00, "dipMegAsp": "M/P" }
+]

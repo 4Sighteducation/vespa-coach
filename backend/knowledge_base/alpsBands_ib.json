@@ -1,0 +1,11 @@
+[
+  { "gcseMin": 8.35, "gcseMax": null, "hlPoints": 6.58, "hlMeg": "7", "slPoints": 6.46, "slMeg": "7", "ibAlpsBand": 1 },
+  { "gcseMin": 8.10, "gcseMax": 8.35, "hlPoints": 6.43, "hlMeg": "7", "slPoints": 6.33, "slMeg": "7", "ibAlpsBand": 2 },
+  { "gcseMin": 7.70, "gcseMax": 8.10, "hlPoints": 6.11, "hlMeg": "6", "slPoints": 6.04, "slMeg": "6", "ibAlpsBand": 3 },
+  { "gcseMin": 7.28, "gcseMax": 7.70, "hlPoints": 5.92, "hlMeg": "6", "slPoints": 5.78, "slMeg": "6", "ibAlpsBand": 4 },
+  { "gcseMin": 7.00, "gcseMax": 7.28, "hlPoints": 5.59, "hlMeg": "6", "slPoints": 5.82, "slMeg": "6", "ibAlpsBand": 5 },
+  { "gcseMin": 6.25, "gcseMax": 7.00, "hlPoints": 5.52, "hlMeg": "6", "slPoints": 5.38, "slMeg": "6", "ibAlpsBand": 6 },
+  { "gcseMin": 5.50, "gcseMax": 6.25, "hlPoints": 5.22, "hlMeg": "5", "slPoints": 4.80, "slMeg": "5", "ibAlpsBand": 7 },
+  { "gcseMin": 4.80, "gcseMax": 5.50, "hlPoints": 4.89, "hlMeg": "5", "slPoints": 4.39, "slMeg": "5", "ibAlpsBand": 8 },
+  { "gcseMin": 0.00, "gcseMax": 4.80, "hlPoints": 3.85, "hlMeg": "4", "slPoints": 3.88, "slMeg": "4", "ibAlpsBand": 9 }
+]

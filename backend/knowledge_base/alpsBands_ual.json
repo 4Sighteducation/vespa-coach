@@ -1,0 +1,12 @@
+[
+  { "band": 1, "gcseMin": 5.80, "gcseMax": null, "dipPoints": 79.20, "extDipPoints": 158.40, "megGrade": "Dis" },
+  { "band": 2, "gcseMin": 5.06, "gcseMax": 5.80, "dipPoints": 71.08, "extDipPoints": 142.15, "megGrade": "D/M" },
+  { "band": 3, "gcseMin": 4.65, "gcseMax": 5.06, "dipPoints": 70.40, "extDipPoints": 140.80, "megGrade": "D/M" },
+  { "band": 4, "gcseMin": 4.39, "gcseMax": 4.65, "dipPoints": 64.80, "extDipPoints": 129.60, "megGrade": "D/M" },
+  { "band": 5, "gcseMin": 4.10, "gcseMax": 4.39, "dipPoints": 64.00, "extDipPoints": 128.00, "megGrade": "M" },
+  { "band": 6, "gcseMin": 3.91, "gcseMax": 4.10, "dipPoints": 62.00, "extDipPoints": 124.00, "megGrade": "M" },
+  { "band": 7, "gcseMin": 3.67, "gcseMax": 3.91, "dipPoints": 60.00, "extDipPoints": 120.00, "megGrade": "M" },
+  { "band": 8, "gcseMin": 3.37, "gcseMax": 3.67, "dipPoints": 57.60, "extDipPoints": 115.20, "megGrade": "M" },
+  { "band": 9, "gcseMin": 3.00, "gcseMax": 3.37, "dipPoints": 55.20, "extDipPoints": 110.40, "megGrade": "M" },
+  { "band": 10, "gcseMin": 0.00, "gcseMax": 3.00, "dipPoints": 52.94, "extDipPoints": 105.88, "megGrade": "M/P" }
+]
