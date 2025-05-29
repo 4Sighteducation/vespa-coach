@@ -237,7 +237,7 @@ if (window.aiCoachLauncherInitialized) {
         link.id = styleId;
         link.rel = 'stylesheet';
         link.type = 'text/css';
-        link.href = 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/aiCoachLauncher1c.css';
+        link.href = 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/aiCoachLauncher1e.css';
         
         // Add dynamic CSS for config-specific IDs
         const dynamicCss = `
@@ -408,7 +408,7 @@ if (window.aiCoachLauncherInitialized) {
             if (!isResizing) return;
             
             const diff = startX - e.clientX;
-            const newWidth = Math.max(300, Math.min(800, startWidth + diff)); // CHANGED: 300px min, 800px max (was 350-600)
+            const newWidth = Math.max(300, Math.min(1200, startWidth + diff)); // CHANGED: 300px min, 1200px max (was 350-600)
             
             // Update CSS variable for smooth transitions
             document.documentElement.style.setProperty('--ai-coach-panel-width', newWidth + 'px');
@@ -470,7 +470,7 @@ if (window.aiCoachLauncherInitialized) {
         const savedWidth = localStorage.getItem('aiCoachPanelWidth');
         if (savedWidth) {
             const width = parseInt(savedWidth, 10);
-            if (!isNaN(width) && width >= 300 && width <= 800) { // CHANGED: Updated range check
+            if (!isNaN(width) && width >= 300 && width <= 1200) { // CHANGED: Updated range check
                 document.documentElement.style.setProperty('--ai-coach-panel-width', width + 'px');
                 panel.style.width = width + 'px';
                 currentWidth = width;
@@ -492,6 +492,11 @@ if (window.aiCoachLauncherInitialized) {
         panel.innerHTML = `
             <div class="ai-coach-panel-header">
                 <h3>VESPA AI Coaching Assistant</h3>
+                <div class="ai-coach-text-controls">
+                    <button class="ai-coach-text-control-btn" data-action="decrease" title="Decrease text size">A-</button>
+                    <span class="ai-coach-text-size-indicator">100%</span>
+                    <button class="ai-coach-text-control-btn" data-action="increase" title="Increase text size">A+</button>
+                </div>
                 <button class="ai-coach-close-btn" aria-label="Close AI Coach Panel">&times;</button>
             </div>
             <div class="ai-coach-panel-content">
@@ -500,6 +505,55 @@ if (window.aiCoachLauncherInitialized) {
         `;
         document.body.appendChild(panel);
         logAICoach("AI Coach panel created.");
+        
+        // Add text size control functionality
+        setupTextSizeControls();
+    }
+
+    // Add text size control functionality
+    function setupTextSizeControls() {
+        const panel = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId);
+        if (!panel) return;
+        
+        let currentZoom = 100;
+        const zoomStep = 10;
+        const minZoom = 70;
+        const maxZoom = 150;
+        
+        // Load saved zoom preference
+        const savedZoom = localStorage.getItem('aiCoachTextZoom');
+        if (savedZoom) {
+            currentZoom = parseInt(savedZoom, 10);
+            applyTextZoom(currentZoom);
+        }
+        
+        // Add event listeners for zoom controls
+        panel.addEventListener('click', (e) => {
+            if (e.target.classList.contains('ai-coach-text-control-btn')) {
+                const action = e.target.getAttribute('data-action');
+                if (action === 'increase' && currentZoom < maxZoom) {
+                    currentZoom += zoomStep;
+                } else if (action === 'decrease' && currentZoom > minZoom) {
+                    currentZoom -= zoomStep;
+                }
+                applyTextZoom(currentZoom);
+            }
+        });
+        
+        function applyTextZoom(zoom) {
+            panel.style.fontSize = `${zoom * 14 / 100}px`;
+            const indicator = panel.querySelector('.ai-coach-text-size-indicator');
+            if (indicator) {
+                indicator.textContent = `${zoom}%`;
+            }
+            // Apply zoom to modals as well
+            const modals = document.querySelectorAll('.ai-coach-modal-content');
+            modals.forEach(modal => {
+                modal.style.fontSize = `${zoom * 14 / 100}px`;
+            });
+            localStorage.setItem('aiCoachTextZoom', zoom);
+            logAICoach(`Text zoom set to ${zoom}%`);
+        }
     }
 
     function addLauncherButton() {
@@ -1211,10 +1265,6 @@ if (window.aiCoachLauncherInitialized) {
                     🎯 Tackle a Specific Problem?
                 </button>
             </div>
-            <div id="aiCoachProblemSelector" style="display: none; margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">
-                <p style="margin: 0 0 10px 0; font-weight: bold; color: #333;">Select a common challenge:</p>
-                <div id="aiCoachProblemCategories"></div>
-            </div>
             <div style="display: flex; gap: 10px;">
                 <input type="text" id="aiCoachChatInput" placeholder="Type your message...">
                 <button id="aiCoachChatSendButton" class="p-button p-component">Send</button>
@@ -1273,15 +1323,15 @@ if (window.aiCoachLauncherInitialized) {
                 if (!role) { // Infer role if data-role is not set (e.g. initial bot message)
                     if (msgElement.classList.contains('ai-chat-message-bot')) {
                          role = 'assistant';
-                         content = msgElement.innerHTML.replace(/<em>AI Coach:<\/em>\\s*/, '');
+                         content = msgElement.innerHTML.replace(/<em>AI Coach:<\/em>\s*/, '');
                     } else if (msgElement.classList.contains('ai-chat-message-user')) {
                          role = 'user';
-                         content = msgElement.textContent.replace(/You:\\s*/, '');
+                         content = msgElement.textContent.replace(/You:\s*/, '');
                     } else {
                         return; // Skip if role cannot be determined
                     }
                 } else {
-                     content = msgElement.textContent.replace(/^(You:|<em>AI Coach:\\s*)/, '');
+                     content = msgElement.textContent.replace(/^(You:|<em>AI Coach:\s*)/, '');
                 }
                 chatHistory.push({ role: role, content: content });
             });
@@ -1466,76 +1516,11 @@ if (window.aiCoachLauncherInitialized) {
             ]
         };
 
-        // Handle problem selector button
+        // Handle problem selector button - MODIFIED to show modal
         const problemButton = document.getElementById('aiCoachProblemButton');
-        const problemSelector = document.getElementById('aiCoachProblemSelector');
-        const problemCategories = document.getElementById('aiCoachProblemCategories');
-
-        if (problemButton && problemSelector && problemCategories) {
-            // Populate problem categories
-            Object.entries(commonProblems).forEach(([vespaElement, problems]) => {
-                const categoryDiv = document.createElement('div');
-                categoryDiv.style.cssText = 'margin-bottom: 15px;';
-                
-                const categoryTitle = document.createElement('h5');
-                categoryTitle.style.cssText = 'margin: 0 0 8px 0; color: #555; font-size: 1em;';
-                categoryTitle.textContent = vespaElement;
-                categoryDiv.appendChild(categoryTitle);
-                
-                problems.forEach(problem => {
-                    const problemItem = document.createElement('div');
-                    problemItem.style.cssText = `
-                        padding: 8px 12px;
-                        margin: 4px 0;
-                        background: white;
-                        border: 1px solid #e0e0e0;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        transition: all 0.2s;
-                        font-size: 0.9em;
-                    `;
-                    problemItem.textContent = problem.text;
-                    problemItem.dataset.problemId = problem.id;
-                    problemItem.dataset.vespaElement = vespaElement;
-                    
-                    // Hover effect
-                    problemItem.addEventListener('mouseenter', () => {
-                        problemItem.style.backgroundColor = '#e3f2fd';
-                        problemItem.style.borderColor = '#3498db';
-                    });
-                    problemItem.addEventListener('mouseleave', () => {
-                        problemItem.style.backgroundColor = 'white';
-                        problemItem.style.borderColor = '#e0e0e0';
-                    });
-                    
-                    // Click handler
-                    problemItem.addEventListener('click', () => {
-                        // Populate chat input with the problem
-                        chatInput.value = `I need help with: ${problem.text} (${vespaElement} related)`;
-                        // Hide problem selector
-                        problemSelector.style.display = 'none';
-                        problemButton.textContent = '🎯 Tackle a Different Problem?';
-                        // Focus on input
-                        chatInput.focus();
-                        // Optionally auto-send
-                        // sendChatMessage();
-                    });
-                    
-                    categoryDiv.appendChild(problemItem);
-                });
-                
-                problemCategories.appendChild(categoryDiv);
-            });
-            
-            // Toggle problem selector
+        if (problemButton) {
             problemButton.addEventListener('click', () => {
-                if (problemSelector.style.display === 'none') {
-                    problemSelector.style.display = 'block';
-                    problemButton.textContent = '✖ Hide Problem Selector';
-                } else {
-                    problemSelector.style.display = 'none';
-                    problemButton.textContent = '🎯 Tackle a Specific Problem?';
-                }
+                showProblemSelectorModal(commonProblems, chatInput);
             });
         }
 
@@ -1550,6 +1535,113 @@ if (window.aiCoachLauncherInitialized) {
             });
         }
         logAICoach("Chat interface added and event listeners set up.");
+    }
+
+    // --- NEW: Function to show problem selector modal ---
+    function showProblemSelectorModal(commonProblems, chatInput) {
+        logAICoach("Showing problem selector modal");
+        
+        // Remove existing modal if present
+        const existingModal = document.getElementById('aiCoachProblemModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Create modal structure
+        const modal = document.createElement('div');
+        modal.id = 'aiCoachProblemModal';
+        modal.className = 'ai-coach-modal-overlay';
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'ai-coach-modal-content';
+        
+        // Apply saved zoom level to modal
+        const savedZoom = localStorage.getItem('aiCoachTextZoom');
+        if (savedZoom) {
+            const zoom = parseInt(savedZoom, 10);
+            modalContent.style.fontSize = `${zoom * 14 / 100}px`;
+        }
+        
+        // Modal header
+        const modalHeader = document.createElement('div');
+        modalHeader.className = 'ai-coach-problem-modal-header';
+        modalHeader.innerHTML = `
+            <h3>Select a Common Challenge</h3>
+            <p>Choose a specific problem to get targeted coaching advice</p>
+            <button class="ai-coach-modal-close">&times;</button>
+        `;
+        
+        // Modal body
+        const modalBody = document.createElement('div');
+        modalBody.className = 'ai-coach-problem-modal-body';
+        
+        // Create categories with VESPA colors
+        Object.entries(commonProblems).forEach(([vespaElement, problems]) => {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = `ai-coach-problem-category vespa-${vespaElement.toLowerCase()}`;
+            
+            const categoryTitle = document.createElement('h4');
+            categoryTitle.textContent = vespaElement;
+            categoryDiv.appendChild(categoryTitle);
+            
+            problems.forEach(problem => {
+                const problemItem = document.createElement('div');
+                problemItem.className = 'ai-coach-problem-item';
+                problemItem.textContent = problem.text;
+                problemItem.dataset.problemId = problem.id;
+                problemItem.dataset.vespaElement = vespaElement;
+                
+                // Click handler
+                problemItem.addEventListener('click', () => {
+                    // Populate chat input with the problem
+                    if (chatInput) {
+                        chatInput.value = `I need help with: ${problem.text} (${vespaElement} related)`;
+                        chatInput.focus();
+                    }
+                    // Close modal
+                    closeModal();
+                });
+                
+                categoryDiv.appendChild(problemItem);
+            });
+            
+            modalBody.appendChild(categoryDiv);
+        });
+        
+        // Assemble modal
+        modalContent.appendChild(modalHeader);
+        modalContent.appendChild(modalBody);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        // Trigger animations
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            modalContent.style.transform = 'scale(1)';
+        }, 10);
+        
+        // Close handlers
+        const closeModal = () => {
+            modal.style.opacity = '0';
+            modalContent.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        };
+        
+        modalHeader.querySelector('.ai-coach-modal-close').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        
+        // ESC key to close
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
     }
 
     // --- Helper function to determine max points for visual scale ---
@@ -1994,6 +2086,13 @@ if (window.aiCoachLauncherInitialized) {
             transform: scale(0.9);
             transition: transform 0.3s ease;
         `;
+        
+        // Apply saved zoom level to modal
+        const savedZoom = localStorage.getItem('aiCoachTextZoom');
+        if (savedZoom) {
+            const zoom = parseInt(savedZoom, 10);
+            modalContent.style.fontSize = `${zoom * 14 / 100}px`;
+        }
         
         // Modal header
         const modalHeader = document.createElement('div');

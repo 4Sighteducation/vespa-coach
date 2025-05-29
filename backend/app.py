@@ -1682,11 +1682,16 @@ IMPORTANT GUIDELINES:
    - Explain WHY it's relevant to the student's specific situation
    - Suggest HOW the tutor might introduce it (e.g., "You could start by asking...")
    - Mention the activity name and ID clearly: e.g., "Growth Mindset (ID: AT24)"
+   - IMPORTANT: If the tutor mentions a specific VESPA element problem (e.g., "Practice related"), ensure you include AT LEAST ONE activity from that element
+   - You may also suggest complementary activities from other elements if they address root causes
 5. When providing coaching questions:
    - Select and adapt questions that directly address the tutor's concern
    - Explain how these questions can help the student discover their own solutions
 6. Keep responses concise but actionable - busy tutors need clear next steps.
 7. Use an encouraging, professional tone that empowers the tutor.
+8. BALANCE your response:
+   - If addressing a symptom (e.g., not practicing), consider both direct solutions (Practice activities) AND root causes (Vision/motivation)
+   - Always include at least one activity from the element mentioned in the problem
 
 Remember: You're coaching the tutor, not the student directly."""}
     ]
@@ -1711,6 +1716,23 @@ Remember: You're coaching the tutor, not the student directly."""}
             keywords = [word for word in current_tutor_message.lower().replace('?', '').replace('.', '').split() if word not in common_words and len(word) > 2]
             app.logger.info(f"chat_turn RAG: Extracted keywords from tutor message '{current_tutor_message}': {keywords}")
 
+            # ADDED: Extract VESPA element from problem description if present
+            vespa_element_from_problem = None
+            message_lower = current_tutor_message.lower()
+            if "(vision related)" in message_lower or "vision related" in message_lower:
+                vespa_element_from_problem = "VISION"
+            elif "(effort related)" in message_lower or "effort related" in message_lower:
+                vespa_element_from_problem = "EFFORT"
+            elif "(systems related)" in message_lower or "systems related" in message_lower:
+                vespa_element_from_problem = "SYSTEMS"
+            elif "(practice related)" in message_lower or "practice related" in message_lower:
+                vespa_element_from_problem = "PRACTICE"
+            elif "(attitude related)" in message_lower or "attitude related" in message_lower:
+                vespa_element_from_problem = "ATTITUDE"
+            
+            if vespa_element_from_problem:
+                app.logger.info(f"chat_turn RAG: Detected VESPA element from problem: {vespa_element_from_problem}")
+
             # Search COACHING_INSIGHTS_DATA
             if COACHING_INSIGHTS_DATA and keywords:
                 app.logger.info(f"chat_turn RAG: Searching COACHING_INSIGHTS_DATA ({len(COACHING_INSIGHTS_DATA)} items) for keywords: {keywords}")
@@ -1734,43 +1756,64 @@ Remember: You're coaching the tutor, not the student directly."""}
             else:
                 app.logger.info("chat_turn RAG: Skipped searching COACHING_INSIGHTS_DATA (KB empty or no keywords).")
             
-            # Search VESPA_ACTIVITIES_DATA
-            if VESPA_ACTIVITIES_DATA and keywords:
+            # Search VESPA_ACTIVITIES_DATA - MODIFIED to prioritize matching VESPA element
+            if VESPA_ACTIVITIES_DATA:
                 app.logger.info(f"chat_turn RAG: Searching VESPA_ACTIVITIES_DATA ({len(VESPA_ACTIVITIES_DATA)} items) for keywords: {keywords}")
-                found_activities_count = 0
-                current_found_activities_text = [] 
+                
+                # ADDED: Separate lists for element-matching and other activities
+                element_matching_activities = []
+                other_activities = []
+                
                 for activity in VESPA_ACTIVITIES_DATA:
                     activity_text_to_search = (str(activity.get('keywords', [])).lower() +
                                                str(activity.get('name', '')).lower() +
                                                str(activity.get('short_summary', '')).lower() +
                                                str(activity.get('vespa_element', '')).lower())
-                    if any(kw in activity_text_to_search for kw in keywords):
-                        activity_id = activity.get('id', 'N/A')
-                        activity_name = activity.get('name', 'N/A')
-                        activity_summary = activity.get('short_summary', 'N/A')
-                        activity_pdf_link = activity.get('pdf_link', '#')
-                        activity_vespa = activity.get('vespa_element','N/A')
+                    
+                    # Check if activity matches keywords
+                    if any(kw in activity_text_to_search for kw in keywords) or (vespa_element_from_problem and activity.get('vespa_element', '').upper() == vespa_element_from_problem):
+                        activity_data = {
+                            "id": activity.get('id', 'N/A'),
+                            "name": activity.get('name', 'N/A'),
+                            "short_summary": activity.get('short_summary', 'N/A'),
+                            "pdf_link": activity.get('pdf_link', '#'),
+                            "vespa_element": activity.get('vespa_element','N/A')
+                        }
                         
-                        current_found_activities_text.append(f"- Activity: {activity_name} (ID: {activity_id}, VESPA: {activity_vespa}, Summary: {activity_summary[:100]}... PDF available.)")
-                        
-                        # Add to the list for the API response
-                        suggested_activities_for_response.append({
-                            "id": activity_id,
-                            "name": activity_name,
-                            "short_summary": activity_summary,
-                            "pdf_link": activity_pdf_link,
-                            "vespa_element": activity_vespa
-                        })
-                        found_activities_count +=1
-                        if found_activities_count >= 2: break # Limit to 2 activities
+                        # ADDED: Categorize by VESPA element match
+                        if vespa_element_from_problem and activity.get('vespa_element', '').upper() == vespa_element_from_problem:
+                            element_matching_activities.append(activity_data)
+                        else:
+                            other_activities.append(activity_data)
+                
+                # ADDED: Build final list prioritizing element-matching activities
+                found_activities_count = 0
+                current_found_activities_text = []
+                
+                # First add activities from the matching VESPA element
+                for activity_data in element_matching_activities[:2]:  # Up to 2 from matching element
+                    current_found_activities_text.append(f"- Activity: {activity_data['name']} (ID: {activity_data['id']}, VESPA: {activity_data['vespa_element']}, Summary: {activity_data['short_summary'][:100]}... PDF available.)")
+                    suggested_activities_for_response.append(activity_data)
+                    found_activities_count += 1
+                    if found_activities_count >= 3: break  # Total limit
+                
+                # Then add other relevant activities if space remains
+                remaining_slots = 3 - found_activities_count
+                for activity_data in other_activities[:remaining_slots]:
+                    current_found_activities_text.append(f"- Activity: {activity_data['name']} (ID: {activity_data['id']}, VESPA: {activity_data['vespa_element']}, Summary: {activity_data['short_summary'][:100]}... PDF available.)")
+                    suggested_activities_for_response.append(activity_data)
+                    found_activities_count += 1
+                
                 if current_found_activities_text: 
                     retrieved_context_parts.append("\nRelevant VESPA Activities you could suggest (mention their ID if you do):")
+                    if vespa_element_from_problem and element_matching_activities:
+                        retrieved_context_parts.append(f"NOTE: Activities from {vespa_element_from_problem} element are prioritized since the problem is {vespa_element_from_problem}-related.")
                     retrieved_context_parts.extend(current_found_activities_text)
-                    app.logger.info(f"chat_turn RAG: Found {found_activities_count} relevant VESPA activities and added them to suggested_activities_for_response.")
+                    app.logger.info(f"chat_turn RAG: Found {found_activities_count} relevant VESPA activities ({len(element_matching_activities)} from matching element) and added them to suggested_activities_for_response.")
                 else:
                     app.logger.info("chat_turn RAG: No relevant VESPA activities found.")
             else:
-                app.logger.info("chat_turn RAG: Skipped searching VESPA_ACTIVITIES_DATA (KB empty or no keywords).")
+                app.logger.info("chat_turn RAG: Skipped searching VESPA_ACTIVITIES_DATA (KB empty).")
 
             # Search REFLECTIVE_STATEMENTS_DATA
             if REFLECTIVE_STATEMENTS_DATA and keywords:
@@ -1846,7 +1889,14 @@ Remember: You're coaching the tutor, not the student directly."""}
                 context_preamble += "The following resources have been retrieved based on the tutor's query. Use these to formulate your response, but remember to:\n"
                 context_preamble += "• Synthesize and adapt the information, don't just list it\n"
                 context_preamble += "• Explain WHY each suggestion is relevant\n"
-                context_preamble += "• Provide practical HOW-TO guidance for implementation\n\n"
+                context_preamble += "• Provide practical HOW-TO guidance for implementation\n"
+                
+                # ADDED: Emphasize element-specific guidance when detected
+                if vespa_element_from_problem:
+                    context_preamble += f"• IMPORTANT: The tutor has indicated a {vespa_element_from_problem}-related problem. Ensure your response includes at least one {vespa_element_from_problem} activity.\n"
+                    context_preamble += f"• You may also suggest activities from other elements if they address root causes, but {vespa_element_from_problem} activities should be primary.\n"
+                
+                context_preamble += "\n"
                 # Structure the RAG context more clearly
                 # Example: retrieved_context_parts already has headers like "Relevant Coaching Insights..."
                 context_preamble += "\n".join(retrieved_context_parts)
