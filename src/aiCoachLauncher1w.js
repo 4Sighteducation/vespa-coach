@@ -1403,7 +1403,28 @@ if (window.aiCoachLauncherInitialized) {
                 const botMessageElement = document.createElement('p');
                 botMessageElement.className = 'ai-chat-message ai-chat-message-bot';
                 botMessageElement.setAttribute('data-role', 'assistant'); // For history reconstruction
-                botMessageElement.innerHTML = `<em>AI Coach:</em> ${data.ai_response}`;
+                
+                let botResponseHtml = `<em>AI Coach:</em> ${data.ai_response}`;
+
+                // Enhance activity mentions if a PDF is available
+                if (data.suggested_activities_in_chat && data.suggested_activities_in_chat.length > 0) {
+                    data.suggested_activities_in_chat.forEach(activity => {
+                        if (activity.name && activity.pdf_link && activity.pdf_link !== '#') {
+                            // Create a regex to find the activity name, case-insensitive, and ensure it's not already linked
+                            const activityNameRegex = new RegExp(`\\b${activity.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b(?!</a>|\\s*\\(PDF\\))`, 'gi');
+                            // Check if the AI response specifically mentions that resources are available for *this* activity or a similar phrase
+                            // This is a simple check; more sophisticated NLP might be needed if AI phrasing varies greatly.
+                            const resourceMentionRegex = new RegExp(`(?:resources?|materials?|PDFs?)(?:\\s+(?:are|is))?\\s+available\\s+(?:for|to support|related to)(?:\\s+this|\\s+it|\\s+"${activity.name}")`, 'i');
+
+                            if (botResponseHtml.match(activityNameRegex) && (botResponseHtml.match(resourceMentionRegex) || data.ai_response.includes(activity.name))) { // Simpler check if AI just mentions name for now
+                                botResponseHtml = botResponseHtml.replace(activityNameRegex, 
+                                    `<a href="${activity.pdf_link}" target="_blank" class="ai-coach-activity-link" title="Open PDF for ${activity.name}">${activity.name} (View Resource)</a>`);
+                            }
+                        }
+                    });
+                }
+
+                botMessageElement.innerHTML = botResponseHtml;
                 chatDisplay.appendChild(botMessageElement);
 
             } catch (error) {
