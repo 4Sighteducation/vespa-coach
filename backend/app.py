@@ -1643,7 +1643,8 @@ def get_all_knack_records(object_key, filters=None, max_pages=20):
 # --- API Endpoint for AI Chat Turn ---
 @app.route('/api/v1/chat_turn', methods=['POST'])
 def chat_turn():
-    app.logger.info("Received request for /api/v1/chat_turn with data: {str(data)[:500]}...")
+    data = request.get_json() # Ensure this line is present
+    app.logger.info(f"Received request for /api/v1/chat_turn with data: {str(data)[:500]}...")
 
     student_object10_id = data.get('student_object10_record_id')
     chat_history = data.get('chat_history', []) 
