@@ -77,6 +77,7 @@ if (window.aiCoachLauncherInitialized) {
 
     // Function to initialize the UI elements (button and panel)
     function initializeCoachUI() {
+        logAICoach("AICoachLauncher: initializeCoachUI START"); // ADDED LOG
         if (coachUIInitialized && document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId)) {
             logAICoach("Coach UI appears to be already initialized with a button. Skipping full re-initialization.");
             // If UI is marked initialized and button exists, critical parts are likely fine.
@@ -89,6 +90,7 @@ if (window.aiCoachLauncherInitialized) {
         createAICoachPanel();
         addPanelResizeHandler(); // ADD THIS LINE
         addLauncherButton();
+        logAICoach("AICoachLauncher: initializeCoachUI - BEFORE setupEventListeners call"); // ADDED LOG
         setupEventListeners();
         coachUIInitialized = true; // Mark as initialized
         logAICoach("AICoachLauncher UI initialization complete.");
@@ -118,6 +120,7 @@ if (window.aiCoachLauncherInitialized) {
     }
 
     function initializeAICoachLauncher() {
+        logAICoach("AICoachLauncher: initializeAICoachLauncher START"); // ADDED LOG
         logAICoach("AICoachLauncher initializing and setting up observer...");
 
         if (typeof window.AI_COACH_LAUNCHER_CONFIG === 'undefined') {
@@ -224,6 +227,7 @@ if (window.aiCoachLauncherInitialized) {
         if (isIndividualReportView()) {
             initializeCoachUI();
         }
+        logAICoach("AICoachLauncher: initializeAICoachLauncher END"); // ADDED LOG
     }
 
     function loadExternalStyles() {
@@ -1224,12 +1228,16 @@ if (window.aiCoachLauncherInitialized) {
     }
 
     function setupEventListeners() {
+        logAICoach("AICoachLauncher: setupEventListeners START"); // ADDED LOG
+
         if (eventListenersAttached) {
-            logAICoach("Global AI Coach event listeners already attached. Skipping setup.");
+            logAICoach("Global AI Coach event listeners already attached. Skipping setup."); // ADDED LOG (was already similar)
             return;
         }
-
+        logAICoach("AICoachLauncher: setupEventListeners - BEFORE document.body.addEventListener"); // ADDED LOG
         document.body.addEventListener('click', function(event) {
+            logAICoach("AICoachLauncher: document.body CLICK DETECTED", { target: event.target }); // ADDED LOG
+
             if (!AI_COACH_LAUNCHER_CONFIG || 
                 !AI_COACH_LAUNCHER_CONFIG.aiCoachToggleButtonId || 
                 !AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId) {
@@ -1252,11 +1260,12 @@ if (window.aiCoachLauncherInitialized) {
             }
         });
         eventListenersAttached = true;
-        logAICoach("Global AI Coach event listeners set up ONCE.");
+        logAICoach("Global AI Coach event listeners set up ONCE."); // ADDED LOG (was already similar)
     }
 
     // --- Function to add Chat Interface --- 
     function addChatInterface(panelContentElement, studentNameForContext) {
+        logAICoach("AICoachLauncher: addChatInterface START", { studentName: studentNameForContext}); // ADDED LOG
         if (!panelContentElement) return;
 
         logAICoach("Adding chat interface...");
@@ -1344,10 +1353,18 @@ if (window.aiCoachLauncherInitialized) {
         let chatMessages = []; // Store message metadata including IDs
 
         // Load chat history and stats
+        logAICoach("AICoachLauncher: addChatInterface - BEFORE loadChatHistory call"); // ADDED LOG
+        loadChatHistory();
+
         async function loadChatHistory() {
+            logAICoach("AICoachLauncher: loadChatHistory START"); // ADDED LOG
             const currentStudentId = lastFetchedStudentId;
+            logAICoach("AICoachLauncher: loadChatHistory - currentStudentId (lastFetchedStudentId)", currentStudentId); // ADDED LOG
+
+            if (chatCountElement) chatCountElement.textContent = 'Loading...'; // Explicitly set loading text
+
             if (!currentStudentId) {
-                chatCountElement.textContent = 'No student selected';
+                if (chatCountElement) chatCountElement.textContent = 'No student selected'; // Update if no ID
                 return;
             }
 
@@ -1356,7 +1373,7 @@ if (window.aiCoachLauncherInitialized) {
                 // This endpoint needs to be created or confirmed on the backend.
                 // For now, we'll assume it returns the expected structure.
                 const chatHistoryEndpoint = `${HEROKU_API_BASE_URL}/chat_history`; 
-                logAICoach("loadChatHistory: Fetching from endpoint: ", chatHistoryEndpoint);
+                logAICoach("loadChatHistory: Fetching from endpoint: ", chatHistoryEndpoint); // ADDED LOG (was already similar)
 
                 const response = await fetch(chatHistoryEndpoint, { // MODIFIED to use a variable
                     method: 'POST',
@@ -1370,10 +1387,11 @@ if (window.aiCoachLauncherInitialized) {
                         include_metadata: true // Request message ID and liked status
                     }),
                 });
+                logAICoach("AICoachLauncher: loadChatHistory - AFTER fetch call, status: " + response.status); // ADDED LOG
 
                 if (response.ok) {
                     const data = await response.json();
-                    logAICoach("Loaded chat history with metadata:", data);
+                    logAICoach("Loaded chat history with metadata:", data); // ADDED LOG (was already similar)
                     
                     // Clear existing messages except the initial greeting
                     const existingMessages = chatDisplay.querySelectorAll('.ai-chat-message');
@@ -1464,7 +1482,7 @@ if (window.aiCoachLauncherInitialized) {
                     throw new Error(errorData.error || `Chat History API Error: ${response.status}`);
                 }
             } catch (error) {
-                logAICoach("Error loading chat history:", error);
+                logAICoach("Error loading chat history:", error); // ADDED LOG (was already similar)
                 chatCountElement.textContent = 'Error loading history';
             }
         }
@@ -1526,13 +1544,17 @@ if (window.aiCoachLauncherInitialized) {
             
             // Click handler
             likeBtn.addEventListener('click', async () => {
-                logAICoach(`Like button clicked for message ID: ${messageId}. Current liked state before click: ${likeBtn.getAttribute('data-liked') === 'true'}`); // ADD THIS LOG
+                logAICoach(`Like button clicked for message ID: ${messageId}. Current liked state before click: ${likeBtn.getAttribute('data-liked') === 'true'}`); 
                 const currentlyLiked = likeBtn.getAttribute('data-liked') === 'true';
                 const newLikedState = !currentlyLiked;
+                logAICoach(`Like button: messageId=${messageId}, newLikedState=${newLikedState}`); 
                 
                 // Optimistically update UI
+                logAICoach(`Like button: About to set attribute data-liked to ${newLikedState}`); // NEW LOG
                 likeBtn.setAttribute('data-liked', newLikedState ? 'true' : 'false');
+                logAICoach(`Like button: About to change innerHTML. Current: ${likeBtn.innerHTML}, New state: ${newLikedState}`); // NEW LOG
                 likeBtn.innerHTML = newLikedState ? '❤️' : '🤍';
+                logAICoach(`Like button: Changed innerHTML to: ${likeBtn.innerHTML}`); // NEW LOG
                 likeBtn.title = newLikedState ? 'Unlike this response' : 'Like this response';
                 likeBtn.style.opacity = newLikedState ? '1' : '0.3';
                 
@@ -1548,8 +1570,9 @@ if (window.aiCoachLauncherInitialized) {
                     parentMsg.style.borderLeft = '';
                     parentMsg.style.paddingLeft = '';
                     likedChatCount--;
+                    logAICoach(`Like button: Decremented likedChatCount to: ${likedChatCount}`); // ADDED LOG
                 }
-                updateChatStats();
+                updateChatStats(); // Ensure this is called to update the UI
                 
                 // Send update to backend
                 try {
@@ -1583,12 +1606,12 @@ if (window.aiCoachLauncherInitialized) {
                         }
 
                         if (newLikedState) likedChatCount--; else likedChatCount++; // Revert count
-                        updateChatStats();
+                        updateChatStats(); // Ensure this is called to update the UI after revert
                         const errorData = await response.json().catch(() => ({}));
                         throw new Error(errorData.error || 'Failed to update like status on backend.');
                     }
                     
-                    logAICoach(`Message ${messageId} like status updated to: ${newLikedState}`);
+                    logAICoach(`Message ${messageId} like status updated on backend to: ${newLikedState}`); // ADDED LOG
                 } catch (error) {
                     logAICoach("Error updating like status:", error);
                     // Display a more user-friendly error, e.g., a small toast notification
