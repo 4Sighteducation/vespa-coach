@@ -1311,7 +1311,7 @@ if (window.aiCoachLauncherInitialized) {
                 <input type="text" id="aiCoachChatInput" placeholder="Type your message...">
                 <button id="aiCoachChatSendButton" class="p-button p-component">Send</button>
             </div>
-            <div id="aiCoachChatThinkingIndicator" class="thinking-pulse" style="display: none !important;"> 
+            <div id="aiCoachChatThinkingIndicator" class="thinking-pulse" style="display: none;"> 
                 AI Coach is thinking<span class="thinking-dots"><span></span><span></span><span></span></span>
             </div>
         `;
@@ -1320,11 +1320,11 @@ if (window.aiCoachLauncherInitialized) {
         const chatInput = document.getElementById('aiCoachChatInput');
         const chatSendButton = document.getElementById('aiCoachChatSendButton');
         const chatDisplay = document.getElementById('aiCoachChatDisplay');
-        // const thinkingIndicator = document.getElementById('aiCoachChatThinkingIndicator'); // This was the bottom bar, correctly commented out.
         const chatStats = document.getElementById('aiCoachChatStats');
         const chatCountElement = document.getElementById('aiCoachChatCount');
         const likedCountElement = document.getElementById('likedCountNumber');
         const clearOldChatsBtn = document.getElementById('aiCoachClearOldChatsBtn');
+        const panelThinkingIndicator = document.getElementById('aiCoachChatThinkingIndicator'); // Get the panel-level indicator
 
         // Track chat metadata
         let totalChatCount = 0;
@@ -1655,12 +1655,17 @@ if (window.aiCoachLauncherInitialized) {
             const originalInput = chatInput.value; // Keep original input for history
             chatInput.value = ''; // Clear input
             chatDisplay.scrollTop = chatDisplay.scrollHeight;
-            // thinkingIndicator.style.display = 'block'; // Correctly removed as it pertains to the bottom bar
+            
             chatSendButton.disabled = true;
             chatInput.disabled = true;
 
+            // Show panel-level thinking indicator
+            if (panelThinkingIndicator) {
+                panelThinkingIndicator.style.display = 'block';
+            }
+
             // Add in-chat "Analyzing your question..." message
-            const thinkingMessage = document.createElement('div'); // This is the temporary in-chat message
+            const thinkingMessage = document.createElement('div'); 
             thinkingMessage.id = 'aiCoachTempThinkingMessage';
             thinkingMessage.className = 'ai-chat-message ai-chat-message-bot';
             thinkingMessage.style.cssText = `
@@ -1873,8 +1878,21 @@ if (window.aiCoachLauncherInitialized) {
                 errorMessageElement.innerHTML = `<em>AI Coach:</em> Sorry, I couldn't get a response. ${error.message}`;
                 chatDisplay.appendChild(errorMessageElement);
                 // No need to interact with the old thinkingIndicator (bottom bar)
+                // chatSendButton.disabled = false;
+                // chatInput.disabled = false;
+            }
+            finally {
+                // Always hide the panel-level thinking indicator and re-enable inputs
+                if (panelThinkingIndicator) {
+                    panelThinkingIndicator.style.display = 'none';
+                }
+                const tempThinkingMsgForRemoval = document.getElementById('aiCoachTempThinkingMessage');
+                if (tempThinkingMsgForRemoval) {
+                    tempThinkingMsgForRemoval.remove();
+                }
                 chatSendButton.disabled = false;
                 chatInput.disabled = false;
+                chatInput.focus(); // Return focus to input
             }
             chatDisplay.scrollTop = chatDisplay.scrollHeight;
         }
