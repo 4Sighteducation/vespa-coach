@@ -1437,7 +1437,7 @@ if (window.aiCoachLauncherInitialized) {
                                 'ai-chat-message ai-chat-message-user';
                             msgElement.setAttribute('data-role', msg.role);
                             msgElement.setAttribute('data-message-id', msg.id || ''); // Ensure msg.id is used
-                            msgElement.style.position = 'relative';
+                            msgElement.style.position = 'relative'; // Needed for absolute positioning of like btn
                             
                             // Create message content
                             let messageContent = '';
@@ -1458,6 +1458,7 @@ if (window.aiCoachLauncherInitialized) {
                             
                             // Add like button for assistant messages
                             if (msg.role === 'assistant' && msg.id) { // Ensure msg.id exists
+                                logAICoach('loadChatHistory: Creating like button for historical message ID:', msg.id); // ADDED LOG
                                 const likeButton = createLikeButton(msg.id, msg.is_liked || false); // Pass is_liked status
                                 msgElement.appendChild(likeButton);
                             }
@@ -1520,16 +1521,29 @@ if (window.aiCoachLauncherInitialized) {
                 right: 5px;
                 background: none;
                 border: none;
-                cursor: pointer;
+                cursor: pointer !important; 
                 font-size: 1.2em;
-                opacity: ${isLiked ? '1' : '0.3'}; // Set initial opacity based on liked state
+                opacity: ${isLiked ? '1' : '0.3'}; 
                 transition: opacity 0.2s, transform 0.2s;
                 padding: 5px;
+                user-select: none; /* ADDED to prevent text selection behavior */
+                -webkit-user-select: none; /* For Safari */
+                -moz-user-select: none;    /* For Firefox */
+                -ms-user-select: none;     /* For Internet Explorer/Edge */
             `;
-            likeBtn.innerHTML = isLiked ? '❤️' : '🤍';
-            likeBtn.title = isLiked ? 'Unlike this response' : 'Like this response';
-            
-            // Hover effect - no change needed here from original if it was working
+            likeBtn.setAttribute('contenteditable', 'false'); // ADDED to explicitly prevent content editing
+            likeBtn.setAttribute('role', 'button'); // Reinforce role
+            likeBtn.setAttribute('aria-pressed', isLiked ? 'true' : 'false'); // For accessibility
+            likeBtn.setAttribute('tabindex', '0'); // Make it focusable
+
+            // Set initial content with a span wrapper for the icon
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'ai-chat-like-icon';
+            iconSpan.style.pointerEvents = 'none'; // Make the icon itself not intercept clicks
+            iconSpan.innerHTML = isLiked ? '❤️' : '🤍';
+            likeBtn.appendChild(iconSpan);
+
+            // Hover effect
             likeBtn.addEventListener('mouseenter', () => {
                 likeBtn.style.opacity = '1';
                 likeBtn.style.transform = 'scale(1.2)';
@@ -1550,11 +1564,11 @@ if (window.aiCoachLauncherInitialized) {
                 logAICoach(`Like button: messageId=${messageId}, newLikedState=${newLikedState}`); 
                 
                 // Optimistically update UI
-                logAICoach(`Like button: About to set attribute data-liked to ${newLikedState}`); // NEW LOG
+                logAICoach(`Like button: About to set attribute data-liked to ${newLikedState}`); 
                 likeBtn.setAttribute('data-liked', newLikedState ? 'true' : 'false');
-                logAICoach(`Like button: About to change innerHTML. Current: ${likeBtn.innerHTML}, New state: ${newLikedState}`); // NEW LOG
-                likeBtn.innerHTML = newLikedState ? '❤️' : '🤍';
-                logAICoach(`Like button: Changed innerHTML to: ${likeBtn.innerHTML}`); // NEW LOG
+                logAICoach(`Like button: About to change innerHTML. Current: ${likeBtn.querySelector('.ai-chat-like-icon').innerHTML}, New state: ${newLikedState}`); 
+                likeBtn.querySelector('.ai-chat-like-icon').innerHTML = newLikedState ? '❤️' : '🤍'; // Update the span
+                logAICoach(`Like button: Changed innerHTML to: ${likeBtn.querySelector('.ai-chat-like-icon').innerHTML}`); 
                 likeBtn.title = newLikedState ? 'Unlike this response' : 'Like this response';
                 likeBtn.style.opacity = newLikedState ? '1' : '0.3';
                 
@@ -1591,7 +1605,10 @@ if (window.aiCoachLauncherInitialized) {
                     if (!response.ok) {
                         // Revert on error
                         likeBtn.setAttribute('data-liked', currentlyLiked ? 'true' : 'false');
-                        likeBtn.innerHTML = currentlyLiked ? '❤️' : '🤍';
+                        // likeBtn.innerHTML = currentlyLiked ? '❤️' : '🤍';
+                        if (likeBtn.querySelector('.ai-chat-like-icon')) {
+                            likeBtn.querySelector('.ai-chat-like-icon').innerHTML = currentlyLiked ? '❤️' : '🤍';
+                        }
                         likeBtn.style.opacity = currentlyLiked ? '1' : '0.3'; // Revert opacity
                         likeBtn.title = currentlyLiked ? 'Unlike this response' : 'Like this response';
                         // Revert parent message styling
@@ -1806,6 +1823,7 @@ if (window.aiCoachLauncherInitialized) {
                 const botMessageElement = document.createElement('p');
                 botMessageElement.className = 'ai-chat-message ai-chat-message-bot';
                 botMessageElement.setAttribute('data-role', 'assistant'); // For history reconstruction
+                botMessageElement.style.position = 'relative'; // Needed for absolute positioning of like btn
                 
                 // Process the AI response to make activity references clickable
                 let processedResponse = data.ai_response;
@@ -1841,6 +1859,17 @@ if (window.aiCoachLauncherInitialized) {
                 
                 botMessageElement.innerHTML = `<em>AI Coach:</em> ${processedResponse}`;
                 chatDisplay.appendChild(botMessageElement);
+                
+                // Add like button to the new AI message
+                // ASSUMPTION: Backend response 'data' includes 'ai_message_knack_id' for the just-saved AI response.
+                // If not, this ID needs to be provided by the CHAT_TURN_ENDPOINT.
+                if (data.ai_message_knack_id) {
+                    logAICoach('sendChatMessage: Creating like button for new AI message ID:', data.ai_message_knack_id);
+                    const likeButton = createLikeButton(data.ai_message_knack_id, false); // New messages are not liked by default
+                    botMessageElement.appendChild(likeButton);
+                } else {
+                    logAICoach('sendChatMessage: No ai_message_knack_id in response, cannot add like button to new AI message.', data);
+                }
                 
                 // Add click handlers to activity links
                 const activityLinks = botMessageElement.querySelectorAll('.ai-coach-activity-link');
