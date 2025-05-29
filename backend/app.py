@@ -637,8 +637,11 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
     prompt_parts.append("Ensure all string values within the JSON are properly escaped.")
 
     # --- RAG for Coaching Suggestions and Goals (within generate_student_summary_with_llm) ---
-    retrieved_rag_items_for_prompt = []
-    # Simple RAG based on lowest VESPA score
+    retrieved_rag_items_for_prompt_structured = {
+        "insights": [],
+        "activities": [],
+        "statements": []
+    }
     lowest_vespa_element = None
     lowest_score = 11 # Initialize with a score higher than max VESPA score
     if vespa_profile_for_rag:
@@ -658,32 +661,37 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
         if COACHING_INSIGHTS_DATA:
             for insight in COACHING_INSIGHTS_DATA:
                 if lowest_vespa_element.lower() in str(insight.get('keywords', [])).lower() or lowest_vespa_element.lower() in insight.get('name', '').lower():
-                    retrieved_rag_items_for_prompt.append(f"- Consider Insight: '{insight.get('name')}' - {insight.get('description', '')[:70]}...")
-                    if len(retrieved_rag_items_for_prompt) >=1: break # Max 1 for now
+                    retrieved_rag_items_for_prompt_structured["insights"].append(f"Insight: '{insight.get('name')}' - Description: {insight.get('description', '')[:120]}... (Implications: {insight.get('implications_for_tutor', '')[:100]}...)")
+                    if len(retrieved_rag_items_for_prompt_structured["insights"]) >= 1: break
         
         # Retrieve from VESPA_ACTIVITIES_DATA
         if VESPA_ACTIVITIES_DATA:
-            activity_count = 0
             for activity in VESPA_ACTIVITIES_DATA:
-                if lowest_vespa_element.lower() == activity.get('vespa_element', '').lower():
-                    retrieved_rag_items_for_prompt.append(f"- Consider Activity: '{activity.get('name')}' (VESPA: {activity.get('vespa_element')}) - Summary: {activity.get('short_summary', '')[:70]}...")
-                    activity_count += 1
-                    if activity_count >= 1: break # Max 1 for now
+                if lowest_vespa_element.lower() == activity.get('vespa_element', '').lower(): # Match on element
+                    retrieved_rag_items_for_prompt_structured["activities"].append(f"Activity: '{activity.get('name')}' (VESPA: {activity.get('vespa_element')}, ID: {activity.get('id')}) - Summary: {activity.get('short_summary', '')[:120]}... Link: {activity.get('pdf_link')}")
+                    if len(retrieved_rag_items_for_prompt_structured["activities"]) >= 1: break
 
         # Retrieve from REFLECTIVE_STATEMENTS_DATA (simple match for now)
         if REFLECTIVE_STATEMENTS_DATA:
-            statement_count = 0
             for statement in REFLECTIVE_STATEMENTS_DATA:
-                if lowest_vespa_element.lower() in statement.lower(): # Very basic keyword match
-                    retrieved_rag_items_for_prompt.append(f"- Consider Reflective Statement: '{statement[:100]}...'")
-                    statement_count +=1
-                    if statement_count >= 1: break # Max 1 for now
+                # A more robust category check would be better if statements are structured with categories
+                if lowest_vespa_element.lower() in statement.lower(): 
+                    retrieved_rag_items_for_prompt_structured["statements"].append(f"Reflective Statement: '{statement[:150]}...'")
+                    if len(retrieved_rag_items_for_prompt_structured["statements"]) >= 1: break
     
-    if retrieved_rag_items_for_prompt:
-        prompt_parts.append("\n\n--- Dynamically Retrieved Context (Consider for Questions/Goals) ---")
-        prompt_parts.append("The student\'s lowest VESPA score is in " + lowest_vespa_element + ". Based on this, consider the following:")
-        prompt_parts.extend(retrieved_rag_items_for_prompt)
-        prompt_parts.append("Use these to help formulate more targeted coaching questions and goal suggestions.")
+    if any(retrieved_rag_items_for_prompt_structured.values()):
+        prompt_parts.append("\n\n--- Dynamically Retrieved Context (Strongly consider these for formulating Most Important Coaching Questions and Suggested Student Goals) ---")
+        prompt_parts.append(f"The student\'s lowest VESPA score is in '{lowest_vespa_element}'. Based on this, please incorporate the following into your suggestions:")
+        if retrieved_rag_items_for_prompt_structured["insights"]:
+            prompt_parts.append("\nRelevant Coaching Insight(s):")
+            prompt_parts.extend(retrieved_rag_items_for_prompt_structured["insights"])
+        if retrieved_rag_items_for_prompt_structured["activities"]:
+            prompt_parts.append("\nRelevant VESPA Activity/ies (Include name and ID if suggesting one):")
+            prompt_parts.extend(retrieved_rag_items_for_prompt_structured["activities"])
+        if retrieved_rag_items_for_prompt_structured["statements"]:
+            prompt_parts.append("\nRelevant Reflective Statement(s) to adapt:")
+            prompt_parts.extend(retrieved_rag_items_for_prompt_structured["statements"])
+        prompt_parts.append("Tailor your coaching questions and goal suggestions to be practical and actionable, leveraging these specific resources.")
 
     # --- Include Divers vs. Thrivers insight for comment analysis --- 
     divers_thrivers_insight_text = ""
@@ -1664,7 +1672,7 @@ def chat_turn():
     # For now, just use the history and current message.
     
     messages_for_llm = [
-        {"role": "system", "content": "You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. The tutor will ask you questions based on the student's data. Keep your responses concise and focused on the student being discussed."}
+        {"role": "system", "content": "You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. Your primary goal is to help the tutor. Rephrase any information from the knowledge base in a practical, conversational, and encouraging tone suitable for a busy tutor. Do NOT just repeat knowledge base items verbatim. When suggesting an activity, briefly explain WHY it's relevant and HOW the tutor might introduce it. If suggesting a reflective statement, explain its relevance and how it might be adapted. Focus on providing actionable advice and clear next steps for the tutor."}
     ]
 
     # Prepend initial AI context if available
@@ -1754,10 +1762,12 @@ def chat_turn():
             
             if retrieved_context_parts:
                 app.logger.info(f"chat_turn RAG: Final retrieved_context_parts before adding to preamble: {retrieved_context_parts}")
-                context_preamble += "\n\nAdditional Context from Knowledge Bases based on your message:"
+                context_preamble += "\n\n--- Additional Context from Knowledge Bases (Consider these to help answer the tutor's current question. Synthesize, don't just list them.):\n"
+                # Structure the RAG context more clearly
+                # Example: retrieved_context_parts already has headers like "Relevant Coaching Insights..."
                 context_preamble += "\n".join(retrieved_context_parts)
 
-        context_preamble += "\n\nGiven this context, and the chat history below, please respond to the tutor's latest message."
+        context_preamble += "\n\nGiven the student's overall profile (above) and any specific items I've just retrieved from the knowledge base (also above), please respond to the tutor's latest message, remembering to be practical and conversational."
         messages_for_llm.insert(1, {"role": "system", "content": context_preamble}) 
         app.logger.info(f"chat_turn: Added initial_ai_context and RAG context to LLM prompt. Pre-amble length: {len(context_preamble)}")
 
