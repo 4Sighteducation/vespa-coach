@@ -644,13 +644,14 @@ if (window.aiCoachLauncherInitialized) {
 
         currentlyFetchingStudentId = studentId; // Mark that we are now fetching for this student
 
-        // Set loader text more judiciously
-        if (!panelContent.innerHTML.includes('<div class="loader"></div>') && !panelContent.innerHTML.includes('ai-coach-section')) {
-            // panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Loading AI Coach insights...</p>';
-            // Instead of static message, start rotator if not already started by refreshAICoachData or toggleAICoachPanel
-            if (!loadingMessageIntervalId) { // Check if rotator is already active
-                startLoadingMessageRotator(panelContent);
-            }
+        // Start rotator if not already active and panel content suggests loading is appropriate
+        if (!loadingMessageIntervalId && panelContent &&
+            (panelContent.innerHTML.includes("Activate the AI Coach to get insights") ||
+             panelContent.innerHTML.trim() === "" || // If panel is blank
+             panelContent.innerHTML.includes('<div class="loader"></div>') || // If already somehow showing a loader
+             !panelContent.querySelector('.ai-coach-section') // If no actual content sections are rendered
+            )) {
+            startLoadingMessageRotator(panelContent);
         }
 
         try {
@@ -1166,6 +1167,17 @@ if (window.aiCoachLauncherInitialized) {
                 fetchAICoachingData(studentObject10Id); 
             } else {
                 logAICoach(`refreshAICoachData: Student ID ${studentObject10Id} is same as last fetched (${lastFetchedStudentId}). Data likely current.`);
+                stopLoadingMessageRotator(); // Always stop rotator if it was running and fetch is skipped.
+
+                // If the panel is currently showing a loader or the initial "activate" message,
+                // it means the UI is stale.
+                if (panelContent && panelContent.querySelector('.loader') && !panelContent.querySelector('.ai-coach-section')) {
+                    // If only loader and no actual content sections, revert to default.
+                    panelContent.innerHTML = '<p>Activate the AI Coach to get insights.</p>';
+                }
+                // If panelContent.innerHTML.includes("Activate the AI Coach to get insights") and data is current,
+                // UI is stale. A full re-render of existing data would be ideal, but is complex here.
+                // Leaving it for now, as the main issue is the stuck rotator.
             }
         } else {
             logAICoach("refreshAICoachData: Student Object_10 ID not available. Panel will show error from getStudentObject10RecordId.");
@@ -1188,10 +1200,10 @@ if (window.aiCoachLauncherInitialized) {
             if (toggleButton) toggleButton.textContent = '🙈 Hide AI Coach';
             logAICoach("AI Coach panel activated.");
             
-            // If panelContent is empty or only shows the default activation message, start loading rotator.
-            if (panelContent && (panelContent.innerHTML.includes("Activate the AI Coach to get insights") || panelContent.innerHTML.trim() === '<p>Activate the AI Coach to get insights.</p>')) {
-                startLoadingMessageRotator(panelContent);
-            }
+            // MOVED to fetchAICoachingData: starting rotator is now conditional on fetch proceeding
+            // if (panelContent && (panelContent.innerHTML.includes("Activate the AI Coach to get insights") || panelContent.innerHTML.trim() === '<p>Activate the AI Coach to get insights.</p>')) {
+            //     startLoadingMessageRotator(panelContent);
+            // }
             await refreshAICoachData(); 
 
         } else {
@@ -1514,6 +1526,7 @@ if (window.aiCoachLauncherInitialized) {
             
             // Click handler
             likeBtn.addEventListener('click', async () => {
+                logAICoach(`Like button clicked for message ID: ${messageId}. Current liked state before click: ${likeBtn.getAttribute('data-liked') === 'true'}`); // ADD THIS LOG
                 const currentlyLiked = likeBtn.getAttribute('data-liked') === 'true';
                 const newLikedState = !currentlyLiked;
                 
@@ -2338,115 +2351,6 @@ if (window.aiCoachLauncherInitialized) {
             }
         });
         logAICoach("Questionnaire response distribution pie chart rendered.");
-    }
-
-    function renderVespaComparisonChart(studentVespaProfile, schoolVespaAverages) {
-        const chartContainer = document.getElementById('vespaComparisonChartContainer');
-        if (!chartContainer) {
-            logAICoach("VESPA comparison chart container not found.");
-            return;
-        }
-
-        if (typeof Chart === 'undefined') {
-            logAICoach("Chart.js is not loaded. Cannot render VESPA comparison chart.");
-            chartContainer.innerHTML = '<p style="color:red; text-align:center;">Chart library not loaded.</p>';
-            return;
-        }
-
-        // Destroy previous chart instance if it exists
-        if (vespaChartInstance) {
-            vespaChartInstance.destroy();
-            vespaChartInstance = null;
-            logAICoach("Previous VESPA chart instance destroyed.");
-        }
-        
-        // Ensure chartContainer is empty before creating a new canvas
-        chartContainer.innerHTML = '<canvas id="vespaStudentVsSchoolChart"></canvas>';
-        const ctx = document.getElementById('vespaStudentVsSchoolChart').getContext('2d');
-
-        if (!studentVespaProfile) {
-            logAICoach("Student VESPA profile data is missing. Cannot render chart.");
-            chartContainer.innerHTML = '<p style="text-align:center;">Student VESPA data not available for chart.</p>';
-            return;
-        }
-
-        const labels = ['Vision', 'Effort', 'Systems', 'Practice', 'Attitude'];
-        const studentScores = labels.map(label => {
-            const elementData = studentVespaProfile[label];
-            return elementData && elementData.score_1_to_10 !== undefined && elementData.score_1_to_10 !== "N/A" ? parseFloat(elementData.score_1_to_10) : 0;
-        });
-
-        const datasets = [
-            {
-                label: 'Student Scores',
-                data: studentScores,
-                backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }
-        ];
-
-        let chartTitle = 'Student VESPA Scores';
-
-        if (schoolVespaAverages) {
-            const schoolScores = labels.map(label => {
-                return schoolVespaAverages[label] !== undefined && schoolVespaAverages[label] !== "N/A" ? parseFloat(schoolVespaAverages[label]) : 0;
-            });
-            datasets.push({
-                label: 'School Average',
-                data: schoolScores,
-                backgroundColor: 'rgba(255, 159, 64, 0.6)', // Orange
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderWidth: 1
-            });
-            chartTitle = 'Student VESPA Scores vs. School Average';
-            logAICoach("School averages available, adding to chart.", {studentScores, schoolScores});
-        } else {
-            logAICoach("School averages not available for chart.");
-        }
-
-        try {
-            vespaChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: chartTitle,
-                            font: { size: 16, weight: 'bold' },
-                            padding: { top: 10, bottom: 20 }
-                        },
-                        legend: {
-                            position: 'top',
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 10,
-                            title: {
-                                display: true,
-                                text: 'Score (1-10)'
-                            }
-                        }
-                    }
-                }
-            });
-            logAICoach("VESPA comparison chart rendered successfully.");
-        } catch (error) {
-            console.error("[AICoachLauncher] Error rendering Chart.js chart:", error);
-            chartContainer.innerHTML = '<p style="color:red; text-align:center;">Error rendering chart.</p>';
-        }
     }
 
     // --- Function to create and show activity modal with PDF ---

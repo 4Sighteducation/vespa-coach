@@ -1421,6 +1421,36 @@ def coaching_suggestions():
     # The coaching_kb (dict) and student_goals_statements_content (string) are passed here
     llm_structured_output = generate_student_summary_with_llm(student_data_for_llm, coaching_kb, REFLECTIVE_STATEMENTS_DATA, all_scored_questions_from_object29) # Pass all_scored_questions
     
+    # --- Update Object_10 with the new AI summary for field_3271 ---
+    if llm_structured_output and isinstance(llm_structured_output, dict) and llm_structured_output.get('student_overview_summary'):
+        summary_to_save = llm_structured_output['student_overview_summary']
+        # Ensure summary is not an error message before saving
+        if "error" not in summary_to_save.lower() and "unavailable" not in summary_to_save.lower() and summary_to_save:
+            update_payload_obj10 = {
+                "field_3271": summary_to_save
+            }
+            headers_knack_update = {
+                'X-Knack-Application-Id': KNACK_APP_ID,
+                'X-Knack-REST-API-Key': KNACK_API_KEY,
+                'Content-Type': 'application/json'
+            }
+            update_url_obj10 = f"{KNACK_BASE_URL}/object_10/records/{student_obj10_id_from_request}"
+            try:
+                app.logger.info(f"Attempting to update Object_10 record {student_obj10_id_from_request} with new summary for field_3271. Summary: '{summary_to_save[:100]}...'") # Log summary
+                update_response = requests.put(update_url_obj10, headers=headers_knack_update, json=update_payload_obj10)
+                update_response.raise_for_status()
+                app.logger.info(f"Successfully updated field_3271 for Object_10 record {student_obj10_id_from_request}.")
+            except requests.exceptions.HTTPError as e_http:
+                app.logger.error(f"HTTP error updating field_3271 for Object_10 {student_obj10_id_from_request}: {e_http}. Response: {update_response.content}")
+            except requests.exceptions.RequestException as e_req:
+                app.logger.error(f"Request exception updating field_3271 for Object_10 {student_obj10_id_from_request}: {e_req}")
+            except Exception as e_gen:
+                app.logger.error(f"General error updating field_3271 for Object_10 {student_obj10_id_from_request}: {e_gen}")
+        else:
+            app.logger.info(f"Skipping update of field_3271 for Object_10 {student_obj10_id_from_request} as LLM summary was an error or unavailable: '{summary_to_save}'")
+    else:
+        app.logger.warning(f"Could not update field_3271 for Object_10 {student_obj10_id_from_request} as llm_structured_output or student_overview_summary was missing/invalid. LLM Output: {str(llm_structured_output)[:200]}...")
+
     # --- Prepare Final API Response ---
     # The vespa_profile_details for the API response needs more than what LLM got (report_text etc.)
     # So, we rebuild it here for the API response.
