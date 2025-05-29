@@ -2009,7 +2009,11 @@ Remember: You\'re coaching the tutor, not the student directly. Keep it conversa
     if not ai_message_saved_id:
         app.logger.error(f"chat_turn: Failed to save AI's response to Knack for student {student_object10_id}.")
 
-    return jsonify({"ai_response": ai_response_text, "suggested_activities_in_chat": suggested_activities_for_response})
+    return jsonify({
+        "ai_response": ai_response_text, 
+        "suggested_activities_in_chat": suggested_activities_for_response,
+        "ai_message_knack_id": ai_message_saved_id # Ensure this is returned
+    })
 
 def save_chat_message_to_knack(student_obj10_id, sender, message_text):
     """Saves a chat message to the new Object_118 in Knack."""

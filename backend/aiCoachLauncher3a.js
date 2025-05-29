@@ -242,7 +242,7 @@ if (window.aiCoachLauncherInitialized) {
         link.id = styleId;
         link.rel = 'stylesheet';
         link.type = 'text/css';
-        link.href = 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/aiCoachLauncher1f.css';
+        link.href = 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/aiCoachLauncher1g.css';
         // .css';
         
         // Add dynamic CSS for config-specific IDs
@@ -1523,7 +1523,7 @@ if (window.aiCoachLauncherInitialized) {
                 border: none;
                 cursor: pointer !important; 
                 font-size: 1.2em;
-                opacity: ${isLiked ? '1' : '0.3'}; 
+                opacity: ${isLiked ? '1' : '0.7'}; /* CHANGED unliked opacity from 0.3 to 0.7 */
                 transition: opacity 0.2s, transform 0.2s;
                 padding: 5px;
                 user-select: none; /* ADDED to prevent text selection behavior */
@@ -1541,6 +1541,9 @@ if (window.aiCoachLauncherInitialized) {
             iconSpan.className = 'ai-chat-like-icon';
             iconSpan.style.pointerEvents = 'none'; // Make the icon itself not intercept clicks
             iconSpan.innerHTML = isLiked ? '❤️' : '🤍';
+            if (!isLiked) {
+                iconSpan.classList.add('unliked-icon-visible'); // Add class for unliked state
+            }
             likeBtn.appendChild(iconSpan);
 
             // Hover effect
@@ -1551,7 +1554,7 @@ if (window.aiCoachLauncherInitialized) {
             
             likeBtn.addEventListener('mouseleave', () => {
                 if (likeBtn.getAttribute('data-liked') !== 'true') {
-                    likeBtn.style.opacity = '0.3';
+                    likeBtn.style.opacity = '0.7';
                 }
                 likeBtn.style.transform = 'scale(1)';
             });
@@ -1567,10 +1570,16 @@ if (window.aiCoachLauncherInitialized) {
                 logAICoach(`Like button: About to set attribute data-liked to ${newLikedState}`); 
                 likeBtn.setAttribute('data-liked', newLikedState ? 'true' : 'false');
                 logAICoach(`Like button: About to change innerHTML. Current: ${likeBtn.querySelector('.ai-chat-like-icon').innerHTML}, New state: ${newLikedState}`); 
-                likeBtn.querySelector('.ai-chat-like-icon').innerHTML = newLikedState ? '❤️' : '🤍'; // Update the span
-                logAICoach(`Like button: Changed innerHTML to: ${likeBtn.querySelector('.ai-chat-like-icon').innerHTML}`); 
+                const currentIconSpan = likeBtn.querySelector('.ai-chat-like-icon');
+                currentIconSpan.innerHTML = newLikedState ? '❤️' : '🤍'; 
+                if (newLikedState) {
+                    currentIconSpan.classList.remove('unliked-icon-visible');
+                } else {
+                    currentIconSpan.classList.add('unliked-icon-visible');
+                }
+                logAICoach(`Like button: Changed innerHTML to: ${currentIconSpan.innerHTML}`); 
                 likeBtn.title = newLikedState ? 'Unlike this response' : 'Like this response';
-                likeBtn.style.opacity = newLikedState ? '1' : '0.3';
+                likeBtn.style.opacity = newLikedState ? '1' : '0.7';
                 
                 // Update parent message styling
                 const parentMsg = likeBtn.parentElement;
@@ -1607,9 +1616,15 @@ if (window.aiCoachLauncherInitialized) {
                         likeBtn.setAttribute('data-liked', currentlyLiked ? 'true' : 'false');
                         // likeBtn.innerHTML = currentlyLiked ? '❤️' : '🤍';
                         if (likeBtn.querySelector('.ai-chat-like-icon')) {
-                            likeBtn.querySelector('.ai-chat-like-icon').innerHTML = currentlyLiked ? '❤️' : '🤍';
+                            const iconToRevert = likeBtn.querySelector('.ai-chat-like-icon');
+                            iconToRevert.innerHTML = currentlyLiked ? '❤️' : '🤍';
+                            if (currentlyLiked) {
+                                iconToRevert.classList.remove('unliked-icon-visible');
+                            } else {
+                                iconToRevert.classList.add('unliked-icon-visible');
+                            }
                         }
-                        likeBtn.style.opacity = currentlyLiked ? '1' : '0.3'; // Revert opacity
+                        likeBtn.style.opacity = currentlyLiked ? '1' : '0.7'; // Revert opacity
                         likeBtn.title = currentlyLiked ? 'Unlike this response' : 'Like this response';
                         // Revert parent message styling
                         if (currentlyLiked) {

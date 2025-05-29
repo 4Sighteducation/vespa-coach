@@ -898,3 +898,9 @@ body.ai-coach-resizing * {
     color: #666;
     margin: 0 5px;
 }
+
+/* Style for unliked heart icon on bot messages for better visibility */
+.ai-chat-message-bot .ai-chat-like-btn .ai-chat-like-icon.unliked-icon-visible {
+    color: #555 !important; /* Darker grey for the unliked heart */
+    /* opacity: 1 !important; */ /* Ensure full opacity for the icon itself if needed */
+}
