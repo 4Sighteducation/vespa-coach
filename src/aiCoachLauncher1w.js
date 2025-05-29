@@ -1203,38 +1203,105 @@ if (window.aiCoachLauncherInitialized) {
 
     // --- Function to add Chat Interface --- 
     function addChatInterface(panelContentElement, studentNameForContext) {
-        if (!panelContentElement) return;
-
-        logAICoach("Adding chat interface...");
-
-        // Remove existing chat container if it exists to prevent duplicates on re-render
-        const oldChatContainer = document.getElementById('aiCoachChatContainer');
-        if (oldChatContainer) {
-            oldChatContainer.remove();
-        }
-
+        logAICoach("Adding chat interface for student:", studentNameForContext);
         const chatContainer = document.createElement('div');
-        chatContainer.id = 'aiCoachChatContainer';
-        chatContainer.className = 'ai-coach-section'; // Use existing class for styling consistency
-        chatContainer.style.marginTop = '20px';
-
+        chatContainer.className = 'ai-chat-container';
         chatContainer.innerHTML = `
-            <h4>AI Chat with ${studentNameForContext}</h4>
-            <div id="aiCoachChatDisplay" style="height: 200px; border: 1px solid #ccc; overflow-y: auto; padding: 10px; margin-bottom: 10px; background-color: #fff;">
-                <p class="ai-chat-message ai-chat-message-bot"><em>AI Coach:</em> Hello! How can I help you with ${studentNameForContext} today?</p>
+            <div class="ai-chat-header">
+                <h3>Chat with AI Coach about ${studentNameForContext}</h3>
             </div>
-            <div style="display: flex;">
-                <input type="text" id="aiCoachChatInput" style="flex-grow: 1; padding: 8px; border: 1px solid #ccc;" placeholder="Type your message...">
-                <button id="aiCoachChatSendButton" class="p-button p-component" style="margin-left: 10px; padding: 8px 15px;">Send</button>
+            <div class="ai-chat-display" id="aiChatDisplay">
+                <p class="ai-chat-message ai-chat-message-bot"><em>AI Coach:</em> Hi! I'm here to help you think through ${studentNameForContext}'s VESPA profile and learning journey. What would you like to discuss?</p>
             </div>
-            <div id="aiCoachChatThinkingIndicator" style="font-size:0.8em; color: #777; text-align:center; margin-top:5px; display:none;">AI Coach is thinking...</div>
+            <div class="ai-chat-input-container">
+                <input type="text" id="aiChatInput" class="ai-chat-input" placeholder="Type your message here..." />
+                <button id="aiChatSend" class="ai-chat-send">Send</button>
+            </div>
+            <div id="aiChatThinking" class="ai-chat-thinking" style="display: none;">
+                <em>AI Coach is thinking...</em>
+            </div>
         `;
         panelContentElement.appendChild(chatContainer);
 
-        const chatInput = document.getElementById('aiCoachChatInput');
-        const chatSendButton = document.getElementById('aiCoachChatSendButton');
-        const chatDisplay = document.getElementById('aiCoachChatDisplay');
-        const thinkingIndicator = document.getElementById('aiCoachChatThinkingIndicator');
+        const chatDisplay = document.getElementById('aiChatDisplay');
+        const chatInput = document.getElementById('aiChatInput');
+        const chatSendButton = document.getElementById('aiChatSend');
+        const thinkingIndicator = document.getElementById('aiChatThinking');
+
+        // Fetch and display previous chat history
+        async function loadChatHistory() {
+            try {
+                const response = await fetch(`${HEROKU_API_BASE_URL}/api/v1/chat_history`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        student_object10_record_id: currentStudentId,
+                        max_messages: 20,
+                        days_back: 7
+                    }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logAICoach("Loaded chat history:", data);
+                    
+                    if (data.chat_history && data.chat_history.length > 0) {
+                        // Clear initial greeting if we have history
+                        chatDisplay.innerHTML = '';
+                        
+                        // Add summary if available
+                        if (data.summary) {
+                            const summaryElement = document.createElement('p');
+                            summaryElement.className = 'ai-chat-summary';
+                            summaryElement.innerHTML = `<em>Previous conversations summary:</em> ${data.summary}`;
+                            summaryElement.style.cssText = 'background-color: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 0.9em;';
+                            chatDisplay.appendChild(summaryElement);
+                            
+                            // Add separator
+                            const separator = document.createElement('hr');
+                            separator.style.cssText = 'margin: 15px 0; opacity: 0.3;';
+                            chatDisplay.appendChild(separator);
+                        }
+                        
+                        // Add previous messages
+                        data.chat_history.forEach(msg => {
+                            const msgElement = document.createElement('p');
+                            msgElement.className = msg.role === 'assistant' ? 
+                                'ai-chat-message ai-chat-message-bot' : 
+                                'ai-chat-message ai-chat-message-user';
+                            msgElement.setAttribute('data-role', msg.role);
+                            
+                            if (msg.role === 'assistant') {
+                                msgElement.innerHTML = `<em>AI Coach:</em> ${msg.content}`;
+                            } else {
+                                msgElement.textContent = `You: ${msg.content}`;
+                            }
+                            
+                            chatDisplay.appendChild(msgElement);
+                        });
+                        
+                        // Add a continuation message
+                        const continuationMsg = document.createElement('p');
+                        continuationMsg.className = 'ai-chat-message ai-chat-message-bot';
+                        continuationMsg.innerHTML = `<em>AI Coach:</em> Let's continue our conversation about ${studentNameForContext}. What would you like to discuss next?`;
+                        chatDisplay.appendChild(continuationMsg);
+                        
+                        // Scroll to bottom
+                        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                    }
+                }
+            } catch (error) {
+                logAICoach("Error loading chat history:", error);
+                // Continue with normal chat even if history fails to load
+            }
+        }
+
+        // Load chat history when chat interface is created
+        if (currentStudentId) {
+            loadChatHistory();
+        }
 
         async function sendChatMessage() {
             if (!chatInput || !chatDisplay || !thinkingIndicator) return;
