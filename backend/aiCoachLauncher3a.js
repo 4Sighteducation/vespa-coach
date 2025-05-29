@@ -17,6 +17,7 @@ if (window.aiCoachLauncherInitialized) {
     let currentlyFetchingStudentId = null; // ADD THIS
     let vespaChartInstance = null; // To keep track of the chart instance for updates/destruction
     let currentLLMInsightsForChat = null; // ADDED: To store insights for chat context
+    let loadingMessageIntervalId = null; // For the rotating loading messages
 
     // --- Configuration ---
     const HEROKU_API_BASE_URL = 'https://vespa-coach-c64c795edaa7.herokuapp.com/api/v1'; // MODIFIED for base path
@@ -604,15 +605,14 @@ if (window.aiCoachLauncherInitialized) {
             return getStudentObject10RecordId(retryCount + 1);
         } else {
             logAICoach("Warning: student_object10_record_id not found in window.currentReportObject10Id after multiple retries. AI Coach may not function correctly if ReportProfiles hasn't set this.");
-            // Display a message in the panel if the ID isn't found.
             const panelContent = document.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-content`);
             if(panelContent) {
-                // Avoid overwriting a more specific error already shown by a failed Knack API call if we were to reinstate it.
                 if (!panelContent.querySelector('.ai-coach-section p[style*="color:red"], .ai-coach-section p[style*="color:orange"] ')) {
                     panelContent.innerHTML = '<div class="ai-coach-section"><p style="color:orange;">Could not automatically determine the specific VESPA report ID for this student. Ensure student profile data is fully loaded.</p></div>';
+                    stopLoadingMessageRotator(); // Stop rotator if error is shown
                 }
             }
-            return null; // Important to return null so fetchAICoachingData isn't called with undefined.
+            return null; 
         }
     }
 
@@ -645,8 +645,12 @@ if (window.aiCoachLauncherInitialized) {
         currentlyFetchingStudentId = studentId; // Mark that we are now fetching for this student
 
         // Set loader text more judiciously
-        if (!panelContent.innerHTML.includes('<div class="loader"></div>')) {
-            panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Loading AI Coach insights...</p>';
+        if (!panelContent.innerHTML.includes('<div class="loader"></div>') && !panelContent.innerHTML.includes('ai-coach-section')) {
+            // panelContent.innerHTML = '<div class="loader"></div><p style="text-align:center;">Loading AI Coach insights...</p>';
+            // Instead of static message, start rotator if not already started by refreshAICoachData or toggleAICoachPanel
+            if (!loadingMessageIntervalId) { // Check if rotator is already active
+                startLoadingMessageRotator(panelContent);
+            }
         }
 
         try {
@@ -680,9 +684,9 @@ if (window.aiCoachLauncherInitialized) {
                 logAICoach('Fetch aborted for student ID: ' + studentId);
             } else {
                 logAICoach("Error fetching AI Coaching data:", error);
-                // Only update panel if this error wasn't for an aborted old fetch
                 if (currentlyFetchingStudentId === studentId) { 
                     panelContent.innerHTML = `<div class="ai-coach-section"><p style="color:red;">Error loading AI Coach insights: ${error.message}</p></div>`;
+                    stopLoadingMessageRotator(); // Stop rotator on error
                 }
             }
         } finally {
@@ -700,6 +704,8 @@ if (window.aiCoachLauncherInitialized) {
     function renderAICoachData(data) {
         logAICoach("renderAICoachData CALLED. Data received:", JSON.parse(JSON.stringify(data)));
         const panelContent = document.querySelector(`#${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-content`);
+
+        stopLoadingMessageRotator(); // Stop rotator as data is about to be rendered
 
         if (!panelContent) {
             logAICoach("renderAICoachData: panelContent element not found. Cannot render.");
@@ -1140,6 +1146,7 @@ if (window.aiCoachLauncherInitialized) {
             logAICoach("Cannot refresh AI Coach data: panel or panelContent not found.");
             return;
         }
+        // stopLoadingMessageRotator(); // Stop any existing rotator before starting a new one or showing static message
         if (!document.body.classList.contains('ai-coach-active')) {
             logAICoach("AI Coach panel is not active, refresh not needed.");
             return;
@@ -1181,7 +1188,10 @@ if (window.aiCoachLauncherInitialized) {
             if (toggleButton) toggleButton.textContent = '🙈 Hide AI Coach';
             logAICoach("AI Coach panel activated.");
             
-            // Instead of direct call here, refreshAICoachData will be primary way for new/refreshed data
+            // If panelContent is empty or only shows the default activation message, start loading rotator.
+            if (panelContent && (panelContent.innerHTML.includes("Activate the AI Coach to get insights") || panelContent.innerHTML.trim() === '<p>Activate the AI Coach to get insights.</p>')) {
+                startLoadingMessageRotator(panelContent);
+            }
             await refreshAICoachData(); 
 
         } else {
@@ -1189,6 +1199,7 @@ if (window.aiCoachLauncherInitialized) {
             if (toggleButton) toggleButton.textContent = '🚀 Activate AI Coach';
             if (panelContent) panelContent.innerHTML = '<p>Activate the AI Coach to get insights.</p>';
             logAICoach("AI Coach panel deactivated.");
+            stopLoadingMessageRotator(); // Stop rotator when panel is closed
             lastFetchedStudentId = null; 
             observerLastProcessedStudentId = null; 
             currentlyFetchingStudentId = null; // ADD THIS: Reset when panel is closed
@@ -1300,7 +1311,7 @@ if (window.aiCoachLauncherInitialized) {
                 <input type="text" id="aiCoachChatInput" placeholder="Type your message...">
                 <button id="aiCoachChatSendButton" class="p-button p-component">Send</button>
             </div>
-            <div id="aiCoachChatThinkingIndicator" class="thinking-pulse">
+            <div id="aiCoachChatThinkingIndicator" class="thinking-pulse" style="display: none !important;"> 
                 AI Coach is thinking<span class="thinking-dots"><span></span><span></span><span></span></span>
             </div>
         `;
@@ -1309,7 +1320,7 @@ if (window.aiCoachLauncherInitialized) {
         const chatInput = document.getElementById('aiCoachChatInput');
         const chatSendButton = document.getElementById('aiCoachChatSendButton');
         const chatDisplay = document.getElementById('aiCoachChatDisplay');
-        const thinkingIndicator = document.getElementById('aiCoachChatThinkingIndicator');
+        // const thinkingIndicator = document.getElementById('aiCoachChatThinkingIndicator'); // This was the bottom bar, correctly commented out.
         const chatStats = document.getElementById('aiCoachChatStats');
         const chatCountElement = document.getElementById('aiCoachChatCount');
         const likedCountElement = document.getElementById('likedCountNumber');
@@ -1608,7 +1619,7 @@ if (window.aiCoachLauncherInitialized) {
         }
 
         async function sendChatMessage() {
-            if (!chatInput || !chatDisplay || !thinkingIndicator) return;
+            if (!chatInput || !chatDisplay) return;
             const messageText = chatInput.value.trim();
             if (messageText === '') return;
 
@@ -1644,12 +1655,12 @@ if (window.aiCoachLauncherInitialized) {
             const originalInput = chatInput.value; // Keep original input for history
             chatInput.value = ''; // Clear input
             chatDisplay.scrollTop = chatDisplay.scrollHeight;
-            thinkingIndicator.style.display = 'block';
+            // thinkingIndicator.style.display = 'block'; // Correctly removed as it pertains to the bottom bar
             chatSendButton.disabled = true;
             chatInput.disabled = true;
 
-            // Add thinking indicator as a temporary chat message
-            const thinkingMessage = document.createElement('div');
+            // Add in-chat "Analyzing your question..." message
+            const thinkingMessage = document.createElement('div'); // This is the temporary in-chat message
             thinkingMessage.id = 'aiCoachTempThinkingMessage';
             thinkingMessage.className = 'ai-chat-message ai-chat-message-bot';
             thinkingMessage.style.cssText = `
@@ -1659,8 +1670,8 @@ if (window.aiCoachLauncherInitialized) {
             `;
             thinkingMessage.innerHTML = `
                 <em>AI Coach:</em> 
-                <span style="color: #3498db; font-weight: 500;">
-                    🤔 Analyzing your question<span class="thinking-dots"><span></span><span></span><span></span></span>
+                <span style=\"color: #3498db; font-weight: 500;\">
+                    🤔 Analyzing your question<span class=\"thinking-dots\"><span></span><span></span><span></span></span>
                 </span>
             `;
             chatDisplay.appendChild(thinkingMessage);
@@ -1670,31 +1681,43 @@ if (window.aiCoachLauncherInitialized) {
             const chatHistory = [];
             const messages = chatDisplay.querySelectorAll('.ai-chat-message');
             messages.forEach(msgElement => {
-                // Don't include the user message we just added to the DOM in the history sent to API
-                // as it's sent separately as current_tutor_message.
-                // Only include messages *before* the one just sent by the user.
-                if (msgElement === userMessageElement) return; 
+                // Skip the user message we just added to the DOM AND the thinking message
+                if (msgElement === userMessageElement || msgElement.id === 'aiCoachTempThinkingMessage') return; 
 
                 let role = msgElement.getAttribute('data-role');
                 let content = '';
 
-                if (!role) { // Infer role if data-role is not set (e.g. initial bot message)
+                if (!role) { 
                     if (msgElement.classList.contains('ai-chat-message-bot')) {
                          role = 'assistant';
-                         content = msgElement.innerHTML.replace(/<em>AI Coach:<\/em>\s*/, '');
+                         // Extract only text content, remove HTML tags for history
+                         const tempDiv = document.createElement('div');
+                         tempDiv.innerHTML = msgElement.innerHTML.replace(/<em>AI Coach:<\/em>\s*/, '');
+                         content = tempDiv.textContent || tempDiv.innerText || '';
                     } else if (msgElement.classList.contains('ai-chat-message-user')) {
                          role = 'user';
                          content = msgElement.textContent.replace(/You:\s*/, '');
                     } else {
-                        return; // Skip if role cannot be determined
+                        return; 
                     }
                 } else {
-                     content = msgElement.textContent.replace(/^(You:|<em>AI Coach:\s*)/, '');
+                    if (role === 'user') {
+                        content = msgElement.textContent.replace(/^(You:)/, '').trim();
+                    } else { // assistant
+                        const tempDiv = document.createElement('div');
+                        // Remove "AI Coach:" prefix and then get text content
+                        tempDiv.innerHTML = msgElement.innerHTML.replace(/<em>AI Coach:<\/em>\s*/, '');
+                        content = (tempDiv.textContent || tempDiv.innerText || '').trim();
+                    }
                 }
                 chatHistory.push({ role: role, content: content });
             });
-            // The user's current message isn't part of displayed history yet for the API call
-            // It will be added to the LLM prompt as the latest user message on the backend.
+            
+            // Remove temporary thinking message BEFORE the API call
+            const tempThinkingMsgForRemoval = document.getElementById('aiCoachTempThinkingMessage');
+            if (tempThinkingMsgForRemoval) {
+                tempThinkingMsgForRemoval.remove();
+            }
 
             logAICoach("Sending chat turn with history:", chatHistory);
             logAICoach("Current tutor message for API:", originalInput);
@@ -1705,6 +1728,14 @@ if (window.aiCoachLauncherInitialized) {
                     chat_history: chatHistory, 
                     current_tutor_message: originalInput
                 };
+
+                // No need to interact with the old thinkingIndicator (bottom bar) here
+                chatSendButton.disabled = false;
+                chatInput.disabled = false;
+                
+                // The in-chat thinking message (aiCoachTempThinkingMessage) was already removed before the fetch call.
+                // If we want to remove it only *after* a successful response or error, we'd move its removal here.
+                // For now, keeping removal before fetch call as per previous logic.
 
                 if (currentLLMInsightsForChat) {
                     payload.initial_ai_context = {
@@ -1723,15 +1754,13 @@ if (window.aiCoachLauncherInitialized) {
                     body: JSON.stringify(payload),
                 });
 
-                thinkingIndicator.style.display = 'none';
+                // No need to interact with the old thinkingIndicator (bottom bar) here
                 chatSendButton.disabled = false;
                 chatInput.disabled = false;
                 
-                // Remove temporary thinking message in error case too
-                const tempThinkingMsgError = document.getElementById('aiCoachTempThinkingMessage');
-                if (tempThinkingMsgError) {
-                    tempThinkingMsgError.remove();
-                }
+                // The in-chat thinking message (aiCoachTempThinkingMessage) was already removed before the fetch call.
+                // If we want to remove it only *after* a successful response or error, we'd move its removal here.
+                // For now, keeping removal before fetch call as per previous logic.
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: "An unknown error occurred communicating with the AI chat."}));
@@ -1841,10 +1870,9 @@ if (window.aiCoachLauncherInitialized) {
                 logAICoach("Error sending chat message:", error);
                 const errorMessageElement = document.createElement('p');
                 errorMessageElement.className = 'ai-chat-message ai-chat-message-bot';
-                // Don't set data-role for error messages not from AI assistant proper
                 errorMessageElement.innerHTML = `<em>AI Coach:</em> Sorry, I couldn't get a response. ${error.message}`;
                 chatDisplay.appendChild(errorMessageElement);
-                thinkingIndicator.style.display = 'none';
+                // No need to interact with the old thinkingIndicator (bottom bar)
                 chatSendButton.disabled = false;
                 chatInput.disabled = false;
             }
@@ -2637,4 +2665,59 @@ if (window.aiCoachLauncherInitialized) {
     // (This replaces part of the existing sendChatMessage function in addChatInterface)
     
     window.initializeAICoachLauncher = initializeAICoachLauncher;
+
+    // --- NEW FUNCTION to manage rotating loading messages ---
+    function startLoadingMessageRotator(panelContentElement) {
+        if (loadingMessageIntervalId) {
+            clearInterval(loadingMessageIntervalId); // Clear existing interval if any
+            loadingMessageIntervalId = null; // Reset ID
+        }
+        if (!panelContentElement) return;
+
+        const messages = [
+            "Please wait while I analyse the student data...",
+            "While I complete this please read through the report on the left.....",
+            "Once my chat field has opened please ask me any questions about the student or report...",
+            "Or add a \"specific Problem\" and I can help you find a solution."
+        ];
+        let messageIndex = 0;
+
+        // Initial message display
+        panelContentElement.innerHTML = `<div class="loader"></div><p style="text-align:center; min-height: 40px;">${messages[messageIndex]}</p>`;
+        messageIndex = (messageIndex + 1) % messages.length;
+
+        loadingMessageIntervalId = setInterval(() => {
+            if (panelContentElement) { // Check if panel still exists
+                 const existingLoader = panelContentElement.querySelector('.loader');
+                 let loaderHtml = '';
+                 if(existingLoader) loaderHtml = '<div class="loader"></div>'; // Preserve loader if it's there
+
+                // Check if the panel content has been replaced by actual data or an error message
+                // This is a simple check; more robust checks might be needed if other content can exist here.
+                const currentText = panelContentElement.textContent || "";
+                const isDefaultActivationMessage = currentText.includes("Activate the AI Coach to get insights");
+                const isDisplayingMessages = messages.some(msg => currentText.includes(msg.substring(0,20)));
+                const hasErrorMessage = currentText.toLowerCase().includes("error loading ai coach insights") || currentText.toLowerCase().includes("student id missing") || currentText.toLowerCase().includes("could not identify student report");
+
+                if ((isDisplayingMessages || (existingLoader && !currentText.includes("Snapshot"))) && !hasErrorMessage && !isDefaultActivationMessage) { // Only update if still showing loading messages and no error and not default message
+                    panelContentElement.innerHTML = `${loaderHtml}<p style=\"text-align:center; min-height: 40px;\">${messages[messageIndex]}</p>`;
+                    messageIndex = (messageIndex + 1) % messages.length;
+                } else {
+                     // If content is not a loading message (e.g., data rendered or error shown), stop rotator.
+                    stopLoadingMessageRotator();
+                }
+            } else { // panelContentElement does not exist
+                stopLoadingMessageRotator();
+            }
+        }, 3500); // Change message every 3.5 seconds
+        logAICoach("Started loading message rotator.");
+    }
+
+    function stopLoadingMessageRotator() {
+        if (loadingMessageIntervalId) {
+            clearInterval(loadingMessageIntervalId);
+            loadingMessageIntervalId = null;
+            logAICoach("Stopped loading message rotator.");
+        }
+    }
 } 
