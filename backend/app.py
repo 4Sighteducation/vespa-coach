@@ -1672,7 +1672,7 @@ def chat_turn():
     # For now, just use the history and current message.
     
     messages_for_llm = [
-        {"role": "system", "content": "You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. Your primary goal is to help the tutor. Rephrase any information from the knowledge base in a practical, conversational, and encouraging tone suitable for a busy tutor. Do NOT just repeat knowledge base items verbatim. When suggesting an activity, briefly explain WHY it's relevant and HOW the tutor might introduce it. If suggesting a reflective statement, explain its relevance and how it might be adapted. Focus on providing actionable advice and clear next steps for the tutor."}
+        {"role": "system", "content": "You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. Your primary goal is to help the tutor. Rephrase any information from the knowledge base in a practical, conversational, and encouraging tone suitable for a busy tutor. Do NOT just repeat knowledge base items verbatim. When suggesting an activity, briefly explain WHY it's relevant and HOW the tutor might introduce it. If suggesting a reflective statement, explain its relevance and how it might be adapted. When the tutor asks for coaching questions to help a student find their own solutions, prioritize using the 'Relevant Coaching Questions from Knowledge Base' that will be provided in the context. Adapt and select from these questions as appropriate to the situation. Focus on providing actionable advice and clear next steps for the tutor."}
     ]
 
     # Prepend initial AI context if available
@@ -1687,9 +1687,10 @@ def chat_turn():
         
         # Keyword extraction and RAG for chat_turn
         retrieved_context_parts = []
+        suggested_activities_for_response = [] # Initialize list for API response
+
         if current_tutor_message:
             # Simple keyword extraction (split by space, lowercase, remove common words)
-            # In a real scenario, use a more robust NLP library or technique
             common_words = {"is", "a", "the", "and", "to", "of", "it", "in", "for", "on", "with", "as", "an", "at", "by", "what", "how", "tell", "me", "about"}
             keywords = [word for word in current_tutor_message.lower().replace('?', '').replace('.', '').split() if word not in common_words and len(word) > 2]
             app.logger.info(f"chat_turn RAG: Extracted keywords from tutor message '{current_tutor_message}': {keywords}")
@@ -1721,21 +1722,35 @@ def chat_turn():
             if VESPA_ACTIVITIES_DATA and keywords:
                 app.logger.info(f"chat_turn RAG: Searching VESPA_ACTIVITIES_DATA ({len(VESPA_ACTIVITIES_DATA)} items) for keywords: {keywords}")
                 found_activities_count = 0
-                # temp list for this search to avoid extending retrieved_context_parts with already added insight headers
-                current_found_activities = [] 
+                current_found_activities_text = [] 
                 for activity in VESPA_ACTIVITIES_DATA:
                     activity_text_to_search = (str(activity.get('keywords', [])).lower() +
                                                str(activity.get('name', '')).lower() +
                                                str(activity.get('short_summary', '')).lower() +
                                                str(activity.get('vespa_element', '')).lower())
                     if any(kw in activity_text_to_search for kw in keywords):
-                        current_found_activities.append(f"- Activity: {activity.get('name', 'N/A')} (VESPA: {activity.get('vespa_element','N/A')}, Summary: {activity.get('short_summary', 'N/A')[:100]}...)")
+                        activity_id = activity.get('id', 'N/A')
+                        activity_name = activity.get('name', 'N/A')
+                        activity_summary = activity.get('short_summary', 'N/A')
+                        activity_pdf_link = activity.get('pdf_link', '#')
+                        activity_vespa = activity.get('vespa_element','N/A')
+                        
+                        current_found_activities_text.append(f"- Activity: {activity_name} (ID: {activity_id}, VESPA: {activity_vespa}, Summary: {activity_summary[:100]}... PDF available.)")
+                        
+                        # Add to the list for the API response
+                        suggested_activities_for_response.append({
+                            "id": activity_id,
+                            "name": activity_name,
+                            "short_summary": activity_summary,
+                            "pdf_link": activity_pdf_link,
+                            "vespa_element": activity_vespa
+                        })
                         found_activities_count +=1
                         if found_activities_count >= 2: break # Limit to 2 activities
-                if current_found_activities: # Check if this specific search yielded results
-                    retrieved_context_parts.append("\nRelevant VESPA Activities you could suggest:")
-                    retrieved_context_parts.extend(current_found_activities)
-                    app.logger.info(f"chat_turn RAG: Found {found_activities_count} relevant VESPA activities.")
+                if current_found_activities_text: 
+                    retrieved_context_parts.append("\\nRelevant VESPA Activities you could suggest (mention their ID if you do):")
+                    retrieved_context_parts.extend(current_found_activities_text)
+                    app.logger.info(f"chat_turn RAG: Found {found_activities_count} relevant VESPA activities and added them to suggested_activities_for_response.")
                 else:
                     app.logger.info("chat_turn RAG: No relevant VESPA activities found.")
             else:
@@ -1760,9 +1775,58 @@ def chat_turn():
             else:
                 app.logger.info("chat_turn RAG: Skipped searching REFLECTIVE_STATEMENTS_DATA (KB empty or no keywords).")
             
+            # Search COACHING_QUESTIONS_KNOWLEDGE_BASE (coaching_kb)
+            # Keywords that might trigger a search for coaching questions
+            coaching_question_trigger_keywords = {"question", "questions", "ask", "guide", "coach", "coaching", "empower", "help student think", "student to decide"}
+            search_coaching_questions = any(kw in keywords for kw in coaching_question_trigger_keywords) or any(trigger_kw in current_tutor_message.lower() for trigger_kw in coaching_question_trigger_keywords)
+
+            if coaching_kb and (keywords or search_coaching_questions): # Ensure coaching_kb is loaded and there's a reason to search
+                app.logger.info(f"chat_turn RAG: Searching coaching_kb for relevant questions based on keywords: {keywords} or trigger words.")
+                found_coaching_questions_count = 0
+                current_found_coaching_questions = []
+
+                # Search general introductory questions
+                if coaching_kb.get('generalIntroductoryQuestions'):
+                    for q_text in coaching_kb['generalIntroductoryQuestions']:
+                        if any(kw in q_text.lower() for kw in keywords) or search_coaching_questions: # Prioritize if trigger words present
+                            current_found_coaching_questions.append(f"- General Question: {q_text}")
+                            found_coaching_questions_count += 1
+                            if found_coaching_questions_count >= 3: break # Limit total found questions
+                
+                # Search VESPA specific questions if count is still low
+                if found_coaching_questions_count < 3 and coaching_kb.get('vespaSpecificCoachingQuestions'):
+                    for vespa_element, levels in coaching_kb['vespaSpecificCoachingQuestions'].items():
+                        if found_coaching_questions_count >= 3: break
+                        for level, scores in levels.items():
+                            if found_coaching_questions_count >= 3: break
+                            for score_type, questions_list in scores.items():
+                                if found_coaching_questions_count >= 3: break
+                                for q_text in questions_list:
+                                    if any(kw in q_text.lower() for kw in keywords) or (search_coaching_questions and any(kw in vespa_element.lower() for kw in keywords)): # more targeted if specific VESPA mentioned
+                                        current_found_coaching_questions.append(f"- {vespa_element} ({score_type}): {q_text}")
+                                        found_coaching_questions_count += 1
+                                        if found_coaching_questions_count >= 3: break # Limit total
+                                    elif search_coaching_questions and found_coaching_questions_count < 2: # Add a couple general ones if broad question search
+                                        # Add more general questions if the user asked broadly for questions and we haven't found many specifics yet
+                                        # Avoid adding too many that are not keyword-specific if keywords were present
+                                        if not keywords: # Only add if no keywords were present and it's a general ask for questions
+                                            current_found_coaching_questions.append(f"- {vespa_element} ({score_type}): {q_text}")
+                                            found_coaching_questions_count += 1
+                                            if found_coaching_questions_count >= 2: break
+
+
+                if current_found_coaching_questions:
+                    retrieved_context_parts.append("\\nRelevant Coaching Questions from Knowledge Base:")
+                    retrieved_context_parts.extend(current_found_coaching_questions)
+                    app.logger.info(f"chat_turn RAG: Found {found_coaching_questions_count} relevant coaching questions from coaching_kb.")
+                else:
+                    app.logger.info("chat_turn RAG: No specific coaching questions found in coaching_kb based on keywords/triggers.")
+            else:
+                app.logger.info("chat_turn RAG: Skipped searching coaching_kb (KB empty, no keywords, or no trigger words).")
+
             if retrieved_context_parts:
                 app.logger.info(f"chat_turn RAG: Final retrieved_context_parts before adding to preamble: {retrieved_context_parts}")
-                context_preamble += "\n\n--- Additional Context from Knowledge Bases (Consider these to help answer the tutor's current question. Synthesize, don't just list them.):\n"
+                context_preamble += "\\n\\n--- Additional Context from Knowledge Bases (Consider these to help answer the tutor\\'s current question. Synthesize, don\\'t just list them.):\\n"
                 # Structure the RAG context more clearly
                 # Example: retrieved_context_parts already has headers like "Relevant Coaching Insights..."
                 context_preamble += "\n".join(retrieved_context_parts)
@@ -1801,7 +1865,7 @@ def chat_turn():
         app.logger.error(f"chat_turn: Failed to save AI's response to Knack for student {student_object10_id}.")
         # Frontend should be resilient to this.
 
-    return jsonify({"ai_response": ai_response_text})
+    return jsonify({"ai_response": ai_response_text, "suggested_activities_in_chat": suggested_activities_for_response})
 
 
 def save_chat_message_to_knack(student_obj10_id, sender, message_text):
