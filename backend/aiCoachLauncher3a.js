@@ -1659,35 +1659,35 @@ if (window.aiCoachLauncherInitialized) {
             chatSendButton.disabled = true;
             chatInput.disabled = true;
 
-            // Show panel-level thinking indicator
+            // Hide the panel-level (bottom) thinking indicator if it exists, as we prefer inline
             if (panelThinkingIndicator) {
-                panelThinkingIndicator.style.display = 'block';
+                panelThinkingIndicator.style.display = 'none'; 
             }
 
             // Add in-chat "Analyzing your question..." message
-            const thinkingMessage = document.createElement('div'); 
-            thinkingMessage.id = 'aiCoachTempThinkingMessage';
-            thinkingMessage.className = 'ai-chat-message ai-chat-message-bot';
-            thinkingMessage.style.cssText = `
-                background: #f0f8ff !important;
+            const inlineThinkingMessage = document.createElement('div'); 
+            inlineThinkingMessage.id = 'aiCoachTempInlineThinkingMessage'; // Unique ID for the inline message
+            inlineThinkingMessage.className = 'ai-chat-message ai-chat-message-bot'; // Style like a bot message
+            inlineThinkingMessage.style.cssText = `
+                background: #f0f8ff !important; 
                 border: 1px solid #d0e8ff !important;
-                position: relative;
+                opacity: 0.8;
             `;
-            thinkingMessage.innerHTML = `
+            inlineThinkingMessage.innerHTML = `
                 <em>AI Coach:</em> 
-                <span style=\"color: #3498db; font-weight: 500;\">
-                    🤔 Analyzing your question<span class=\"thinking-dots\"><span></span><span></span><span></span></span>
+                <span style="color: #3498db; font-weight: 500;">
+                    🤔 Thinking...<span class="thinking-dots"><span></span><span></span><span></span></span>
                 </span>
             `;
-            chatDisplay.appendChild(thinkingMessage);
-            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            chatDisplay.appendChild(inlineThinkingMessage);
+            chatDisplay.scrollTop = chatDisplay.scrollHeight; // Scroll to show it
 
-            // Construct chat history from displayed messages
+            // Construct chat history from displayed messages (excluding the new inline thinking message)
             const chatHistory = [];
             const messages = chatDisplay.querySelectorAll('.ai-chat-message');
             messages.forEach(msgElement => {
                 // Skip the user message we just added to the DOM AND the thinking message
-                if (msgElement === userMessageElement || msgElement.id === 'aiCoachTempThinkingMessage') return; 
+                if (msgElement === userMessageElement || msgElement.id === 'aiCoachTempInlineThinkingMessage') return; 
 
                 let role = msgElement.getAttribute('data-role');
                 let content = '';
@@ -1718,12 +1718,6 @@ if (window.aiCoachLauncherInitialized) {
                 chatHistory.push({ role: role, content: content });
             });
             
-            // Remove temporary thinking message BEFORE the API call
-            const tempThinkingMsgForRemoval = document.getElementById('aiCoachTempThinkingMessage');
-            if (tempThinkingMsgForRemoval) {
-                tempThinkingMsgForRemoval.remove();
-            }
-
             logAICoach("Sending chat turn with history:", chatHistory);
             logAICoach("Current tutor message for API:", originalInput);
 
@@ -1738,7 +1732,7 @@ if (window.aiCoachLauncherInitialized) {
                 chatSendButton.disabled = false;
                 chatInput.disabled = false;
                 
-                // The in-chat thinking message (aiCoachTempThinkingMessage) was already removed before the fetch call.
+                // The in-chat thinking message (aiCoachTempInlineThinkingMessage) was already removed before the fetch call.
                 // If we want to remove it only *after* a successful response or error, we'd move its removal here.
                 // For now, keeping removal before fetch call as per previous logic.
 
@@ -1763,7 +1757,7 @@ if (window.aiCoachLauncherInitialized) {
                 chatSendButton.disabled = false;
                 chatInput.disabled = false;
                 
-                // The in-chat thinking message (aiCoachTempThinkingMessage) was already removed before the fetch call.
+                // The in-chat thinking message (aiCoachTempInlineThinkingMessage) was already removed before the fetch call.
                 // If we want to remove it only *after* a successful response or error, we'd move its removal here.
                 // For now, keeping removal before fetch call as per previous logic.
 
@@ -1882,14 +1876,17 @@ if (window.aiCoachLauncherInitialized) {
                 // chatInput.disabled = false;
             }
             finally {
-                // Always hide the panel-level thinking indicator and re-enable inputs
+                // Remove the inline thinking message
+                const tempInlineThinkingMsgForRemoval = document.getElementById('aiCoachTempInlineThinkingMessage');
+                if (tempInlineThinkingMsgForRemoval) {
+                    tempInlineThinkingMsgForRemoval.remove();
+                }
+
+                // Ensure panel-level indicator is hidden (should already be if logic above worked)
                 if (panelThinkingIndicator) {
                     panelThinkingIndicator.style.display = 'none';
                 }
-                const tempThinkingMsgForRemoval = document.getElementById('aiCoachTempThinkingMessage');
-                if (tempThinkingMsgForRemoval) {
-                    tempThinkingMsgForRemoval.remove();
-                }
+                
                 chatSendButton.disabled = false;
                 chatInput.disabled = false;
                 chatInput.focus(); // Return focus to input

@@ -8,6 +8,7 @@ import requests
 import logging # Add logging import
 import openai # Import the OpenAI library
 import time # Add time for cache expiry
+from datetime import datetime # Add datetime for timestamp
 
 # Load environment variables from .env file
 load_dotenv()
@@ -1642,8 +1643,7 @@ def get_all_knack_records(object_key, filters=None, max_pages=20):
 # --- API Endpoint for AI Chat Turn ---
 @app.route('/api/v1/chat_turn', methods=['POST'])
 def chat_turn():
-    data = request.get_json()
-    app.logger.info(f"Received request for /api/v1/chat_turn with data: {str(data)[:500]}...")
+    app.logger.info("Received request for /api/v1/chat_turn with data: {str(data)[:500]}...")
 
     student_object10_id = data.get('student_object10_record_id')
     chat_history = data.get('chat_history', []) 
@@ -1651,6 +1651,15 @@ def chat_turn():
     initial_ai_context = data.get('initial_ai_context') 
     student_level_from_context = initial_ai_context.get('student_level') if initial_ai_context else None
     app.logger.info(f"Chat turn: Student level from context: {student_level_from_context}")
+
+    # --- Student Name for Personalization (Fetch if not in initial_ai_context) ---
+    student_name_for_chat = "the student"
+    if initial_ai_context and initial_ai_context.get('student_name'):
+        student_name_for_chat = initial_ai_context['student_name']
+    elif student_object10_id: # Fallback to fetch from Object_10 if needed
+        obj10_record = get_knack_record("object_10", record_id=student_object10_id)
+        if obj10_record and obj10_record.get("field_187_raw"):
+            student_name_for_chat = obj10_record.get("field_187_raw", {}).get("full", "the student")
 
     if not student_object10_id or not current_tutor_message:
         app.logger.error("chat_turn: Missing student_object10_record_id or current_tutor_message.")
@@ -1671,7 +1680,7 @@ def chat_turn():
     messages_for_llm = [
         {"role": "system", "content": f"""You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. \
 You are a highly informed colleague, an AI academic mentor, partnering with the tutor. Your tone should be collaborative, supportive, insightful, and notably conversational and chatty. \
-Think of it like you're brainstorming with a fellow experienced tutor. For example, instead of formal phrasing like \'To address the student's challenge... an activity is...\', try something more like, \'Hey, for that challenge Kai is facing with relevance, why not try the "Ikigai" activity? It's great for helping students connect their studies to personal goals because...\'. \
+Think of it like you're brainstorming with a fellow experienced tutor. For example, instead of formal phrasing like \'To address the student's challenge... an activity is...\', try something more like, \'Hey, for that challenge {student_name_for_chat} is facing with relevance, why not try the "Ikigai" activity? It's great for helping students connect their studies to personal goals because...\'. \
 Use precise and technical language where it adds clarity and demonstrates knowledge (e.g., citing research or specific concepts from the provided knowledge base context), but weave it naturally into this chatty, collegial style. \
 Avoid a patronizing tone. Your goal is to empower the tutor with practical, actionable advice.
 
@@ -1695,7 +1704,7 @@ IMPORTANT GUIDELINES:
 8. BALANCE your response. Consider direct solutions and root causes if relevant activities/insights (considering level) are provided.
 9. The \'Relevant Reflective Statements\' (from 100 statements - 2023.txt) can spark ideas for discussion points or help understand the student. If RAG finds some, think about how they might shed light on what the student is experiencing.
 
-Remember: You\'re coaching the tutor, not the student directly. Keep it conversational!"""}
+Remember: You\'re coaching the tutor, not the student directly. Keep it conversational! If the provided chat history indicates a recent unfinished topic, a recently suggested activity, or a message the tutor previously 'liked' (marked with [Tutor Liked This]), consider referencing it naturally in your response to show continuity and build on prior interaction. For example: 'Last time, we were discussing X for {student_name_for_chat}, how did that go?' or 'I remember you liked the suggestion about activity Y, any thoughts on trying that with {student_name_for_chat}?'"""}
     ]
 
     if initial_ai_context:
@@ -1937,7 +1946,13 @@ Remember: You\'re coaching the tutor, not the student directly. Keep it conversa
 
     # Add existing chat history
     for message in chat_history:
-        messages_for_llm.append(message)
+        # Prepend a marker if the tutor liked this message
+        content = message.get("content", "")
+        if message.get("is_liked") and message.get("role") == "assistant": # Mark liked AI responses
+            content = f"[Tutor Liked This Assistant Response]: {content}"
+        elif message.get("is_liked") and message.get("role") == "user": # Or if user message was somehow marked as liked contextually
+            content = f"[Tutor Indicated This Was Important User Context]: {content}"
+        messages_for_llm.append({"role": message.get("role"), "content": content}) 
     # Add current tutor message
     messages_for_llm.append({"role": "user", "content": current_tutor_message})
 
@@ -1974,20 +1989,49 @@ def save_chat_message_to_knack(student_obj10_id, sender, message_text):
     # --- Knack Field Mappings for Object_118 (AIChatLog) ---
     # Object Key: object_118
     # field_3275: Tutor Report Conversation (Connection to Object_10)
-    # field_3276: Message Timestamp (Date/Time) -> Knack handles this on creation usually, or we can set explicitly.
+    # field_3276: Message Timestamp (Date/Time)
     # field_3273: Author (Short Text) -> Sender
     # field_3277: Conversation Log (Paragraph Text) -> MessageText
     # field_3278: Log Sequence (Auto Increment) -> Knack handles this.
-    # field_3274: Student (Connection to Student Object) -> Optional, can be auto-linked if Object_10 is linked to Student.
+    # field_3274: Student (Connection to Student Object_6)
+    # field_3279: Liked (Yes/No Boolean)
 
     knack_object_key_chatlog = "object_118"
+    
+    # 1. Fetch the Object_10 record to get the connection to Object_6 (Student)
+    student_object_6_id = None
+    if student_obj10_id:
+        object_10_record = get_knack_record("object_10", record_id=student_obj10_id)
+        if object_10_record and isinstance(object_10_record, dict): # specific record fetch returns dict directly
+            # field_132 in Object_10 is 'Student' connecting to Object_6 'Students'
+            student_connection_raw = object_10_record.get("field_132_raw")
+            if isinstance(student_connection_raw, list) and student_connection_raw:
+                student_object_6_id = student_connection_raw[0].get('id')
+                app.logger.info(f"Found student Object_6 ID: {student_object_6_id} from Object_10.field_132_raw")
+            else:
+                app.logger.warning(f"Could not extract student Object_6 ID from Object_10 record's field_132_raw. Data: {student_connection_raw}")
+        else:
+            app.logger.warning(f"Could not fetch Object_10 record for ID: {student_obj10_id} to get student connection.")
+
+    # 2. Prepare current timestamp for Knack
+    # Knack often prefers 'MM/DD/YYYY HH:MM:SS AM/PM' or ISO 8601. Let's try ISO.
+    # Or, if Knack field is Date/Time, often 'MM/DD/YYYY HH:mm' is fine.
+    # Let's use a common format Knack usually accepts for Date/Time fields.
+    current_timestamp_knack_format = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+
     payload = {
-        "field_3275": student_obj10_id, # Link to Object_10
+        "field_3275": student_obj10_id, 
         "field_3273": sender,
-        "field_3277": message_text
-        # Knack should auto-populate Timestamp (field_3276) and Log Sequence (field_3278)
-        # If field_3274 (Student connection) needs to be set, it might require fetching the student_id from student_obj10_id first.
+        "field_3277": message_text,
+        "field_3276": current_timestamp_knack_format 
+        # field_3279 (Liked) will default to "No" or Knack's default for boolean.
+        # It will be updated by a separate 'like' function.
     }
+
+    if student_object_6_id:
+        payload["field_3274"] = student_object_6_id
+    else:
+        app.logger.warning(f"student_object_6_id is None for Object_10 ID {student_obj10_id}. Chat log will not be linked to Object_6.")
 
     headers = {
         'X-Knack-Application-Id': KNACK_APP_ID,
@@ -2011,6 +2055,234 @@ def save_chat_message_to_knack(student_obj10_id, sender, message_text):
     except json.JSONDecodeError:
         app.logger.error(f"JSON decode error for Knack response when saving chat. Response: {response.text}")
     return None
+
+# --- API Endpoint for Updating Chat Like Status ---
+@app.route('/api/v1/update_chat_like', methods=['POST'])
+def update_chat_like():
+    data = request.get_json()
+    app.logger.info(f"Received request for /api/v1/update_chat_like with data: {data}")
+
+    message_knack_id = data.get('message_id')
+    is_liked_status = data.get('is_liked') # This should be a boolean true/false
+
+    if not message_knack_id or is_liked_status is None:
+        app.logger.error("update_chat_like: Missing message_id or is_liked status.")
+        return jsonify({"error": "Missing message_id or is_liked status"}), 400
+
+    # Convert boolean to Knack's expected Yes/No string for field_3279
+    knack_liked_value = "Yes" if is_liked_status else "No"
+
+    knack_object_key_chatlog = "object_118"
+    payload = {
+        "field_3279": knack_liked_value
+    }
+
+    headers = {
+        'X-Knack-Application-Id': KNACK_APP_ID,
+        'X-Knack-REST-API-Key': KNACK_API_KEY,
+        'Content-Type': 'application/json'
+    }
+    url = f"{KNACK_BASE_URL}/{knack_object_key_chatlog}/records/{message_knack_id}"
+
+    try:
+        app.logger.info(f"Updating chat message like status in Knack ({knack_object_key_chatlog}, record: {message_knack_id}). Payload: {payload}")
+        response = requests.put(url, headers=headers, json=payload) # Use PUT for updates
+        response.raise_for_status()
+        updated_record = response.json()
+        app.logger.info(f"Successfully updated like status for chat message. Record: {updated_record}")
+        return jsonify({"success": True, "message": "Like status updated", "record": updated_record}), 200
+    except requests.exceptions.HTTPError as e:
+        app.logger.error(f"HTTP error updating like status in Knack: {e}")
+        app.logger.error(f"Response content: {response.content}")
+        return jsonify({"error": "Failed to update like status in Knack", "details": str(e)}), 500
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Request exception updating like status in Knack: {e}")
+        return jsonify({"error": "Failed to communicate with Knack API", "details": str(e)}), 500
+    except json.JSONDecodeError:
+        app.logger.error(f"JSON decode error for Knack response when updating like status. Response: {response.text}")
+        return jsonify({"error": "Invalid response from Knack API"}), 500
+
+# --- API Endpoint for Fetching Chat History ---
+@app.route('/api/v1/chat_history', methods=['POST'])
+def get_chat_history():
+    data = request.get_json()
+    app.logger.info(f"Received request for /api/v1/chat_history with data: {data}")
+
+    student_obj10_id = data.get('student_object10_record_id')
+    max_messages = data.get('max_messages', 50)
+    # days_back = data.get('days_back', 30) # We'll sort by date and take latest, days_back is complex with Knack filters
+    include_metadata = data.get('include_metadata', True) # Assumed true by frontend
+
+    if not student_obj10_id:
+        app.logger.error("get_chat_history: Missing student_object10_record_id.")
+        return jsonify({"error": "Missing student_object10_record_id"}), 400
+
+    knack_object_key_chatlog = "object_118"
+    filters = [
+        {'field': 'field_3275', 'operator': 'is', 'value': student_obj10_id}
+    ]
+    # Knack sort order: field_key | direction (asc/desc)
+    sort_order = 'field_3276|desc' # Sort by Message Timestamp descending (latest first)
+
+    # Fetch records using a potentially modified get_all_knack_records or a specific fetch for this
+    # For now, let's assume get_knack_record can handle sort and limit if we adapt it slightly
+    # or we fetch a larger set and process. get_all_knack_records fetches all, then we sort/slice.
+
+    app.logger.info(f"Fetching chat history for {student_obj10_id} from {knack_object_key_chatlog} with filters: {filters} and sort: {sort_order}")    
+    
+    # Knack API v1 doesn't directly support `sort` in GET /records, only `sort_field` and `sort_order`
+    # and `rows_per_page` for limiting. We might need to fetch more and sort in Python if complex sorting is needed.
+    # However, for simple sort by one field, we can try to use the Knack parameters.
+    
+    # Let's use get_knack_record and fetch up to a reasonable number (e.g. 2*max_messages) and then sort and slice in Python
+    # as Knack's direct sorting in query params can be tricky with all record fetching.
+    # For simplicity, we will fetch all records for the student and then sort/slice.
+    # This might be inefficient for students with vast histories, but aligns with the 50 record idea.
+    
+    all_student_chats_response = get_knack_record(
+        knack_object_key_chatlog, 
+        filters=filters, 
+        page=1, # Start with page 1
+        rows_per_page=max_messages * 2 # Fetch a bit more to ensure we have enough after potential filtering, max 1000 for Knack
+    )
+
+    all_student_chat_records = []
+    if all_student_chats_response and isinstance(all_student_chats_response, dict) and 'records' in all_student_chats_response:
+        all_student_chat_records = all_student_chats_response['records']
+        app.logger.info(f"Fetched initial {len(all_student_chat_records)} chat records for student {student_obj10_id}.")
+    else:
+        app.logger.warning(f"No chat records found or unexpected response format for student {student_obj10_id}. Response: {all_student_chats_response}")
+        return jsonify({"chat_history": [], "total_count": 0, "liked_count": 0, "summary": "No chat history found."}), 200
+
+    # Sort the records by timestamp (field_3276) in descending order (latest first)
+    # Knack date format is dd/mm/yyyy HH:MM:SS. Need to parse this for correct sorting.
+    def get_datetime_from_knack_timestamp(ts_str):
+        if not ts_str: return datetime.min
+        try:
+            return datetime.strptime(ts_str, '%d/%m/%Y %H:%M:%S')
+        except ValueError:
+            app.logger.warning(f"Could not parse Knack timestamp: {ts_str}. Using fallback date for sorting.")
+            return datetime.min # Fallback for unparseable dates
+
+    all_student_chat_records.sort(key=lambda r: get_datetime_from_knack_timestamp(r.get('field_3276')), reverse=True)
+
+    # Slice to get the actual max_messages
+    recent_chat_records = all_student_chat_records[:max_messages]
+
+    chat_history_for_frontend = []
+    liked_count = 0
+    for record in recent_chat_records:
+        is_liked = record.get('field_3279') == "Yes"
+        if is_liked:
+            liked_count += 1
+        
+        chat_history_for_frontend.append({
+            "id": record.get('id'),
+            "role": "assistant" if record.get('field_3273') == "AI Coach" else "user",
+            "content": record.get('field_3277', ""),
+            "is_liked": is_liked,
+            "timestamp": record.get('field_3276') # Keep original timestamp for display if needed
+        })
+    
+    # Reverse again to have chronological order for display (oldest of the recent batch first)
+    chat_history_for_frontend.reverse()
+
+    # Summary: Use the one from Object_10, field_3271 if available
+    # This requires fetching the Object_10 record again, or passing it if available elsewhere
+    summary_text = "Could not load conversation summary."
+    object_10_record_for_summary = get_knack_record("object_10", record_id=student_obj10_id)
+    if object_10_record_for_summary and isinstance(object_10_record_for_summary, dict):
+        summary_text = object_10_record_for_summary.get("field_3271", "No summary available in Object_10.")
+    
+    total_chat_count_for_student = len(all_student_chat_records) # This is the count before slicing for max_messages
+
+    app.logger.info(f"Returning {len(chat_history_for_frontend)} messages for chat history. Total for student: {total_chat_count_for_student}. Liked: {liked_count}")
+    return jsonify({
+        "chat_history": chat_history_for_frontend,
+        "total_count": total_chat_count_for_student, # Total messages for this student
+        "liked_count": liked_count,
+        "summary": summary_text
+    }), 200
+
+# --- API Endpoint for Clearing Old Chats ---
+@app.route('/api/v1/clear_old_chats', methods=['POST'])
+def clear_old_chats():
+    data = request.get_json()
+    app.logger.info(f"Received request for /api/v1/clear_old_chats with data: {data}")
+
+    student_obj10_id = data.get('student_object10_record_id')
+    keep_liked = data.get('keep_liked', True)
+    target_count_after_clear = data.get('target_count', 150) # Target number of messages to remain
+
+    if not student_obj10_id:
+        app.logger.error("clear_old_chats: Missing student_object10_record_id.")
+        return jsonify({"error": "Missing student_object10_record_id"}), 400
+
+    knack_object_key_chatlog = "object_118"
+    filters = [
+        {'field': 'field_3275', 'operator': 'is', 'value': student_obj10_id}
+    ]
+
+    # Fetch ALL chat records for the student
+    all_chats_for_student = get_all_knack_records(knack_object_key_chatlog, filters=filters, max_pages=50) # Limit pages to prevent runaway
+
+    if not all_chats_for_student:
+        app.logger.info(f"No chat records found for student {student_obj10_id} to clear.")
+        return jsonify({"message": "No chats to clear.", "deleted_count": 0, "remaining_count": 0}), 200
+
+    # Sort by timestamp ascending (oldest first)
+    def get_datetime_from_knack_timestamp_for_clear(ts_str):
+        if not ts_str: return datetime.max # Sort None/empty to the end if sorting ascending
+        try:
+            return datetime.strptime(ts_str, '%d/%m/%Y %H:%M:%S')
+        except ValueError:
+            return datetime.max
+            
+    all_chats_for_student.sort(key=lambda r: get_datetime_from_knack_timestamp_for_clear(r.get('field_3276')))
+
+    num_to_delete = len(all_chats_for_student) - target_count_after_clear
+    deleted_count = 0
+    actual_records_deleted_ids = []
+
+    if num_to_delete > 0:
+        app.logger.info(f"Need to delete {num_to_delete} chats for student {student_obj10_id} to reach target of {target_count_after_clear}.")
+        delete_candidates = []
+        for record in all_chats_for_student:
+            if keep_liked and record.get('field_3279') == "Yes":
+                continue # Skip liked messages
+            delete_candidates.append(record.get('id'))
+        
+        # Delete from the oldest of the candidates
+        records_to_actually_delete_ids = delete_candidates[:num_to_delete]
+
+        headers = {
+            'X-Knack-Application-Id': KNACK_APP_ID,
+            'X-Knack-REST-API-Key': KNACK_API_KEY
+        }
+
+        for record_id_to_delete in records_to_actually_delete_ids:
+            if not record_id_to_delete: continue
+            delete_url = f"{KNACK_BASE_URL}/{knack_object_key_chatlog}/records/{record_id_to_delete}"
+            try:
+                response = requests.delete(delete_url, headers=headers)
+                response.raise_for_status()
+                app.logger.info(f"Successfully deleted chat record ID: {record_id_to_delete}")
+                deleted_count += 1
+                actual_records_deleted_ids.append(record_id_to_delete)
+            except requests.exceptions.HTTPError as e:
+                app.logger.error(f"HTTP error deleting chat record {record_id_to_delete}: {e}. Response: {response.content}")
+            except requests.exceptions.RequestException as e:
+                app.logger.error(f"Request exception deleting chat record {record_id_to_delete}: {e}")
+    else:
+        app.logger.info(f"No chats need to be deleted for student {student_obj10_id}. Current count: {len(all_chats_for_student)}, Target: {target_count_after_clear}.")
+
+    remaining_count = len(all_chats_for_student) - deleted_count
+    return jsonify({
+        "message": f"Clear old chats process completed. Deleted {deleted_count} unliked chats.",
+        "deleted_count": deleted_count,
+        "remaining_count": remaining_count,
+        "deleted_ids": actual_records_deleted_ids
+    }), 200
 
 if __name__ == '__main__':
     # Ensure the FLASK_ENV is set to development for debug mode if not using `flask run`
