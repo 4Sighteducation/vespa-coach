@@ -1462,13 +1462,15 @@ def coaching_suggestions():
             "report_suggested_tools_for_student": matching_report_text_rec.get('field_847', "Tools not found.") if matching_report_text_rec else "Tools not found.",
             "primary_tutor_coaching_comments": matching_report_text_rec.get('field_853', "Coaching comments not found.") if matching_report_text_rec else "Coaching comments not found.",
             "supplementary_tutor_questions": supplementary_questions_for_api if supplementary_questions_for_api else ["No supplementary questions found for this profile."],
+            # key_individual_question_insights_from_object29 is not directly placed here in API response, but used by LLM
             "historical_summary_scores": hist_scores_for_api
         }
-        # For "Overall", we only need a subset of these fields
+        # For "Overall", we only need a subset of these fields, especially if it was handled by llm_structured_output already
         if element == "Overall":
-            final_vespa_profile_details_for_api[element].pop("supplementary_tutor_questions", None)
-            final_vespa_profile_details_for_api[element].pop("report_questions_for_student", None)
-            final_vespa_profile_details_for_api[element].pop("report_suggested_tools_for_student", None)
+             final_vespa_profile_details_for_api[element].pop("supplementary_tutor_questions", None)
+             final_vespa_profile_details_for_api[element].pop("report_questions_for_student", None)
+             final_vespa_profile_details_for_api[element].pop("report_suggested_tools_for_student", None)
+
 
     # Populate general introductory questions and overall framing statement from coaching_kb
     general_intro_questions = ["No general introductory questions found."]
@@ -2149,62 +2151,8 @@ def chat_turn():
 
         final_vespa_profile_details_for_api[element] = {
             "score_1_to_10": score_value if score_value is not None else "N/A",
-            "score_profile_text": score_profile_text,
-            "report_text_for_student": matching_report_text_rec.get('field_845', "Content not found.") if matching_report_text_rec else "Content not found.",
-            "report_questions_for_student": matching_report_text_rec.get('field_846', "Questions not found.") if matching_report_text_rec else "Questions not found.",
-            "report_suggested_tools_for_student": matching_report_text_rec.get('field_847', "Tools not found.") if matching_report_text_rec else "Tools not found.",
-            "primary_tutor_coaching_comments": matching_report_text_rec.get('field_853', "Coaching comments not found.") if matching_report_text_rec else "Coaching comments not found.",
-            "supplementary_tutor_questions": supplementary_questions_for_api if supplementary_questions_for_api else ["No supplementary questions found for this profile."],
-            "historical_summary_scores": hist_scores_for_api
-        }
-        # For "Overall", we only need a subset of these fields
-        if element == "Overall":
-            final_vespa_profile_details_for_api[element].pop("supplementary_tutor_questions", None)
-            final_vespa_profile_details_for_api[element].pop("report_questions_for_student", None)
-            final_vespa_profile_details_for_api[element].pop("report_suggested_tools_for_student", None)
-
-    # Populate general introductory questions and overall framing statement from coaching_kb
-    general_intro_questions = ["No general introductory questions found."]
-    if coaching_kb and coaching_kb.get('generalIntroductoryQuestions'):
-        general_intro_questions = coaching_kb['generalIntroductoryQuestions']
-        if not general_intro_questions: general_intro_questions = ["No general introductory questions found in KB."]
-    
-    overall_framing_statement = {"id": "default_framing", "statement": "No specific framing statement matched or available."}
-    if coaching_kb and coaching_kb.get('conditionalFramingStatements'):
-        default_statement_found = False
-        for stmt in coaching_kb['conditionalFramingStatements']:
-            if stmt.get('id') == 'default_response':
-                overall_framing_statement = {"id": stmt['id'], "statement": stmt.get('statement', "Default statement text missing.")}
-                default_statement_found = True; break
-        if not default_statement_found and coaching_kb['conditionalFramingStatements']:
-            first_stmt = coaching_kb['conditionalFramingStatements'][0]
-            overall_framing_statement = {"id": first_stmt.get('id', 'unknown_conditional'), "statement": first_stmt.get('statement', "Conditional statement text missing.")}
-
-    response_data = {
-        "student_name": student_name_for_profile_lookup,
-        "student_level": student_level,
-        "current_cycle": current_m_cycle,
-        "vespa_profile": final_vespa_profile_details_for_api, # Use the fully detailed one for API
-        "academic_profile_summary": academic_profile_summary_data,
-        "student_reflections_and_goals": student_reflections_and_goals,
-        "object29_question_highlights": object29_top_bottom_questions,
-        "overall_framing_statement_for_tutor": overall_framing_statement,
-        "general_introductory_questions_for_tutor": general_intro_questions,
-        "llm_generated_insights": llm_structured_output, # This now holds the structured data
-        "previous_interaction_summary": previous_interaction_summary,
-        "school_vespa_averages": school_wide_vespa_averages,
-        "academic_megs": academic_megs_data, # Add MEGs to API response
-        "all_scored_questionnaire_statements": all_scored_questions_from_object29 # ADDED for frontend chart
-    }
-    
-    # For backward compatibility with old frontend's "llm_generated_summary_and_suggestions.student_overview_summary"
-    # We can also add the student_overview_summary at the top level of llm_generated_insights if it's not already there.
-    # The new llm_structured_output should already contain "student_overview_summary" as a key.
-    # If frontend expects "llm_generated_summary_and_suggestions", we might need to adapt.
-    # For now, sending "llm_generated_insights" as the main holder of new structured data.
-
-    app.logger.info(f"Successfully prepared API response for student_object10_record_id: {student_obj10_id_from_request}")
-    return jsonify(response_data)
+        app.logger.error(f"Error creating AI summary: {e}")
+        return "Previous conversations covered various VESPA-related topics."
 
 # --- API Endpoint to Get Chat History ---
 @app.route('/api/v1/chat_history', methods=['POST'])
