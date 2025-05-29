@@ -662,14 +662,14 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
             for insight in COACHING_INSIGHTS_DATA:
                 if lowest_vespa_element.lower() in str(insight.get('keywords', [])).lower() or lowest_vespa_element.lower() in insight.get('name', '').lower():
                     retrieved_rag_items_for_prompt_structured["insights"].append(f"Insight: '{insight.get('name')}' - Description: {insight.get('description', '')[:120]}... (Implications: {insight.get('implications_for_tutor', '')[:100]}...)")
-                    if len(retrieved_rag_items_for_prompt_structured["insights"]) >= 2: break # Get up to 2 insights
+                    if len(retrieved_rag_items_for_prompt_structured["insights"]) >= 1: break
         
         # Retrieve from VESPA_ACTIVITIES_DATA
         if VESPA_ACTIVITIES_DATA:
             for activity in VESPA_ACTIVITIES_DATA:
                 if lowest_vespa_element.lower() == activity.get('vespa_element', '').lower(): # Match on element
                     retrieved_rag_items_for_prompt_structured["activities"].append(f"Activity: '{activity.get('name')}' (VESPA: {activity.get('vespa_element')}, ID: {activity.get('id')}) - Summary: {activity.get('short_summary', '')[:120]}... Link: {activity.get('pdf_link')}")
-                    if len(retrieved_rag_items_for_prompt_structured["activities"]) >= 2: break # Get up to 2 activities
+                    if len(retrieved_rag_items_for_prompt_structured["activities"]) >= 1: break
 
         # Retrieve from REFLECTIVE_STATEMENTS_DATA (simple match for now)
         if REFLECTIVE_STATEMENTS_DATA:
@@ -677,11 +677,11 @@ def generate_student_summary_with_llm(student_data_dict, coaching_kb_data, stude
                 # A more robust category check would be better if statements are structured with categories
                 if lowest_vespa_element.lower() in statement.lower(): 
                     retrieved_rag_items_for_prompt_structured["statements"].append(f"Reflective Statement: '{statement[:150]}...'")
-                    if len(retrieved_rag_items_for_prompt_structured["statements"]) >= 2: break # Get up to 2 statements
+                    if len(retrieved_rag_items_for_prompt_structured["statements"]) >= 1: break
     
     if any(retrieved_rag_items_for_prompt_structured.values()):
         prompt_parts.append("\n\n--- Dynamically Retrieved Context (Strongly consider these for formulating Most Important Coaching Questions and Suggested Student Goals) ---")
-        prompt_parts.append(f"The student\\'s lowest VESPA score is in '{lowest_vespa_element}'. Based on this, please incorporate the following into your suggestions. Select the most relevant items if multiple are provided for a category:")
+        prompt_parts.append(f"The student\'s lowest VESPA score is in '{lowest_vespa_element}'. Based on this, please incorporate the following into your suggestions:")
         if retrieved_rag_items_for_prompt_structured["insights"]:
             prompt_parts.append("\nRelevant Coaching Insight(s):")
             prompt_parts.extend(retrieved_rag_items_for_prompt_structured["insights"])
@@ -2151,216 +2151,48 @@ def chat_turn():
 
         final_vespa_profile_details_for_api[element] = {
             "score_1_to_10": score_value if score_value is not None else "N/A",
-            "score_profile_text": score_profile_text,
-            "report_text_for_student": matching_report_text_rec.get('field_845', "Content not found.") if matching_report_text_rec else "Content not found.",
-            "report_questions_for_student": matching_report_text_rec.get('field_846', "Questions not found.") if matching_report_text_rec else "Questions not found.",
-            "report_suggested_tools_for_student": matching_report_text_rec.get('field_847', "Tools not found.") if matching_report_text_rec else "Tools not found.",
-            "primary_tutor_coaching_comments": matching_report_text_rec.get('field_853', "Coaching comments not found.") if matching_report_text_rec else "Coaching comments not found.",
-            "supplementary_tutor_questions": supplementary_questions_for_api if supplementary_questions_for_api else ["No supplementary questions found for this profile."],
-            # key_individual_question_insights_from_object29 is not directly placed here in API response, but used by LLM
-            "historical_summary_scores": hist_scores_for_api
-        }
-        # For "Overall", we only need a subset of these fields, especially if it was handled by llm_structured_output already
-        if element == "Overall":
-             final_vespa_profile_details_for_api[element].pop("supplementary_tutor_questions", None)
-             final_vespa_profile_details_for_api[element].pop("report_questions_for_student", None)
-             final_vespa_profile_details_for_api[element].pop("report_suggested_tools_for_student", None)
+        app.logger.error(f"Error creating AI summary: {e}")
+        return "Previous conversations covered various VESPA-related topics."
 
-
-    # Populate general introductory questions and overall framing statement from coaching_kb
-    general_intro_questions = ["No general introductory questions found."]
-    if coaching_kb and coaching_kb.get('generalIntroductoryQuestions'):
-        general_intro_questions = coaching_kb['generalIntroductoryQuestions']
-        if not general_intro_questions: general_intro_questions = ["No general introductory questions found in KB."]
-    
-    overall_framing_statement = {"id": "default_framing", "statement": "No specific framing statement matched or available."}
-    if coaching_kb and coaching_kb.get('conditionalFramingStatements'):
-        default_statement_found = False
-        for stmt in coaching_kb['conditionalFramingStatements']:
-            if stmt.get('id') == 'default_response':
-                overall_framing_statement = {"id": stmt['id'], "statement": stmt.get('statement', "Default statement text missing.")}
-                default_statement_found = True; break
-        if not default_statement_found and coaching_kb['conditionalFramingStatements']:
-            first_stmt = coaching_kb['conditionalFramingStatements'][0]
-            overall_framing_statement = {"id": first_stmt.get('id', 'unknown_conditional'), "statement": first_stmt.get('statement', "Conditional statement text missing.")}
-
-    response_data = {
-        "student_name": student_name_for_profile_lookup,
-        "student_level": student_level,
-        "current_cycle": current_m_cycle,
-        "vespa_profile": final_vespa_profile_details_for_api, # Use the fully detailed one for API
-        "academic_profile_summary": academic_profile_summary_data,
-        "student_reflections_and_goals": student_reflections_and_goals,
-        "object29_question_highlights": object29_top_bottom_questions,
-        "overall_framing_statement_for_tutor": overall_framing_statement,
-        "general_introductory_questions_for_tutor": general_intro_questions,
-        "llm_generated_insights": llm_structured_output, # This now holds the structured data
-        "previous_interaction_summary": previous_interaction_summary,
-        "school_vespa_averages": school_wide_vespa_averages,
-        "academic_megs": academic_megs_data, # Add MEGs to API response
-        "all_scored_questionnaire_statements": all_scored_questions_from_object29 # ADDED for frontend chart
-    }
-    
-    # For backward compatibility with old frontend's "llm_generated_summary_and_suggestions.student_overview_summary"
-    # We can also add the student_overview_summary at the top level of llm_generated_insights if it's not already there.
-    # The new llm_structured_output should already contain "student_overview_summary" as a key.
-    # If frontend expects "llm_generated_summary_and_suggestions", we might need to adapt.
-    # For now, sending "llm_generated_insights" as the main holder of new structured data.
-
-    app.logger.info(f"Successfully prepared API response for student_object10_record_id: {student_obj10_id_from_request}")
-    return jsonify(response_data)
-
-def save_chat_message_to_knack(student_obj10_id, sender, message_text):
-    """Saves a chat message to the new Object_118 in Knack."""
-    if not student_obj10_id or not sender or not message_text:
-        app.logger.error("save_chat_message_to_knack: Missing required parameters.")
-        return None
-
-    # --- Knack Field Mappings for Object_118 (AIChatLog) ---
-    # Object Key: object_118
-    # field_3275: Tutor Report Conversation (Connection to Object_10)
-    # field_3276: Message Timestamp (Date/Time) -> Knack handles this on creation usually, or we can set explicitly.
-    # field_3273: Author (Short Text) -> Sender
-    # field_3277: Conversation Log (Paragraph Text) -> MessageText
-    # field_3278: Log Sequence (Auto Increment) -> Knack handles this.
-    # field_3274: Student (Connection to Student Object) -> Optional, can be auto-linked if Object_10 is linked to Student.
-
-    knack_object_key_chatlog = "object_118"
-    payload = {
-        "field_3275": student_obj10_id, # Link to Object_10
-        "field_3273": sender,
-        "field_3277": message_text
-        # field_3279: Liked (Boolean) - will be handled separately
-    }
-
-    # --- Attempt to get student_object3_id to link in field_3274 ---
-    student_object3_id_for_chatlog = None
-    if student_obj10_id:
-        app.logger.info(f"save_chat_message_to_knack: Attempting to fetch Object_10 record ({student_obj10_id}) to get email for Object_3 link.")
-        # We need the full record, not just a part of it, to get field_197_raw
-        student_obj10_record_response = get_knack_record("object_10", record_id=student_obj10_id)
-        
-        # get_knack_record returns the full response dict; the actual record is under the main key (e.g., if it's a single record fetch)
-        # or as the first item in 'records' if fetched via filters (though here it's a direct ID fetch)
-        student_obj10_data = None
-        if student_obj10_record_response:
-            # If fetching a single record by ID, Knack API often returns the record directly as the JSON response, not nested under 'records'
-            # However, let's be safe and check if it's nested first, then assume direct if not.
-            if 'records' in student_obj10_record_response and isinstance(student_obj10_record_response['records'], list) and student_obj10_record_response['records']:
-                student_obj10_data = student_obj10_record_response['records'][0] # Should not happen with record_id fetch
-            elif isinstance(student_obj10_record_response, dict) and 'id' in student_obj10_record_response: # Direct record fetch
-                student_obj10_data = student_obj10_record_response
-            else:
-                app.logger.warning(f"save_chat_message_to_knack: Unexpected format for Object_10 record response: {str(student_obj10_record_response)[:200]}")
-
-        if student_obj10_data:
-            student_email_obj = student_obj10_data.get("field_197_raw")
-            student_email_for_chatlog = None
-            if isinstance(student_email_obj, dict) and 'email' in student_email_obj:
-                student_email_for_chatlog = student_email_obj['email']
-            elif isinstance(student_email_obj, str): # If it's just a string email
-                student_email_for_chatlog = student_email_obj
-            
-            if student_email_for_chatlog:
-                app.logger.info(f"save_chat_message_to_knack: Found email '{student_email_for_chatlog}'. Fetching Object_3 ID.")
-                filters_object3 = [{'field': 'field_70', 'operator': 'is', 'value': student_email_for_chatlog}]
-                # Fetching from object_3 (User accounts)
-                object3_response = get_knack_record("object_3", filters=filters_object3)
-                
-                # get_knack_record with filters returns a dict like {'records': [...]}
-                if object3_response and isinstance(object3_response, dict) and \
-                   object3_response.get('records') and isinstance(object3_response['records'], list) and \
-                   len(object3_response['records']) > 0:
-                    # Assuming the first record is the correct one if multiple exist for an email (should be unique ideally)
-                    student_account_record = object3_response['records'][0]
-                    student_object3_id_for_chatlog = student_account_record.get('id')
-                    if student_object3_id_for_chatlog:
-                        app.logger.info(f"save_chat_message_to_knack: Successfully found Object_3 ID: {student_object3_id_for_chatlog} for linking.")
-                        payload["field_3274"] = student_object3_id_for_chatlog # This is the ID of the student's account record in Object_3
-                    else:
-                        app.logger.warning(f"save_chat_message_to_knack: Found Object_3 record for email {student_email_for_chatlog}, but it has no 'id' attribute.")
-                else:
-                    app.logger.warning(f"save_chat_message_to_knack: Could not find Object_3 record for email {student_email_for_chatlog}. Response: {str(object3_response)[:200]}")
-            else:
-                app.logger.warning(f"save_chat_message_to_knack: Email not found or in unexpected format in Object_10 record {student_obj10_id}. Email object: {student_email_obj}")
-        else:
-            app.logger.warning(f"save_chat_message_to_knack: Could not fetch or parse Object_10 record {student_obj10_id} to get email.")
-    else:
-        app.logger.warning("save_chat_message_to_knack: student_obj10_id not provided, cannot link Object_3.")
-    # --- End attempt to get student_object3_id ---
-
-
-    headers = {
-        'X-Knack-Application-Id': KNACK_APP_ID,
-        'X-Knack-REST-API-Key': KNACK_API_KEY,
-        'Content-Type': 'application/json'
-    }
-    url = f"{KNACK_BASE_URL}/{knack_object_key_chatlog}/records"
-
-    try:
-        app.logger.info(f"Saving chat message to Knack ({knack_object_key_chatlog}). Payload: {payload}")
-        response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()
-        saved_record = response.json()
-        app.logger.info(f"Successfully saved chat message to Knack. Record ID: {saved_record.get('id')}")
-        return saved_record.get('id')
-    except requests.exceptions.HTTPError as e:
-        app.logger.error(f"HTTP error saving chat message to Knack: {e}")
-        app.logger.error(f"Response content: {response.content}")
-    except requests.exceptions.RequestException as e:
-        app.logger.error(f"Request exception saving chat message to Knack: {e}")
-    except json.JSONDecodeError:
-        app.logger.error(f"JSON decode error for Knack response when saving chat. Response: {response.text}")
-    return None
-
-@app.route('/api/v1/update_chat_like', methods=['POST'])
-def update_chat_like():
+# --- API Endpoint to Get Chat History ---
+@app.route('/api/v1/chat_history', methods=['POST'])
+def get_chat_history():
+    """Endpoint to retrieve chat history for a student."""
     data = request.get_json()
-    app.logger.info(f"Received request for /api/v1/update_chat_like with data: {data}")
-
-    message_id = data.get('message_id')
-    is_liked = data.get('is_liked')
-
-    if not message_id or not isinstance(is_liked, bool):
-        app.logger.error("update_chat_like: Missing message_id or is_liked, or is_liked is not a boolean.")
-        return jsonify({"error": "Missing message_id or is_liked (must be boolean)"}), 400
-
-    if not KNACK_APP_ID or not KNACK_API_KEY:
-        app.logger.error("update_chat_like: Knack App ID or API Key is missing.")
-        return jsonify({"error": "Knack API credentials not configured."}), 500
-
-    knack_object_key_chatlog = "object_118"
-    url = f"{KNACK_BASE_URL}/{knack_object_key_chatlog}/records/{message_id}"
-    payload = {
-        "field_3279": is_liked  # Your boolean field for liked status
-    }
-
-    headers = {
-        'X-Knack-Application-Id': KNACK_APP_ID,
-        'X-Knack-REST-API-Key': KNACK_API_KEY,
-        'Content-Type': 'application/json'
-    }
-
-    try:
-        app.logger.info(f"Updating chat message like status in Knack ({knack_object_key_chatlog}, record: {message_id}). Payload: {payload}")
-        response = requests.put(url, headers=headers, json=payload)
-        response.raise_for_status()
-        updated_record = response.json()
-        app.logger.info(f"Successfully updated like status for chat message {message_id}. New status: {is_liked}")
-        return jsonify({"success": True, "message": "Like status updated.", "record": updated_record}), 200
-    except requests.exceptions.HTTPError as e:
-        app.logger.error(f"HTTP error updating like status in Knack: {e}")
-        app.logger.error(f"Response content: {response.content}")
-        return jsonify({"error": f"Knack API HTTP error: {e}", "details": str(response.content)}), 500
-    except requests.exceptions.RequestException as e:
-        app.logger.error(f"Request exception updating like status in Knack: {e}")
-        return jsonify({"error": f"Knack API request error: {e}"}), 500
-    except json.JSONDecodeError:
-        app.logger.error(f"JSON decode error for Knack response when updating like status. Response: {response.text}")
-        return jsonify({"error": "Knack API JSON decode error.", "details": response.text}), 500
-    except Exception as e:
-        app.logger.error(f"An unexpected error occurred in update_chat_like: {e}")
-        return jsonify({"error": f"An unexpected error occurred: {e}"}), 500
+    student_object10_id = data.get('student_object10_record_id')
+    max_messages = data.get('max_messages', 20)  # Default to last 20 messages
+    days_back = data.get('days_back', 7)  # Default to last 7 days
+    
+    if not student_object10_id:
+        app.logger.error("get_chat_history endpoint: Missing student_object10_record_id.")
+        return jsonify({"error": "Missing student_object10_record_id"}), 400
+    
+    app.logger.info(f"Fetching chat history for student {student_object10_id}")
+    
+    # Get the raw chat history
+    messages = get_chat_history_from_knack(student_object10_id, max_messages=max_messages, days_back=days_back)
+    
+    # Convert to format expected by frontend
+    formatted_messages = []
+    for msg in messages:
+        role = "assistant" if msg['author'] == "AI Coach" else "user"
+        formatted_messages.append({
+            "role": role,
+            "content": msg['message'],
+            "timestamp": msg['timestamp'],
+            "author": msg['author']
+        })
+    
+    # Also provide a summary if there are many messages
+    summary = None
+    if len(messages) > 15:
+        summary = summarize_chat_history(messages[:-10], max_summary_length=300)
+    
+    return jsonify({
+        "chat_history": formatted_messages,
+        "summary": summary,
+        "total_messages": len(formatted_messages)
+    })
 
 if __name__ == '__main__':
     # Ensure the FLASK_ENV is set to development for debug mode if not using `flask run`

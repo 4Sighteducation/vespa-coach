@@ -38,17 +38,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/VISION%20-%20MotivationD.pdf"
   },
   {
-    "id": "VI31",
-    "name": "V1-Ugain Cwestiwn",
-    "vespa_element": "VISION",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/V1-Ugain%20Cwestiwn.pdf"
-  },
-  {
     "id": "EF1",
     "name": "Proactive vs Reactive",
     "vespa_element": "EFFORT",
@@ -86,17 +75,6 @@
       "Power"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/VISION%20-%20Personal%20Compass.pdf"
-  },
-  {
-    "id": "EF32",
-    "name": "E1-Y Raddfa 1–10",
-    "vespa_element": "EFFORT",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/E1-Y%20Raddfa%201%E2%80%9310.pdf"
   },
   {
     "id": "EF32",
@@ -154,17 +132,6 @@
       "audit"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/EFFORT%20-%20Mision%20%26%20Medal.pdf"
-  },
-  {
-    "id": "AT33",
-    "name": "A6-Y Gromlin Newid",
-    "vespa_element": "ATTITUDE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/A6-Y%20Gromlin%20Newid.pdf"
   },
   {
     "id": "AT33",
@@ -233,17 +200,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/ATTITUDE%20-%20Growth%20Mindset.pdf"
   },
   {
-    "id": "VI34",
-    "name": "V2-Cyflawni Breuddwydion",
-    "vespa_element": "VISION",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/V2-Cyflawni%20Breuddwydion.pdf"
-  },
-  {
     "id": "AT4",
     "name": "NAF vs NACH",
     "vespa_element": "ATTITUDE",
@@ -280,17 +236,6 @@
       "obstacles"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/VISION%20-%20Roadmap.pdf"
-  },
-  {
-    "id": "AT35",
-    "name": "A7-Y Prawf Fampir",
-    "vespa_element": "ATTITUDE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/A7-Y%20Prawf%20Fampir.pdf"
   },
   {
     "id": "AT35",
@@ -352,17 +297,6 @@
   },
   {
     "id": "EF36",
-    "name": "E3-Arfer y Tair ‘A’ (The Three Rs)",
-    "vespa_element": "EFFORT",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/E3-Arfer%20y%20Tair%20%E2%80%98A%E2%80%99%20%28The%20Three%20Rs%29.pdf"
-  },
-  {
-    "id": "EF36",
     "name": "3R's of Habit",
     "vespa_element": "EFFORT",
     "level": "3",
@@ -411,17 +345,6 @@
       "long-term goal"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/VISION%20-%20Rule%20of%203.pdf"
-  },
-  {
-    "id": "PR37",
-    "name": "P1-Yr Holiadur Adolygu",
-    "vespa_element": "PRACTICE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/P1-Yr%20Holiadur%20Adolygu.pdf"
   },
   {
     "id": "PR37",
@@ -576,17 +499,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/ALEVELMindsetPdfs/S1-Energy%20Line.pdf"
   },
   {
-    "id": "SY39",
-    "name": "S1-The Energy Line",
-    "vespa_element": "SYSTEMS",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/S1-The%20Energy%20Line.pdf"
-  },
-  {
     "id": "EF9",
     "name": "The Peleton",
     "vespa_element": "EFFORT",
@@ -638,19 +550,8 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/PRACTICE%20-%20Building%20Independent%20Learning.pdf"
   },
   {
-    "id": "AT310",
-    "name": "A3-Lladdwch eich Beirniad",
-    "vespa_element": "ATTITUDE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/A3-Lladdwch%20eich%20Beirniad.pdf"
-  },
-  {
     "id": "EF10",
-    "name": "Indisctractible",
+    "name": "Indistractible",
     "vespa_element": "EFFORT",
     "level": "",
     "research_basis": "The text strongly implies the research basis of behavioral psychology and cognitive psychology. It mentions the concept of recognizing discomfort as a precursor to distraction, which aligns with the principles of behaviorism and cognitive behavioral therapy. Additionally, the text discusses the importance of identifying external and internal triggers, which relates to the cognitive processes involved in attention and self-regulation.",
@@ -706,17 +607,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/SYSTEMS%20-%203%20Types%20of%20Attention.pdf"
   },
   {
-    "id": "VI311",
-    "name": "V3-Eich Pen-blwydd yn 21",
-    "vespa_element": "VISION",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/V3-Eich%20Pen-blwydd%20yn%2021.pdf"
-  },
-  {
     "id": "VI11",
     "name": "Ikigai",
     "vespa_element": "VISION",
@@ -768,17 +658,6 @@
       "lead domino"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/ALEVELMindsetPdfs/E5%20-%20Frogs%20%26%20Bannisters.pdf"
-  },
-  {
-    "id": "EF312",
-    "name": "E5-Llyffantod a Chanllawiau Grisiau",
-    "vespa_element": "EFFORT",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/E5-Llyffantod%20a%20Chanllawiau%20Grisiau.pdf"
   },
   {
     "id": "AT12",
@@ -850,17 +729,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/EFFORT%20-%20Looking%20under%20Rocks.pdf"
   },
   {
-    "id": "EF313",
-    "name": "E4-Adnabod Eich Blocwyr",
-    "vespa_element": "EFFORT",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/E4-Adnabod%20Eich%20Blocwyr.pdf"
-  },
-  {
     "id": "EF13",
     "name": "Disruption Cost vs Deep Work",
     "vespa_element": "EFFORT",
@@ -910,17 +778,6 @@
       "1. Educational activities\n2. Revision techniques\n3. Mock exams\n4. Study habits\n5. Peer support\n6. Exam preparation\n7. Feedback analysis"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/PRACTICE%20-%20Practice%20Questionnaire.pdf"
-  },
-  {
-    "id": "SY314",
-    "name": "S3-Byrbryd, nid Gorfwyta (neu’r Adolygiad)",
-    "vespa_element": "SYSTEMS",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/S3-Byrbryd%2C%20nid%20Gorfwyta%20%28neu%E2%80%99r%20Adolygiad%29.pdf"
   },
   {
     "id": "SY14",
@@ -980,17 +837,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/EFFORT%20-%203%20How%27s%20of%20Independent%20Work.pdf"
   },
   {
-    "id": "VI315",
-    "name": "V4-Gwirio Eich Dangosfwrdd",
-    "vespa_element": "VISION",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/V4-Gwirio%20Eich%20Dangosfwrdd.pdf"
-  },
-  {
     "id": "VI15",
     "name": "Question of Money",
     "vespa_element": "VISION",
@@ -1034,17 +880,6 @@
       "1. Mistakes\n2. Learning\n3. Professor James Reason\n4. Error analysis\n5. Active mistake\n6. Slip-up\n7. Blackout"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/ALEVELMindsetPdfs/P7-Learn%20from%20Mistakes.pdf"
-  },
-  {
-    "id": "PR316",
-    "name": "P7-Dysgu o Gamgymeriadau",
-    "vespa_element": "PRACTICE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/P7-Dysgu%20o%20Gamgymeriadau.pdf"
   },
   {
     "id": "AT16",
@@ -1102,17 +937,6 @@
       "Mantra"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/ALEVELMindsetPdfs/E7%20-%20Inner%20Story%20Telling.pdf"
-  },
-  {
-    "id": "EF317",
-    "name": "E7-Dweud Stori Fewnol",
-    "vespa_element": "EFFORT",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/E7-Dweud%20Stori%20Fewnol.pdf"
   },
   {
     "id": "EF17",
@@ -1174,17 +998,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/ALEVELMindsetPdfs/S4-2-4-8%20Rule.pdf"
   },
   {
-    "id": "SY318",
-    "name": "S4-Y Rheol 2–4–8",
-    "vespa_element": "SYSTEMS",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/S4-Y%20Rheol%202%E2%80%934%E2%80%938.pdf"
-  },
-  {
     "id": "PR18",
     "name": "High & Low Utility",
     "vespa_element": "PRACTICE",
@@ -1228,17 +1041,6 @@
       "Responsibility"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/ALEVELMindsetPdfs/A5-Falling%20Forwards.pdf"
-  },
-  {
-    "id": "AT319",
-    "name": "A5-Symud Ymlaen ar ôl Methu",
-    "vespa_element": "ATTITUDE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/A5-Symud%20Ymlaen%20ar%20%C3%B4l%20Methu.pdf"
   },
   {
     "id": "SY19",
@@ -1292,17 +1094,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/ALEVELMindsetPdfs/E6%20-%2010Min%20Rule.pdf"
   },
   {
-    "id": "EF320",
-    "name": "E6-Y Rheol Deng Munud",
-    "vespa_element": "EFFORT",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/E6-Y%20Rheol%20Deng%20Munud.pdf"
-  },
-  {
     "id": "VI20",
     "name": "Outcome Control",
     "vespa_element": "VISION",
@@ -1354,17 +1145,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/ATTITUDE%20-%20The%20Battery.pdf"
   },
   {
-    "id": "AT321",
-    "name": "A1-Dadansoddiad Meysydd Grym",
-    "vespa_element": "ATTITUDE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/A1-Dadansoddiad%20Meysydd%20Grym.pdf"
-  },
-  {
     "id": "AT21",
     "name": "5,5,5",
     "vespa_element": "ATTITUDE",
@@ -1408,17 +1188,6 @@
       "Enjoying"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/SYSTEMS%20-%20The%20Bottom%20Left.pdf"
-  },
-  {
-    "id": "VI322",
-    "name": "V5-Y Diwrnod Perffaith",
-    "vespa_element": "VISION",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/V5-Y%20Diwrnod%20Perffaith.pdf"
   },
   {
     "id": "EF22",
@@ -1472,17 +1241,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/ALEVELMindsetPdfs/P6-Right%2CWrong%2CRight.pdf"
   },
   {
-    "id": "PR323",
-    "name": "P6-Cywir, Anghywir, Cywir",
-    "vespa_element": "PRACTICE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/P6-Cywir%2C%20Anghywir%2C%20Cywir.pdf"
-  },
-  {
     "id": "PR23",
     "name": "Closed Book Notetaking",
     "vespa_element": "PRACTICE",
@@ -1526,17 +1284,6 @@
       "1. Effort Thermometer\n2. Study habits\n3. Work ethic\n4. Proactive\n5. Habits\n6. Hard work\n7. Success"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/EFFORT%20-%20Effort%20Thermometer.pdf"
-  },
-  {
-    "id": "VI324",
-    "name": "V6-Nodau CAMPUS",
-    "vespa_element": "VISION",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/V6-Nodau%20CAMPUS.pdf"
   },
   {
     "id": "SY24",
@@ -1596,17 +1343,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/EFFORT%20-%20Packing%20Bags.pdf"
   },
   {
-    "id": "SY325",
-    "name": "S5-CAAA",
-    "vespa_element": "SYSTEMS",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/S5-CAAA.pdf"
-  },
-  {
     "id": "VI25",
     "name": "Paths are Well Lit",
     "vespa_element": "VISION",
@@ -1650,17 +1386,6 @@
       "task management"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/EFFORT%20-%2025min%20Sprints.pdf"
-  },
-  {
-    "id": "VI326",
-    "name": "V8-Ffugio",
-    "vespa_element": "VISION",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/V8-Ffugio.pdf"
   },
   {
     "id": "AT26",
@@ -1712,28 +1437,6 @@
       "Key Concepts"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/PRACTICE%20-%209%20Box%20Grid.pdf"
-  },
-  {
-    "id": "PR327",
-    "name": "P3-Trefnyddion Gweledol",
-    "vespa_element": "PRACTICE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/P3-Trefnyddion%20Gweledol.pdf"
-  },
-  {
-    "id": "SY327",
-    "name": "S8-The Lead Domino",
-    "vespa_element": "SYSTEMS",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/S8-The%20Lead%20Domino.pdf"
   },
   {
     "id": "SY327",
@@ -1843,17 +1546,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/ALEVELMindsetPdfs/E8-Power%20of%20If-Then%20thinking.pdf"
   },
   {
-    "id": "EF329",
-    "name": "E8-Grym Meddwl  'Os...Yna'",
-    "vespa_element": "EFFORT",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/E8-Grym%20Meddwl%20%E2%80%98Os%E2%80%A6.Yna%E2%80%99.pdf"
-  },
-  {
     "id": "PR29",
     "name": "Verbal Recaps",
     "vespa_element": "PRACTICE",
@@ -1909,17 +1601,6 @@
       "model"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/PRACTICE%20-%20K-SPA.pdf"
-  },
-  {
-    "id": "EF330",
-    "name": "E2-Wythnosau Gwaith",
-    "vespa_element": "EFFORT",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/E2-Wythnosau%20Gwaith.pdf"
   },
   {
     "id": "VI30",
@@ -1979,17 +1660,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/PRACTICE%20-%20Spaced%20Practice.pdf"
   },
   {
-    "id": "PR331",
-    "name": "P2-Gwybod y Sgiliau",
-    "vespa_element": "PRACTICE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/P2-Gwybod%20y%20Sgiliau.pdf"
-  },
-  {
     "id": "AT31",
     "name": "Worst Case Scenarios",
     "vespa_element": "ATTITUDE",
@@ -2033,17 +1703,6 @@
       "1. Test Yourself\n2. Memory improvement\n3. Testing effect\n4. Long-term memory\n5. Retrieval practice\n6. Study techniques\n7. Exam preparation"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/PRACTICE%20-%20Test%20Yourself.pdf"
-  },
-  {
-    "id": "PR332",
-    "name": "P8-Mecanyddol neu Hyblyg",
-    "vespa_element": "PRACTICE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/P8-Mecanyddol%20neu%20Hyblyg.pdf"
   },
   {
     "id": "EF32",
@@ -2103,17 +1762,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/VISION%20-%20What%27s%20Stopping%20You.pdf"
   },
   {
-    "id": "VI333",
-    "name": "V7-Cyferbynnu Meddyliol",
-    "vespa_element": "VISION",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/V7-Cyferbynnu%20Meddyliol.pdf"
-  },
-  {
     "id": "PR33",
     "name": "Test Your Future Self",
     "vespa_element": "PRACTICE",
@@ -2169,17 +1817,6 @@
       "zone"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/PRACTICE%20-%20Finding%20Flow.pdf"
-  },
-  {
-    "id": "AT334",
-    "name": "A2-Atal Meddyliau Negyddol",
-    "vespa_element": "ATTITUDE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/A2-Atal%20Meddyliau%20Negyddol.pdf"
   },
   {
     "id": "VI34",
@@ -2265,17 +1902,6 @@
   },
   {
     "id": "PR336",
-    "name": "P4-Blwch Leitner",
-    "vespa_element": "PRACTICE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/P4-Blwch%20Leitner.pdf"
-  },
-  {
-    "id": "PR336",
     "name": "Leitner Box",
     "vespa_element": "PRACTICE",
     "level": "3",
@@ -2352,17 +1978,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/SYSTEMS%20-%20Action%20Priority%20Matrix.pdf"
   },
   {
-    "id": "SY337",
-    "name": "S6-Siart Cynnydd Prosiect",
-    "vespa_element": "SYSTEMS",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/S6-Siart%20Cynnydd%20Prosiect.pdf"
-  },
-  {
     "id": "VI37",
     "name": "Odyssey Planning",
     "vespa_element": "VISION",
@@ -2419,17 +2034,6 @@
       "fast practice"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/ALEVELMindsetPdfs/P5-2%20Slow%2C1%20Fast.pdf"
-  },
-  {
-    "id": "PR338",
-    "name": "P5-Dau Araf,2C Un Cyflym",
-    "vespa_element": "PRACTICE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/P5-Dau%20Araf%2C%20Un%20Cyflym.pdf"
   },
   {
     "id": "AT38",
@@ -2500,17 +2104,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/ATTITUDE%20-%20The%20First%20Aid%20Kit.pdf"
   },
   {
-    "id": "AT339",
-    "name": "A4-Yno ac yn ôl",
-    "vespa_element": "ATTITUDE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/A4-Yno%20ac%20yn%20%C3%B4l.pdf"
-  },
-  {
     "id": "AT39",
     "name": "Think Three Positives",
     "vespa_element": "ATTITUDE",
@@ -2550,17 +2143,6 @@
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/GCSEMindsetPDFS/EFFORT%20-%20Pre-Making%20Decisions.pdf"
   },
   {
-    "id": "AT340",
-    "name": "A8-Sefyll yn Dalsyth",
-    "vespa_element": "ATTITUDE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/WelshPDFs/L3/A8-Sefyll%20yn%20Dalsyth.pdf"
-  },
-  {
     "id": "PR40",
     "name": "Overnight Boost",
     "vespa_element": "PRACTICE",
@@ -2591,49 +2173,5 @@
       "Task assessment"
     ],
     "pdf_link": "https://www.vespa.academy/assets/MVIMAGES/VESPAHandbookPdfs/SYSTEMS/SYSTEMS%20-%20Boosters%20%26%20Sappers.pdf"
-  },
-  {
-    "id": "EF353",
-    "name": "The 1-10 Scale",
-    "vespa_element": "EFFORT",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": ""
-  },
-  {
-    "id": "EF363",
-    "name": "The 3R's of Habit",
-    "vespa_element": "EFFORT",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": ""
-  },
-  {
-    "id": "PR364",
-    "name": "The Leitner Box",
-    "vespa_element": "PRACTICE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": ""
-  },
-  {
-    "id": "PR377",
-    "name": "The Revision Questionnaire",
-    "vespa_element": "PRACTICE",
-    "level": "3",
-    "research_basis": "",
-    "short_summary": "",
-    "long_summary": "",
-    "keywords": [],
-    "pdf_link": ""
   }
 ]
