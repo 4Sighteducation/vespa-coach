@@ -1269,7 +1269,9 @@ if (window.aiCoachLauncherInitialized) {
                 <input type="text" id="aiCoachChatInput" placeholder="Type your message...">
                 <button id="aiCoachChatSendButton" class="p-button p-component">Send</button>
             </div>
-            <div id="aiCoachChatThinkingIndicator">AI Coach is thinking...</div>
+            <div id="aiCoachChatThinkingIndicator" class="thinking-pulse">
+                AI Coach is thinking<span class="thinking-dots"><span></span><span></span><span></span></span>
+            </div>
         `;
         panelContentElement.appendChild(chatContainer);
 
@@ -1307,6 +1309,24 @@ if (window.aiCoachLauncherInitialized) {
             thinkingIndicator.style.display = 'block';
             chatSendButton.disabled = true;
             chatInput.disabled = true;
+
+            // Add thinking indicator as a temporary chat message
+            const thinkingMessage = document.createElement('div');
+            thinkingMessage.id = 'aiCoachTempThinkingMessage';
+            thinkingMessage.className = 'ai-chat-message ai-chat-message-bot';
+            thinkingMessage.style.cssText = `
+                background: #f0f8ff !important;
+                border: 1px solid #d0e8ff !important;
+                position: relative;
+            `;
+            thinkingMessage.innerHTML = `
+                <em>AI Coach:</em> 
+                <span style="color: #3498db; font-weight: 500;">
+                    🤔 Analyzing your question<span class="thinking-dots"><span></span><span></span><span></span></span>
+                </span>
+            `;
+            chatDisplay.appendChild(thinkingMessage);
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
 
             // Construct chat history from displayed messages
             const chatHistory = [];
@@ -1368,6 +1388,12 @@ if (window.aiCoachLauncherInitialized) {
                 thinkingIndicator.style.display = 'none';
                 chatSendButton.disabled = false;
                 chatInput.disabled = false;
+                
+                // Remove temporary thinking message in error case too
+                const tempThinkingMsgError = document.getElementById('aiCoachTempThinkingMessage');
+                if (tempThinkingMsgError) {
+                    tempThinkingMsgError.remove();
+                }
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: "An unknown error occurred communicating with the AI chat."}));
