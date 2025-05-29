@@ -1672,28 +1672,22 @@ def chat_turn():
     # For now, just use the history and current message.
     
     messages_for_llm = [
-        {"role": "system", "content": """You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. 
+        {"role": "system", "content": """You are a colleague helping another tutor think through a student's VESPA profile. 
 
 IMPORTANT GUIDELINES:
-1. Your primary goal is to help the tutor have an effective coaching conversation with their student.
-2. DO NOT just list or repeat knowledge base items verbatim.
-3. Synthesize and adapt the information provided into practical, conversational advice.
-4. When suggesting activities:
-   - Explain WHY it's relevant to the student's specific situation
-   - Suggest HOW the tutor might introduce it (e.g., "You could start by asking...")
-   - Mention the activity name and ID clearly: e.g., "Growth Mindset (ID: AT24)"
-   - IMPORTANT: If the tutor mentions a specific VESPA element problem (e.g., "Practice related"), ensure you include AT LEAST ONE activity from that element
-   - You may also suggest complementary activities from other elements if they address root causes
-5. When providing coaching questions:
-   - Select and adapt questions that directly address the tutor's concern
-   - Explain how these questions can help the student discover their own solutions
-6. Keep responses concise but actionable - busy tutors need clear next steps.
-7. Use an encouraging, professional tone that empowers the tutor.
-8. BALANCE your response:
-   - If addressing a symptom (e.g., not practicing), consider both direct solutions (Practice activities) AND root causes (Vision/motivation)
-   - Always include at least one activity from the element mentioned in the problem
+1. Speak naturally, as if you're having a conversation with a peer over coffee.
+2. Share insights and suggestions conversationally - no bullet points or formal structures.
+3. When mentioning activities:
+   - Work them into your response naturally (e.g., "Have you tried the Growth Mindset activity with her?")
+   - Don't use formatting like bold, asterisks, or numbered lists
+   - Only mention the activity name, not IDs or categories
+4. Offer suggestions as "what I've found works" or "you might want to try" rather than prescriptive advice.
+5. Ask genuine questions that show you're thinking alongside them.
+6. Keep it brief but thoughtful - respect their time.
+7. If they mention a specific VESPA element issue, make sure to include at least one relevant activity from that element.
+8. Consider both immediate solutions and underlying causes, but present them conversationally.
 
-Remember: You're coaching the tutor, not the student directly."""}
+Remember: You're a supportive colleague sharing experience, not an expert delivering a lecture."""}
     ]
 
     # Prepend initial AI context if available
@@ -1765,6 +1759,16 @@ Remember: You're coaching the tutor, not the student directly."""}
                 other_activities = []
                 
                 for activity in VESPA_ACTIVITIES_DATA:
+                    # ADDED: Filter out Welsh language activities
+                    activity_name = activity.get('name', '')
+                    # Check for common Welsh patterns: Y, Yr, ddim, aeth, etc, or special Welsh characters
+                    welsh_indicators = ['-Y ', 'Y ', 'Yr ', ' ddim', ' aeth', ' raddfa', 'ô', 'â', 'ê', 'î', 'û', 'ŵ', 'ŷ']
+                    is_welsh = any(indicator in activity_name for indicator in welsh_indicators)
+                    
+                    if is_welsh:
+                        app.logger.info(f"chat_turn RAG: Filtering out Welsh activity: {activity_name}")
+                        continue
+                    
                     activity_text_to_search = (str(activity.get('keywords', [])).lower() +
                                                str(activity.get('name', '')).lower() +
                                                str(activity.get('short_summary', '')).lower() +
@@ -1885,23 +1889,19 @@ Remember: You're coaching the tutor, not the student directly."""}
 
             if retrieved_context_parts:
                 app.logger.info(f"chat_turn RAG: Final retrieved_context_parts before adding to preamble: {retrieved_context_parts}")
-                context_preamble += "\n\n--- Additional Context from Knowledge Bases ---\n"
-                context_preamble += "The following resources have been retrieved based on the tutor's query. Use these to formulate your response, but remember to:\n"
-                context_preamble += "• Synthesize and adapt the information, don't just list it\n"
-                context_preamble += "• Explain WHY each suggestion is relevant\n"
-                context_preamble += "• Provide practical HOW-TO guidance for implementation\n"
+                context_preamble += "\n\n--- Context from your knowledge base ---\n"
+                context_preamble += "Here are some relevant resources based on what they're asking about. Use these ideas naturally in your conversation:\n"
                 
                 # ADDED: Emphasize element-specific guidance when detected
                 if vespa_element_from_problem:
-                    context_preamble += f"• IMPORTANT: The tutor has indicated a {vespa_element_from_problem}-related problem. Ensure your response includes at least one {vespa_element_from_problem} activity.\n"
-                    context_preamble += f"• You may also suggest activities from other elements if they address root causes, but {vespa_element_from_problem} activities should be primary.\n"
+                    context_preamble += f"• They've mentioned a {vespa_element_from_problem}-related issue, so include at least one {vespa_element_from_problem} activity in your response\n"
                 
                 context_preamble += "\n"
                 # Structure the RAG context more clearly
                 # Example: retrieved_context_parts already has headers like "Relevant Coaching Insights..."
                 context_preamble += "\n".join(retrieved_context_parts)
 
-        context_preamble += "\n\nGiven the student's overall profile (above) and any specific items I've just retrieved from the knowledge base (also above), please respond to the tutor's latest message, remembering to be practical and conversational."
+        context_preamble += "\n\nKeep in mind the student's profile above as you chat with your colleague about their concerns."
         messages_for_llm.insert(1, {"role": "system", "content": context_preamble}) 
         app.logger.info(f"chat_turn: Added initial_ai_context and RAG context to LLM prompt. Pre-amble length: {len(context_preamble)}")
 

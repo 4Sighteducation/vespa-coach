@@ -237,7 +237,8 @@ if (window.aiCoachLauncherInitialized) {
         link.id = styleId;
         link.rel = 'stylesheet';
         link.type = 'text/css';
-        link.href = 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/aiCoachLauncher1e.css';
+        link.href = 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/aiCoachLauncher1f.css';
+        // .css';
         
         // Add dynamic CSS for config-specific IDs
         const dynamicCss = `
