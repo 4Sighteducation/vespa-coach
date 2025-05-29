@@ -1251,6 +1251,36 @@ if (window.aiCoachLauncherInitialized) {
 
         chatContainer.innerHTML = `
             <h4>AI Chat with ${studentNameForContext}</h4>
+            <div id="aiCoachChatStats" style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 12px;
+                background: #f0f8ff;
+                border-radius: 5px;
+                margin-bottom: 10px;
+                font-size: 0.85em;
+                color: #666;
+            ">
+                <div>
+                    <span id="aiCoachChatCount">Loading chat history...</span>
+                </div>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <span id="aiCoachLikedCount" style="color: #e74c3c;">
+                        <span style="font-size: 1.1em;">❤️</span> <span id="likedCountNumber">0</span> liked
+                    </span>
+                    <button id="aiCoachClearOldChatsBtn" class="p-button p-component" style="
+                        padding: 4px 8px;
+                        font-size: 0.8em;
+                        background: #f8f9fa;
+                        color: #666;
+                        border: 1px solid #ddd;
+                        display: none;
+                    ">
+                        Clear Old Chats
+                    </button>
+                </div>
+            </div>
             <div id="aiCoachChatDisplay">
                 <p class="ai-chat-message ai-chat-message-bot"><em>AI Coach:</em> Hello! How can I help you with ${studentNameForContext} today?</p>
             </div>
@@ -1280,6 +1310,282 @@ if (window.aiCoachLauncherInitialized) {
         const chatSendButton = document.getElementById('aiCoachChatSendButton');
         const chatDisplay = document.getElementById('aiCoachChatDisplay');
         const thinkingIndicator = document.getElementById('aiCoachChatThinkingIndicator');
+        const chatStats = document.getElementById('aiCoachChatStats');
+        const chatCountElement = document.getElementById('aiCoachChatCount');
+        const likedCountElement = document.getElementById('likedCountNumber');
+        const clearOldChatsBtn = document.getElementById('aiCoachClearOldChatsBtn');
+
+        // Track chat metadata
+        let totalChatCount = 0;
+        let likedChatCount = 0;
+        let chatMessages = []; // Store message metadata including IDs
+
+        // Load chat history and stats
+        async function loadChatHistory() {
+            const currentStudentId = lastFetchedStudentId;
+            if (!currentStudentId) {
+                chatCountElement.textContent = 'No student selected';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${HEROKU_API_BASE_URL}/chat_history`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        student_object10_record_id: currentStudentId,
+                        max_messages: 50,
+                        days_back: 30,
+                        include_metadata: true // Request additional metadata
+                    }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    logAICoach("Loaded chat history with metadata:", data);
+                    
+                    // Clear existing messages except the initial greeting
+                    const existingMessages = chatDisplay.querySelectorAll('.ai-chat-message');
+                    existingMessages.forEach((msg, index) => {
+                        if (index > 0) msg.remove(); // Keep first message (greeting)
+                    });
+                    
+                    // Update stats
+                    totalChatCount = data.total_count || data.total_messages || 0;
+                    likedChatCount = data.liked_count || 0;
+                    chatMessages = data.messages || [];
+                    
+                    // Update UI counters
+                    updateChatStats();
+                    
+                    // Add summary if available
+                    if (data.summary) {
+                        const summaryElement = document.createElement('div');
+                        summaryElement.className = 'ai-chat-summary';
+                        summaryElement.style.cssText = `
+                            background-color: #f0f0f0;
+                            padding: 10px;
+                            margin: 10px 0;
+                            border-radius: 5px;
+                            font-size: 0.9em;
+                            border-left: 3px solid #3498db;
+                        `;
+                        summaryElement.innerHTML = `<em>Previous conversations summary:</em> ${data.summary}`;
+                        chatDisplay.appendChild(summaryElement);
+                        
+                        // Add separator
+                        const separator = document.createElement('hr');
+                        separator.style.cssText = 'margin: 15px 0; opacity: 0.3;';
+                        chatDisplay.appendChild(separator);
+                    }
+                    
+                    // Add previous messages
+                    if (data.chat_history && data.chat_history.length > 0) {
+                        data.chat_history.forEach((msg, index) => {
+                            const msgElement = document.createElement('div');
+                            msgElement.className = msg.role === 'assistant' ? 
+                                'ai-chat-message ai-chat-message-bot' : 
+                                'ai-chat-message ai-chat-message-user';
+                            msgElement.setAttribute('data-role', msg.role);
+                            msgElement.setAttribute('data-message-id', msg.id || '');
+                            msgElement.style.position = 'relative';
+                            
+                            // Create message content
+                            let messageContent = '';
+                            if (msg.role === 'assistant') {
+                                messageContent = `<em>AI Coach:</em> ${msg.content}`;
+                            } else {
+                                messageContent = `You: ${msg.content}`;
+                            }
+                            
+                            // Add liked indicator if message is liked
+                            if (msg.is_liked) {
+                                msgElement.style.backgroundColor = '#fff5f5';
+                                msgElement.style.borderLeft = '3px solid #e74c3c';
+                                msgElement.style.paddingLeft = '15px';
+                            }
+                            
+                            msgElement.innerHTML = messageContent;
+                            
+                            // Add like button for assistant messages
+                            if (msg.role === 'assistant' && msg.id) {
+                                const likeButton = createLikeButton(msg.id, msg.is_liked);
+                                msgElement.appendChild(likeButton);
+                            }
+                            
+                            chatDisplay.appendChild(msgElement);
+                        });
+                        
+                        // Add continuation message
+                        const continuationMsg = document.createElement('p');
+                        continuationMsg.className = 'ai-chat-message ai-chat-message-bot';
+                        continuationMsg.innerHTML = `<em>AI Coach:</em> Let's continue our conversation about ${studentNameForContext}. What would you like to discuss?`;
+                        chatDisplay.appendChild(continuationMsg);
+                    }
+                    
+                    // Scroll to bottom
+                    chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                }
+            } catch (error) {
+                logAICoach("Error loading chat history:", error);
+                chatCountElement.textContent = 'Error loading history';
+            }
+        }
+
+        // Update chat statistics display
+        function updateChatStats() {
+            const remaining = 200 - totalChatCount;
+            let statusText = `${totalChatCount} chats`;
+            let statusColor = '#666';
+            
+            if (remaining <= 20 && remaining > 0) {
+                statusText += ` (${remaining} remaining)`;
+                statusColor = '#ff9800'; // Orange warning
+                clearOldChatsBtn.style.display = 'inline-block';
+            } else if (remaining <= 0) {
+                statusText = `Chat limit reached (200 max)`;
+                statusColor = '#e74c3c'; // Red
+                clearOldChatsBtn.style.display = 'inline-block';
+            }
+            
+            chatCountElement.textContent = statusText;
+            chatCountElement.style.color = statusColor;
+            likedCountElement.textContent = likedChatCount;
+        }
+
+        // Create like button for messages
+        function createLikeButton(messageId, isLiked = false) {
+            const likeBtn = document.createElement('button');
+            likeBtn.className = 'ai-chat-like-btn';
+            likeBtn.setAttribute('data-message-id', messageId);
+            likeBtn.setAttribute('data-liked', isLiked ? 'true' : 'false');
+            likeBtn.style.cssText = `
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 1.2em;
+                opacity: 0.3;
+                transition: opacity 0.2s, transform 0.2s;
+                padding: 5px;
+            `;
+            likeBtn.innerHTML = isLiked ? '❤️' : '🤍';
+            likeBtn.title = isLiked ? 'Unlike this response' : 'Like this response';
+            
+            if (isLiked) {
+                likeBtn.style.opacity = '1';
+            }
+            
+            // Hover effect
+            likeBtn.addEventListener('mouseenter', () => {
+                likeBtn.style.opacity = '1';
+                likeBtn.style.transform = 'scale(1.2)';
+            });
+            
+            likeBtn.addEventListener('mouseleave', () => {
+                if (likeBtn.getAttribute('data-liked') !== 'true') {
+                    likeBtn.style.opacity = '0.3';
+                }
+                likeBtn.style.transform = 'scale(1)';
+            });
+            
+            // Click handler
+            likeBtn.addEventListener('click', async () => {
+                const currentlyLiked = likeBtn.getAttribute('data-liked') === 'true';
+                const newLikedState = !currentlyLiked;
+                
+                // Optimistically update UI
+                likeBtn.setAttribute('data-liked', newLikedState ? 'true' : 'false');
+                likeBtn.innerHTML = newLikedState ? '❤️' : '🤍';
+                likeBtn.title = newLikedState ? 'Unlike this response' : 'Like this response';
+                likeBtn.style.opacity = newLikedState ? '1' : '0.3';
+                
+                // Update parent message styling
+                const parentMsg = likeBtn.parentElement;
+                if (newLikedState) {
+                    parentMsg.style.backgroundColor = '#fff5f5';
+                    parentMsg.style.borderLeft = '3px solid #e74c3c';
+                    parentMsg.style.paddingLeft = '15px';
+                    likedChatCount++;
+                } else {
+                    parentMsg.style.backgroundColor = '';
+                    parentMsg.style.borderLeft = '';
+                    parentMsg.style.paddingLeft = '';
+                    likedChatCount--;
+                }
+                updateChatStats();
+                
+                // Send update to backend
+                try {
+                    const response = await fetch(`${HEROKU_API_BASE_URL}/update_chat_like`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message_id: messageId,
+                            is_liked: newLikedState
+                        }),
+                    });
+                    
+                    if (!response.ok) {
+                        // Revert on error
+                        likeBtn.setAttribute('data-liked', currentlyLiked ? 'true' : 'false');
+                        likeBtn.innerHTML = currentlyLiked ? '❤️' : '🤍';
+                        if (currentlyLiked) {
+                            likedChatCount++;
+                        } else {
+                            likedChatCount--;
+                        }
+                        updateChatStats();
+                        throw new Error('Failed to update like status');
+                    }
+                    
+                    logAICoach(`Message ${messageId} like status updated to: ${newLikedState}`);
+                } catch (error) {
+                    logAICoach("Error updating like status:", error);
+                    // Could show a toast notification here
+                }
+            });
+            
+            return likeBtn;
+        }
+
+        // Clear old chats handler
+        if (clearOldChatsBtn) {
+            clearOldChatsBtn.addEventListener('click', async () => {
+                if (!confirm('This will delete your oldest unlisted chats to make room for new ones. Continue?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${HEROKU_API_BASE_URL}/clear_old_chats`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            student_object10_record_id: lastFetchedStudentId,
+                            keep_liked: true,
+                            target_count: 150 // Clear to 150 to give some breathing room
+                        }),
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        alert(`Cleared ${result.deleted_count} old chats. You now have room for ${200 - result.remaining_count} new chats.`);
+                        loadChatHistory(); // Reload to show updated counts
+                    }
+                } catch (error) {
+                    logAICoach("Error clearing old chats:", error);
+                    alert('Failed to clear old chats. Please try again.');
+                }
+            });
+        }
 
         async function sendChatMessage() {
             if (!chatInput || !chatDisplay || !thinkingIndicator) return;
@@ -1294,6 +1600,17 @@ if (window.aiCoachLauncherInitialized) {
                 errorMessageElement.className = 'ai-chat-message ai-chat-message-bot';
                 errorMessageElement.innerHTML = `<em>AI Coach:</em> Sorry, I can't process this message as the student context is missing. Please ensure student data is loaded.`;
                 chatDisplay.appendChild(errorMessageElement);
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                return;
+            }
+
+            // Check chat limit before sending
+            if (totalChatCount >= 200) {
+                const warningMsg = document.createElement('p');
+                warningMsg.className = 'ai-chat-message ai-chat-message-bot';
+                warningMsg.style.cssText = 'background-color: #fff3cd; border-left: 3px solid #ffc107;';
+                warningMsg.innerHTML = `<em>AI Coach:</em> You've reached the 200 chat limit. Please clear some old chats to continue.`;
+                chatDisplay.appendChild(warningMsg);
                 chatDisplay.scrollTop = chatDisplay.scrollHeight;
                 return;
             }
