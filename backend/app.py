@@ -1672,7 +1672,23 @@ def chat_turn():
     # For now, just use the history and current message.
     
     messages_for_llm = [
-        {"role": "system", "content": "You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. Your primary goal is to help the tutor. Rephrase any information from the knowledge base in a practical, conversational, and encouraging tone suitable for a busy tutor. Do NOT just repeat knowledge base items verbatim. When suggesting an activity, briefly explain WHY it's relevant and HOW the tutor might introduce it. If suggesting a reflective statement, explain its relevance and how it might be adapted. When the tutor asks for coaching questions to help a student find their own solutions, prioritize using the 'Relevant Coaching Questions from Knowledge Base' that will be provided in the context. Adapt and select from these questions as appropriate to the situation. Focus on providing actionable advice and clear next steps for the tutor."}
+        {"role": "system", "content": """You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. 
+
+IMPORTANT GUIDELINES:
+1. Your primary goal is to help the tutor have an effective coaching conversation with their student.
+2. DO NOT just list or repeat knowledge base items verbatim.
+3. Synthesize and adapt the information provided into practical, conversational advice.
+4. When suggesting activities:
+   - Explain WHY it's relevant to the student's specific situation
+   - Suggest HOW the tutor might introduce it (e.g., "You could start by asking...")
+   - Mention the activity name and ID clearly: e.g., "Growth Mindset (ID: AT24)"
+5. When providing coaching questions:
+   - Select and adapt questions that directly address the tutor's concern
+   - Explain how these questions can help the student discover their own solutions
+6. Keep responses concise but actionable - busy tutors need clear next steps.
+7. Use an encouraging, professional tone that empowers the tutor.
+
+Remember: You're coaching the tutor, not the student directly."""}
     ]
 
     # Prepend initial AI context if available
@@ -1748,7 +1764,7 @@ def chat_turn():
                         found_activities_count +=1
                         if found_activities_count >= 2: break # Limit to 2 activities
                 if current_found_activities_text: 
-                    retrieved_context_parts.append("\\nRelevant VESPA Activities you could suggest (mention their ID if you do):")
+                    retrieved_context_parts.append("\nRelevant VESPA Activities you could suggest (mention their ID if you do):")
                     retrieved_context_parts.extend(current_found_activities_text)
                     app.logger.info(f"chat_turn RAG: Found {found_activities_count} relevant VESPA activities and added them to suggested_activities_for_response.")
                 else:
@@ -1816,7 +1832,7 @@ def chat_turn():
 
 
                 if current_found_coaching_questions:
-                    retrieved_context_parts.append("\\nRelevant Coaching Questions from Knowledge Base:")
+                    retrieved_context_parts.append("\nRelevant Coaching Questions from Knowledge Base:")
                     retrieved_context_parts.extend(current_found_coaching_questions)
                     app.logger.info(f"chat_turn RAG: Found {found_coaching_questions_count} relevant coaching questions from coaching_kb.")
                 else:
@@ -1826,7 +1842,11 @@ def chat_turn():
 
             if retrieved_context_parts:
                 app.logger.info(f"chat_turn RAG: Final retrieved_context_parts before adding to preamble: {retrieved_context_parts}")
-                context_preamble += "\\n\\n--- Additional Context from Knowledge Bases (Consider these to help answer the tutor\\'s current question. Synthesize, don\\'t just list them.):\\n"
+                context_preamble += "\n\n--- Additional Context from Knowledge Bases ---\n"
+                context_preamble += "The following resources have been retrieved based on the tutor's query. Use these to formulate your response, but remember to:\n"
+                context_preamble += "• Synthesize and adapt the information, don't just list it\n"
+                context_preamble += "• Explain WHY each suggestion is relevant\n"
+                context_preamble += "• Provide practical HOW-TO guidance for implementation\n\n"
                 # Structure the RAG context more clearly
                 # Example: retrieved_context_parts already has headers like "Relevant Coaching Insights..."
                 context_preamble += "\n".join(retrieved_context_parts)
