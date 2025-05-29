@@ -1,4 +1,4 @@
-// AI Coach Launcher Script (aiCoachLauncher.js)
+/// AI Coach Launcher Script (aiCoachLauncher.js)
 
 // Guard to prevent re-initialization
 if (window.aiCoachLauncherInitialized) {
@@ -84,8 +84,9 @@ if (window.aiCoachLauncherInitialized) {
         }
 
         logAICoach("Conditions met. Initializing AI Coach UI (button and panel).");
-        addAICoachStyles();
+        loadExternalStyles();
         createAICoachPanel();
+        addPanelResizeHandler(); // ADD THIS LINE
         addLauncherButton();
         setupEventListeners();
         coachUIInitialized = true; // Mark as initialized
@@ -224,41 +225,65 @@ if (window.aiCoachLauncherInitialized) {
         }
     }
 
-    function addAICoachStyles() {
-        const styleId = 'ai-coach-styles';
-        if (document.getElementById(styleId)) return;
+    function loadExternalStyles() {
+        const styleId = 'ai-coach-external-styles';
+        if (document.getElementById(styleId)) {
+            logAICoach("AI Coach external styles already loaded.");
+            return;
+        }
 
-        const css = `
+        // Load external CSS from jsdelivr
+        const link = document.createElement('link');
+        link.id = styleId;
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/gh/4Sighteducation/FlashcardLoader@main/integrations/report/aiCoachLauncher1f.css';
+        // .css';
+        
+        // Add dynamic CSS for config-specific IDs
+        const dynamicCss = `
             body.ai-coach-active ${AI_COACH_LAUNCHER_CONFIG.mainContentSelector} {
-                width: calc(100% - 450px); /* Increased panel width */
-                margin-right: 450px; /* Increased panel width */
-                transition: width 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+                width: calc(100% - var(--ai-coach-panel-width));
+                margin-right: var(--ai-coach-panel-width);
+                transition: width var(--ai-coach-transition-duration) ease-in-out, 
+                            margin-right var(--ai-coach-transition-duration) ease-in-out;
             }
-            #${AI_COACH_LAUNCHER_CONFIG.mainContentSelector} {
-                 transition: width 0.3s ease-in-out, margin-right 0.3s ease-in-out;
+            
+            ${AI_COACH_LAUNCHER_CONFIG.mainContentSelector} {
+                transition: width var(--ai-coach-transition-duration) ease-in-out, 
+                            margin-right var(--ai-coach-transition-duration) ease-in-out;
             }
+            
             #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} {
                 width: 0;
                 opacity: 0;
                 visibility: hidden;
-                position: fixed;
+                position: fixed !important;
                 top: 0;
                 right: 0;
                 height: 100vh;
-                background-color: #f4f6f8; /* Main panel background */
+                background-color: #f4f6f8;
                 border-left: 1px solid #ddd;
                 padding: 20px;
                 box-sizing: border-box;
                 overflow-y: auto;
                 z-index: 1050;
-                transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s;
-                font-family: Arial, sans-serif; 
+                transition: width var(--ai-coach-transition-duration) ease-in-out, 
+                            opacity var(--ai-coach-transition-duration) ease-in-out, 
+                            visibility var(--ai-coach-transition-duration);
+                font-family: Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
             }
+            
             body.ai-coach-active #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} {
-                width: 450px; /* Increased panel width */
+                width: var(--ai-coach-panel-width);
                 opacity: 1;
                 visibility: visible;
             }
+            
+            /* REMOVED ::before pseudo-element to avoid conflict with JavaScript resize handle */
+            
             #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-header {
                 display: flex;
                 justify-content: space-between;
@@ -266,242 +291,194 @@ if (window.aiCoachLauncherInitialized) {
                 margin-bottom: 15px;
                 border-bottom: 1px solid #ccc;
                 padding-bottom: 10px;
+                flex-shrink: 0;
             }
-            #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-header h3 {
-                margin: 0;
-                font-size: 1.3em;
-                color: #333; /* Darker text for header */
+            
+            #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-panel-content {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow-y: auto;
+                min-height: 0;
             }
-            #${AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId} .ai-coach-close-btn {
-                background: none;
-                border: none;
-                font-size: 1.6em;
-                cursor: pointer;
-                padding: 5px;
-                color: #555; /* Darker color for close button */
-            }
-            #aiCoachLauncherButtonContainer { /* This is for the main Activate AI Coach button if used from config */
-                 text-align: center; 
-                 padding: 20px; 
-                 border-top: 1px solid #eee;
-            }
-            .ai-coach-section-toggles {
-                display: flex; /* Make buttons appear in a row */
-                flex-direction: row; /* Explicitly row */
-                justify-content: space-between; /* Distribute space */
-                gap: 8px; /* Space between buttons */
-                margin: 10px 0 15px 0 !important; /* Ensure margin is applied */
-            }
-            .ai-coach-section-toggles .p-button {
-                flex-grow: 1; /* Allow buttons to grow and share space */
-                padding: 10px 5px !important; /* Adjust padding */
-                font-size: 0.85em !important; /* Slightly smaller font for row layout */
-                border: none; /* Remove existing p-button border if any */
-                color: white !important; /* Text color */
-                border-radius: 4px;
-                transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
-            }
-            .ai-coach-section-toggles .p-button:hover {
-                opacity: 0.85;
-                transform: translateY(-1px);
-            }
-            #aiCoachToggleVespaButton {
-                background-color: #79A6DC !important; /* Vespa Blue */
-            }
-            #aiCoachToggleAcademicButton {
-                background-color: #77DD77 !important; /* Academic Green */
-            }
-            #aiCoachToggleQuestionButton {
-                background-color: #C3B1E1 !important; /* Question Purple */
-            }
-
-            .ai-coach-section {
-                margin-bottom: 20px;
-                padding: 15px;
-                background-color: #fff; /* White background for content sections */
-                border: 1px solid #e0e0e0;
-                border-radius: 5px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            }
-            .ai-coach-section h4 {
-                font-size: 1.1em;
-                margin-top: 0;
-                margin-bottom: 10px;
-                color: #333;
-                border-bottom: 1px solid #eee;
-                padding-bottom: 5px;
-            }
-            .ai-coach-section h5 {
-                font-size: 1em; /* For sub-headings within sections */
-                color: #444;
-                margin-top: 15px;
-                margin-bottom: 8px;
-            }
-            .ai-coach-section p, .ai-coach-section ul, .ai-coach-section li {
-                font-size: 0.9em;
-                line-height: 1.6;
-                color: #555;
-            }
-            .ai-coach-section ul {
-                padding-left: 20px;
-                margin-bottom: 0;
-            }
+            
+            /* Loader animation */
             .loader {
-                border: 5px solid #f3f3f3; 
-                border-top: 5px solid #3498db; 
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #3498db;
                 border-radius: 50%;
-                width: 40px;
-                height: 40px;
+                width: 30px;
+                height: 30px;
                 animation: spin 1s linear infinite;
                 margin: 20px auto;
             }
+            
             @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
             }
-            /* Style for chart containers if Chart.js fails or data is missing */
-            #vespaComparisonChartContainer p,
-            #questionScoresChartContainer p {
-                color: #777;
-                font-style: italic;
-            }
-            /* Styles for Benchmark Scales */
-            .subject-benchmark-item {
-                padding: 10px 0;
-                border-bottom: 1px solid #f0f0f0;
-            }
-            .subject-benchmark-item:last-child {
-                border-bottom: none;
-            }
-            .subject-benchmark-header {
-                /* display: flex; */ /* Already part of a section, might not need flex here directly */
-                /* justify-content: space-between; */
-                /* align-items: center; */
-                margin-bottom: 8px;
-            }
-            .subject-benchmark-header h5 { /* For subject name, within its own section */
-                margin: 0 0 5px 0;
-                font-size: 1em;
-                font-weight: bold;
-                color: #224466; /* Dark blue for subject names */
-            }
-            .subject-grades-info {
-                font-size: 0.85em;
-                color: #555;
-                margin-bottom: 12px; /* Space before the scale */
-            }
-            .subject-benchmark-scale-container {
-                margin-top: 5px;
-                margin-bottom: 25px; /* Increased space below each scale */
-                padding: 0 5px; 
-            }
-            .scale-labels {
-                display: flex;
-                justify-content: space-between;
-                font-size: 0.75em;
-                color: #777;
-                margin-bottom: 4px;
-            }
-            .scale-bar-wrapper {
-                width: 100%;
-                height: 10px; 
-                background-color: #e9ecef; 
-                border-radius: 5px;
-                position: relative;
-            }
-            .scale-bar { 
-                height: 100%;
-                position: relative; 
-            }
-            .scale-marker {
-                width: 8px; 
-                height: 16px; 
-                border-radius: 2px; 
-                position: absolute;
-                top: 50%;
-                transform: translateY(-50%) translateX(-50%); 
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10; 
-            }
-            .scale-marker .marker-label {
-                position: absolute;
-                bottom: -20px; 
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 0.7em;
-                color: #333;
-                white-space: nowrap;
-                background-color: rgba(255, 255, 255, 0.9);
-                padding: 1px 3px;
-                border-radius: 3px;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-                z-index: 11;
-            }
-
-            .current-grade-marker { background-color: #28a745; /* Green */ }
-            .standard-meg-marker { background-color: #ffc107; /* Yellow */ }
-            /* A-Level MEG markers will use this base color */
-            .a-level-meg-marker { background-color: #007bff; /* Blue */ }
             
-            /* Specific label colors for P60, P90, P100 markers for better visual distinction */
-            .a-level-meg-marker.p60 .marker-label { color: #17a2b8; } /* Teal for P60 label */
-            .a-level-meg-marker.p90 .marker-label { color: #fd7e14; } /* Orange for P90 label */
-            .a-level-meg-marker.p100 .marker-label { color: #dc3545; } /* Red for P100 label */
-
-            /* New styles for distinct markers */
-            .current-grade-dot-marker {
-                background-color: #28a745; /* Green - student's actual grade */
-                width: 10px; /* Make it slightly wider for a dot feel */
-                height: 10px; /* Make it a circle/square dot */
-                border-radius: 50%; /* Circle dot */
-                border: 2px solid white; /* White border to stand out */
-                box-shadow: 0 0 3px rgba(0,0,0,0.4);
-                z-index: 15; /* Higher z-index to be on top */
-            }
-            .current-grade-dot-marker .marker-label {
-                bottom: -22px; /* Adjust label position for dot */
-                font-weight: bold; /* Make student name bold */
-            }
-
-            .percentile-line-marker {
-                background-color: #6c757d; /* Grey for percentile lines - can be overridden by specific Px colors */
-                width: 2px; /* Thin line */
-                height: 20px; /* Taller line, extending above and below center */
-                border-radius: 1px; 
-                z-index: 12; /* Below student marker but above bar */
-            }
-            /* Override for A-Level MEG percentiles to use their specific colors */
-            .percentile-line-marker.a-level-meg-marker {
-                 background-color: #007bff; /* Blue for general A-Level percentiles */
-            }
-            .percentile-line-marker.p60 {
-                 background-color: #17a2b8; /* Teal */
-            }
-            .percentile-line-marker.p90 {
-                 background-color: #fd7e14; /* Orange */
-            }
-            .percentile-line-marker.p100 {
-                 background-color: #dc3545; /* Red */
-            }
-            .percentile-line-marker.standard-meg-marker { /* For the Top25% or general MEG */
-                background-color: #ffc107; /* Yellow, if it's the main MEG marker */
-                z-index: 13; /* Slightly higher z-index to ensure it's visible over other percentiles like P60 if they overlap */
-            }
-
-            .percentile-line-marker .marker-label {
-                bottom: -20px; /* Keep labels consistent for lines */
-                 font-size: 0.65em; /* Slightly smaller for percentile labels if needed */
+            /* Ensure ai-coach-resizing body state prevents text selection */
+            body.ai-coach-resizing {
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
             }
         `;
+        
         const styleElement = document.createElement('style');
-        styleElement.id = styleId;
-        styleElement.type = 'text/css';
-        styleElement.appendChild(document.createTextNode(css));
+        styleElement.textContent = dynamicCss;
+        
+        // Set CSS variables
+        document.documentElement.style.setProperty('--ai-coach-panel-width', '450px');
+        document.documentElement.style.setProperty('--ai-coach-panel-min-width', '300px'); // CHANGED: from 350px
+        document.documentElement.style.setProperty('--ai-coach-panel-max-width', '800px'); // CHANGED: from 600px
+        document.documentElement.style.setProperty('--ai-coach-transition-duration', '0.3s');
+        
+        document.head.appendChild(link);
         document.head.appendChild(styleElement);
-        logAICoach("AICoachLauncher styles added.");
+        
+        logAICoach("AI Coach external styles loading from CDN...");
+        
+        // Log when styles are loaded
+        link.onload = () => {
+            logAICoach("AI Coach external styles loaded successfully.");
+        };
+        
+        link.onerror = () => {
+            console.error("[AICoachLauncher] Failed to load external styles from CDN.");
+        };
+    }
+
+    // Add resize functionality for the panel
+    function addPanelResizeHandler() {
+        const panel = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId);
+        if (!panel) return;
+
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+        let currentWidth = 450; // Default width
+
+        // Create resize handle
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'ai-coach-resize-handle';
+        resizeHandle.style.cssText = `
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            cursor: ew-resize;
+            background: transparent;
+            z-index: 1051;
+            transition: background-color 0.2s;
+        `;
+        
+        // Add hover effect
+        resizeHandle.addEventListener('mouseenter', () => {
+            resizeHandle.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+        });
+        
+        resizeHandle.addEventListener('mouseleave', () => {
+            if (!isResizing) {
+                resizeHandle.style.backgroundColor = 'transparent';
+            }
+        });
+        
+        panel.appendChild(resizeHandle);
+
+        const startResize = (e) => {
+            e.preventDefault();
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = panel.offsetWidth;
+            document.body.classList.add('ai-coach-resizing');
+            
+            // Add visual feedback
+            resizeHandle.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+            
+            // Store current width
+            currentWidth = startWidth;
+            
+            logAICoach(`Starting resize from width: ${startWidth}px`);
+        };
+
+        const doResize = (e) => {
+            if (!isResizing) return;
+            
+            const diff = startX - e.clientX;
+            const newWidth = Math.max(300, Math.min(1200, startWidth + diff)); // CHANGED: 300px min, 1200px max (was 350-600)
+            
+            // Update CSS variable for smooth transitions
+            document.documentElement.style.setProperty('--ai-coach-panel-width', newWidth + 'px');
+            
+            // Update panel width directly
+            panel.style.width = newWidth + 'px';
+            
+            // Update main content width
+            const mainContent = document.querySelector(AI_COACH_LAUNCHER_CONFIG.mainContentSelector);
+            if (mainContent && document.body.classList.contains('ai-coach-active')) {
+                mainContent.style.width = `calc(100% - ${newWidth}px)`;
+                mainContent.style.marginRight = `${newWidth}px`;
+            }
+            
+            currentWidth = newWidth;
+        };
+
+        const stopResize = () => {
+            if (!isResizing) return;
+            isResizing = false;
+            document.body.classList.remove('ai-coach-resizing');
+            
+            // Reset visual feedback
+            resizeHandle.style.backgroundColor = 'transparent';
+            
+            // Save the width preference
+            if (window.localStorage) {
+                localStorage.setItem('aiCoachPanelWidth', currentWidth);
+                logAICoach(`Saved panel width: ${currentWidth}px`);
+            }
+        };
+
+        // Add event listeners
+        resizeHandle.addEventListener('mousedown', startResize);
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', stopResize);
+        
+        // Add touch support for mobile
+        resizeHandle.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            startResize({ preventDefault: () => e.preventDefault(), clientX: touch.clientX });
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (isResizing) {
+                const touch = e.touches[0];
+                doResize({ clientX: touch.clientX });
+            }
+        });
+        
+        document.addEventListener('touchend', stopResize);
+        
+        // Debug: Log when resize handle is clicked
+        resizeHandle.addEventListener('click', () => {
+            logAICoach('Resize handle clicked (debug)');
+        });
+        
+        // Load saved width if available
+        const savedWidth = localStorage.getItem('aiCoachPanelWidth');
+        if (savedWidth) {
+            const width = parseInt(savedWidth, 10);
+            if (!isNaN(width) && width >= 300 && width <= 1200) { // CHANGED: Updated range check
+                document.documentElement.style.setProperty('--ai-coach-panel-width', width + 'px');
+                panel.style.width = width + 'px';
+                currentWidth = width;
+            }
+        }
+        
+        logAICoach("Panel resize handler added.");
     }
 
     function createAICoachPanel() {
@@ -516,6 +493,11 @@ if (window.aiCoachLauncherInitialized) {
         panel.innerHTML = `
             <div class="ai-coach-panel-header">
                 <h3>VESPA AI Coaching Assistant</h3>
+                <div class="ai-coach-text-controls">
+                    <button class="ai-coach-text-control-btn" data-action="decrease" title="Decrease text size">A-</button>
+                    <span class="ai-coach-text-size-indicator">100%</span>
+                    <button class="ai-coach-text-control-btn" data-action="increase" title="Increase text size">A+</button>
+                </div>
                 <button class="ai-coach-close-btn" aria-label="Close AI Coach Panel">&times;</button>
             </div>
             <div class="ai-coach-panel-content">
@@ -524,6 +506,55 @@ if (window.aiCoachLauncherInitialized) {
         `;
         document.body.appendChild(panel);
         logAICoach("AI Coach panel created.");
+        
+        // Add text size control functionality
+        setupTextSizeControls();
+    }
+
+    // Add text size control functionality
+    function setupTextSizeControls() {
+        const panel = document.getElementById(AI_COACH_LAUNCHER_CONFIG.aiCoachPanelId);
+        if (!panel) return;
+        
+        let currentZoom = 100;
+        const zoomStep = 10;
+        const minZoom = 70;
+        const maxZoom = 150;
+        
+        // Load saved zoom preference
+        const savedZoom = localStorage.getItem('aiCoachTextZoom');
+        if (savedZoom) {
+            currentZoom = parseInt(savedZoom, 10);
+            applyTextZoom(currentZoom);
+        }
+        
+        // Add event listeners for zoom controls
+        panel.addEventListener('click', (e) => {
+            if (e.target.classList.contains('ai-coach-text-control-btn')) {
+                const action = e.target.getAttribute('data-action');
+                if (action === 'increase' && currentZoom < maxZoom) {
+                    currentZoom += zoomStep;
+                } else if (action === 'decrease' && currentZoom > minZoom) {
+                    currentZoom -= zoomStep;
+                }
+                applyTextZoom(currentZoom);
+            }
+        });
+        
+        function applyTextZoom(zoom) {
+            panel.style.fontSize = `${zoom * 14 / 100}px`;
+            const indicator = panel.querySelector('.ai-coach-text-size-indicator');
+            if (indicator) {
+                indicator.textContent = `${zoom}%`;
+            }
+            // Apply zoom to modals as well
+            const modals = document.querySelectorAll('.ai-coach-modal-content');
+            modals.forEach(modal => {
+                modal.style.fontSize = `${zoom * 14 / 100}px`;
+            });
+            localStorage.setItem('aiCoachTextZoom', zoom);
+            logAICoach(`Text zoom set to ${zoom}%`);
+        }
     }
 
     function addLauncherButton() {
@@ -980,7 +1011,7 @@ if (window.aiCoachLauncherInitialized) {
 
         // --- Add Chat Interface (conditionally, if student context is valid) ---
         if (data.student_name && data.student_name !== "N/A") {
-            addChatInterface(panelContent, data.student_name, data.student_level); // Pass data.student_level
+            addChatInterface(panelContent, data.student_name);
         } else {
             // Optionally, add a placeholder if chat cannot be initialized due to missing student context
             const existingChat = document.getElementById('aiCoachChatContainer');
@@ -1202,112 +1233,378 @@ if (window.aiCoachLauncherInitialized) {
     }
 
     // --- Function to add Chat Interface --- 
-    function addChatInterface(panelContentElement, studentNameForContext, studentLevelForContext) { // Added studentLevelForContext
-        logAICoach("Adding chat interface for student:", studentNameForContext, "Level:", studentLevelForContext);
-        const existingChatContainer = document.getElementById('aiCoachChatContainer');
-        if (existingChatContainer) {
-            logAICoach("Chat interface already exists. Appending to existing container.");
-            panelContentElement.appendChild(existingChatContainer);
-        } else {
-            logAICoach("Chat interface not found. Creating new container.");
-            const chatContainer = document.createElement('div');
-            chatContainer.className = 'ai-chat-container';
-            chatContainer.innerHTML = `
-                <div class="ai-chat-header">
-                    <h3>Chat with AI Coach about ${studentNameForContext}</h3>
-                </div>
-                <div class="ai-chat-display" id="aiChatDisplay">
-                    <p class="ai-chat-message ai-chat-message-bot"><em>AI Coach:</em> Hi! I'm here to help you think through ${studentNameForContext}'s VESPA profile and learning journey. What would you like to discuss?</p>
-                </div>
-                <div class="ai-chat-input-container">
-                    <input type="text" id="aiChatInput" class="ai-chat-input" placeholder="Type your message here..." />
-                    <button id="aiChatSend" class="ai-chat-send">Send</button>
-                </div>
-                <div id="aiChatThinking" class="ai-chat-thinking" style="display: none;">
-                    <em>AI Coach is thinking...</em>
-                </div>
-            `;
-            panelContentElement.appendChild(chatContainer);
+    function addChatInterface(panelContentElement, studentNameForContext) {
+        if (!panelContentElement) return;
+
+        logAICoach("Adding chat interface...");
+
+        // Remove existing chat container if it exists to prevent duplicates on re-render
+        const oldChatContainer = document.getElementById('aiCoachChatContainer');
+        if (oldChatContainer) {
+            oldChatContainer.remove();
         }
 
-        const chatDisplay = document.getElementById('aiChatDisplay');
-        const chatInput = document.getElementById('aiChatInput');
-        const chatSendButton = document.getElementById('aiChatSend');
-        const thinkingIndicator = document.getElementById('aiChatThinking');
+        const chatContainer = document.createElement('div');
+        chatContainer.id = 'aiCoachChatContainer';
+        chatContainer.className = 'ai-coach-section'; // Use existing class for styling consistency
+        chatContainer.style.marginTop = '20px';
 
-        // Fetch and display previous chat history
+        chatContainer.innerHTML = `
+            <h4>AI Chat with ${studentNameForContext}</h4>
+            <div id="aiCoachChatStats" style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 12px;
+                background: #f0f8ff;
+                border-radius: 5px;
+                margin-bottom: 10px;
+                font-size: 0.85em;
+                color: #666;
+            ">
+                <div>
+                    <span id="aiCoachChatCount">Loading chat history...</span>
+                </div>
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <span id="aiCoachLikedCount" style="color: #e74c3c;">
+                        <span style="font-size: 1.1em;">❤️</span> <span id="likedCountNumber">0</span> liked
+                    </span>
+                    <button id="aiCoachClearOldChatsBtn" class="p-button p-component" style="
+                        padding: 4px 8px;
+                        font-size: 0.8em;
+                        background: #f8f9fa;
+                        color: #666;
+                        border: 1px solid #ddd;
+                        display: none;
+                    ">
+                        Clear Old Chats
+                    </button>
+                </div>
+            </div>
+            <div id="aiCoachChatDisplay">
+                <p class="ai-chat-message ai-chat-message-bot"><em>AI Coach:</em> Hello! How can I help you with ${studentNameForContext} today?</p>
+            </div>
+            <div style="margin: 10px 0;">
+                <button id="aiCoachProblemButton" class="p-button p-component" style="
+                    width: 100%;
+                    padding: 8px;
+                    font-size: 0.9em;
+                    background: #f8f9fa;
+                    color: #333;
+                    border: 1px solid #ddd;
+                ">
+                    🎯 Tackle a Specific Problem?
+                </button>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="aiCoachChatInput" placeholder="Type your message...">
+                <button id="aiCoachChatSendButton" class="p-button p-component">Send</button>
+            </div>
+            <div id="aiCoachChatThinkingIndicator" class="thinking-pulse">
+                AI Coach is thinking<span class="thinking-dots"><span></span><span></span><span></span></span>
+            </div>
+        `;
+        panelContentElement.appendChild(chatContainer);
+
+        const chatInput = document.getElementById('aiCoachChatInput');
+        const chatSendButton = document.getElementById('aiCoachChatSendButton');
+        const chatDisplay = document.getElementById('aiCoachChatDisplay');
+        const thinkingIndicator = document.getElementById('aiCoachChatThinkingIndicator');
+        const chatStats = document.getElementById('aiCoachChatStats');
+        const chatCountElement = document.getElementById('aiCoachChatCount');
+        const likedCountElement = document.getElementById('likedCountNumber');
+        const clearOldChatsBtn = document.getElementById('aiCoachClearOldChatsBtn');
+
+        // Track chat metadata
+        let totalChatCount = 0;
+        let likedChatCount = 0;
+        let chatMessages = []; // Store message metadata including IDs
+
+        // Load chat history and stats
         async function loadChatHistory() {
+            const currentStudentId = lastFetchedStudentId;
+            if (!currentStudentId) {
+                chatCountElement.textContent = 'No student selected';
+                return;
+            }
+
             try {
-                const response = await fetch(`${HEROKU_API_BASE_URL}/api/v1/chat_history`, {
+                // Assuming CHAT_HISTORY_ENDPOINT is defined, e.g., `${HEROKU_API_BASE_URL}/chat_history`
+                // This endpoint needs to be created or confirmed on the backend.
+                // For now, we'll assume it returns the expected structure.
+                const chatHistoryEndpoint = `${HEROKU_API_BASE_URL}/chat_history`; 
+                logAICoach("loadChatHistory: Fetching from endpoint: ", chatHistoryEndpoint);
+
+                const response = await fetch(chatHistoryEndpoint, { // MODIFIED to use a variable
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         student_object10_record_id: currentStudentId,
-                        max_messages: 20,
-                        days_back: 7
+                        max_messages: 50, // Example: fetch last 50 messages
+                        days_back: 30,    // Example: from last 30 days
+                        include_metadata: true // Request message ID and liked status
                     }),
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    logAICoach("Loaded chat history:", data);
+                    logAICoach("Loaded chat history with metadata:", data);
                     
-                    if (data.chat_history && data.chat_history.length > 0) {
-                        // Clear initial greeting if we have history
-                        chatDisplay.innerHTML = '';
+                    // Clear existing messages except the initial greeting
+                    const existingMessages = chatDisplay.querySelectorAll('.ai-chat-message');
+                    existingMessages.forEach((msg, index) => {
+                        if (index > 0) msg.remove(); // Keep first message (greeting)
+                    });
+                    
+                    // Update stats
+                    totalChatCount = data.total_count || data.chat_history?.length || 0; // Use chat_history.length as fallback
+                    likedChatCount = data.liked_count || 0;
+                    chatMessages = data.chat_history || []; // Ensure chatMessages is updated
+                    
+                    // Update UI counters
+                    updateChatStats();
+                    
+                    // Add summary if available
+                    if (data.summary) {
+                        const summaryElement = document.createElement('div');
+                        summaryElement.className = 'ai-chat-summary';
+                        summaryElement.style.cssText = `
+                            background-color: #f0f0f0;
+                            padding: 10px;
+                            margin: 10px 0;
+                            border-radius: 5px;
+                            font-size: 0.9em;
+                            border-left: 3px solid #3498db;
+                        `;
+                        summaryElement.innerHTML = `<em>Previous conversations summary:</em> ${data.summary}`;
+                        chatDisplay.appendChild(summaryElement);
                         
-                        // Add summary if available
-                        if (data.summary) {
-                            const summaryElement = document.createElement('p');
-                            summaryElement.className = 'ai-chat-summary';
-                            summaryElement.innerHTML = `<em>Previous conversations summary:</em> ${data.summary}`;
-                            summaryElement.style.cssText = 'background-color: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 0.9em;';
-                            chatDisplay.appendChild(summaryElement);
-                            
-                            // Add separator
-                            const separator = document.createElement('hr');
-                            separator.style.cssText = 'margin: 15px 0; opacity: 0.3;';
-                            chatDisplay.appendChild(separator);
-                        }
-                        
-                        // Add previous messages
-                        data.chat_history.forEach(msg => {
-                            const msgElement = document.createElement('p');
+                        // Add separator
+                        const separator = document.createElement('hr');
+                        separator.style.cssText = 'margin: 15px 0; opacity: 0.3;';
+                        chatDisplay.appendChild(separator);
+                    }
+                    
+                    // Add previous messages
+                    if (chatMessages && chatMessages.length > 0) {
+                        chatMessages.forEach((msg, index) => { // Iterate over chatMessages
+                            const msgElement = document.createElement('div');
                             msgElement.className = msg.role === 'assistant' ? 
                                 'ai-chat-message ai-chat-message-bot' : 
                                 'ai-chat-message ai-chat-message-user';
                             msgElement.setAttribute('data-role', msg.role);
+                            msgElement.setAttribute('data-message-id', msg.id || ''); // Ensure msg.id is used
+                            msgElement.style.position = 'relative';
                             
+                            // Create message content
+                            let messageContent = '';
                             if (msg.role === 'assistant') {
-                                msgElement.innerHTML = `<em>AI Coach:</em> ${msg.content}`;
+                                messageContent = `<em>AI Coach:</em> ${msg.content}`;
                             } else {
-                                msgElement.textContent = `You: ${msg.content}`;
+                                messageContent = `You: ${msg.content}`;
+                            }
+                            
+                            // Add liked indicator if message is liked
+                            if (msg.is_liked) { // Check msg.is_liked (boolean expected from backend)
+                                msgElement.style.backgroundColor = '#fff5f5';
+                                msgElement.style.borderLeft = '3px solid #e74c3c';
+                                msgElement.style.paddingLeft = '15px';
+                            }
+                            
+                            msgElement.innerHTML = messageContent;
+                            
+                            // Add like button for assistant messages
+                            if (msg.role === 'assistant' && msg.id) { // Ensure msg.id exists
+                                const likeButton = createLikeButton(msg.id, msg.is_liked || false); // Pass is_liked status
+                                msgElement.appendChild(likeButton);
                             }
                             
                             chatDisplay.appendChild(msgElement);
                         });
                         
-                        // Add a continuation message
-                        const continuationMsg = document.createElement('p');
-                        continuationMsg.className = 'ai-chat-message ai-chat-message-bot';
-                        continuationMsg.innerHTML = `<em>AI Coach:</em> Let's continue our conversation about ${studentNameForContext}. What would you like to discuss next?`;
-                        chatDisplay.appendChild(continuationMsg);
-                        
-                        // Scroll to bottom
-                        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                        // Add continuation message if needed (or adjust greeting)
+                        const lastMessage = chatDisplay.querySelector('.ai-chat-message:last-child');
+                        if(!(lastMessage && lastMessage.textContent.includes("Let's continue"))){
+                            const continuationMsg = document.createElement('p');
+                            continuationMsg.className = 'ai-chat-message ai-chat-message-bot';
+                            continuationMsg.innerHTML = `<em>AI Coach:</em> Let's continue our conversation about ${studentNameForContext}. What would you like to discuss?`;
+                            chatDisplay.appendChild(continuationMsg);
+                        }
                     }
+                    
+                    // Scroll to bottom
+                    chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: "Failed to load chat history. Unknown error."}));
+                    throw new Error(errorData.error || `Chat History API Error: ${response.status}`);
                 }
             } catch (error) {
                 logAICoach("Error loading chat history:", error);
-                // Continue with normal chat even if history fails to load
+                chatCountElement.textContent = 'Error loading history';
             }
         }
 
-        // Load chat history when chat interface is created
-        if (currentStudentId) {
-            loadChatHistory();
+        // Update chat statistics display
+        function updateChatStats() {
+            const remaining = 200 - totalChatCount;
+            let statusText = `${totalChatCount} chats`;
+            let statusColor = '#666';
+            
+            if (remaining <= 20 && remaining > 0) {
+                statusText += ` (${remaining} remaining)`;
+                statusColor = '#ff9800'; // Orange warning
+                clearOldChatsBtn.style.display = 'inline-block';
+            } else if (remaining <= 0) {
+                statusText = `Chat limit reached (200 max)`;
+                statusColor = '#e74c3c'; // Red
+                clearOldChatsBtn.style.display = 'inline-block';
+            }
+            
+            chatCountElement.textContent = statusText;
+            chatCountElement.style.color = statusColor;
+            likedCountElement.textContent = likedChatCount;
+        }
+
+        // Create like button for messages
+        function createLikeButton(messageId, isLiked = false) {
+            const likeBtn = document.createElement('button');
+            likeBtn.className = 'ai-chat-like-btn';
+            likeBtn.setAttribute('data-message-id', messageId);
+            likeBtn.setAttribute('data-liked', isLiked ? 'true' : 'false');
+            likeBtn.style.cssText = `
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 1.2em;
+                opacity: ${isLiked ? '1' : '0.3'}; // Set initial opacity based on liked state
+                transition: opacity 0.2s, transform 0.2s;
+                padding: 5px;
+            `;
+            likeBtn.innerHTML = isLiked ? '❤️' : '🤍';
+            likeBtn.title = isLiked ? 'Unlike this response' : 'Like this response';
+            
+            // Hover effect - no change needed here from original if it was working
+            likeBtn.addEventListener('mouseenter', () => {
+                likeBtn.style.opacity = '1';
+                likeBtn.style.transform = 'scale(1.2)';
+            });
+            
+            likeBtn.addEventListener('mouseleave', () => {
+                if (likeBtn.getAttribute('data-liked') !== 'true') {
+                    likeBtn.style.opacity = '0.3';
+                }
+                likeBtn.style.transform = 'scale(1)';
+            });
+            
+            // Click handler
+            likeBtn.addEventListener('click', async () => {
+                const currentlyLiked = likeBtn.getAttribute('data-liked') === 'true';
+                const newLikedState = !currentlyLiked;
+                
+                // Optimistically update UI
+                likeBtn.setAttribute('data-liked', newLikedState ? 'true' : 'false');
+                likeBtn.innerHTML = newLikedState ? '❤️' : '🤍';
+                likeBtn.title = newLikedState ? 'Unlike this response' : 'Like this response';
+                likeBtn.style.opacity = newLikedState ? '1' : '0.3';
+                
+                // Update parent message styling
+                const parentMsg = likeBtn.parentElement;
+                if (newLikedState) {
+                    parentMsg.style.backgroundColor = '#fff5f5';
+                    parentMsg.style.borderLeft = '3px solid #e74c3c';
+                    parentMsg.style.paddingLeft = '15px';
+                    likedChatCount++;
+                } else {
+                    parentMsg.style.backgroundColor = '';
+                    parentMsg.style.borderLeft = '';
+                    parentMsg.style.paddingLeft = '';
+                    likedChatCount--;
+                }
+                updateChatStats();
+                
+                // Send update to backend
+                try {
+                    const updateLikeEndpoint = `${HEROKU_API_BASE_URL}/update_chat_like`; // Define endpoint
+                    const response = await fetch(updateLikeEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message_id: messageId, // Knack record ID of the chat message
+                            is_liked: newLikedState
+                        }),
+                    });
+                    
+                    if (!response.ok) {
+                        // Revert on error
+                        likeBtn.setAttribute('data-liked', currentlyLiked ? 'true' : 'false');
+                        likeBtn.innerHTML = currentlyLiked ? '❤️' : '🤍';
+                        likeBtn.style.opacity = currentlyLiked ? '1' : '0.3'; // Revert opacity
+                        likeBtn.title = currentlyLiked ? 'Unlike this response' : 'Like this response';
+                        // Revert parent message styling
+                        if (currentlyLiked) {
+                            parentMsg.style.backgroundColor = '#fff5f5';
+                            parentMsg.style.borderLeft = '3px solid #e74c3c';
+                            parentMsg.style.paddingLeft = '15px';
+                        } else {
+                            parentMsg.style.backgroundColor = '';
+                            parentMsg.style.borderLeft = '';
+                            parentMsg.style.paddingLeft = '';
+                        }
+
+                        if (newLikedState) likedChatCount--; else likedChatCount++; // Revert count
+                        updateChatStats();
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error || 'Failed to update like status on backend.');
+                    }
+                    
+                    logAICoach(`Message ${messageId} like status updated to: ${newLikedState}`);
+                } catch (error) {
+                    logAICoach("Error updating like status:", error);
+                    // Display a more user-friendly error, e.g., a small toast notification
+                    // For now, just log it.
+                }
+            });
+            
+            return likeBtn;
+        }
+
+        // Clear old chats handler
+        if (clearOldChatsBtn) {
+            clearOldChatsBtn.addEventListener('click', async () => {
+                if (!confirm('This will delete your oldest unlisted chats to make room for new ones. Continue?')) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${HEROKU_API_BASE_URL}/clear_old_chats`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            student_object10_record_id: lastFetchedStudentId,
+                            keep_liked: true,
+                            target_count: 150 // Clear to 150 to give some breathing room
+                        }),
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        alert(`Cleared ${result.deleted_count} old chats. You now have room for ${200 - result.remaining_count} new chats.`);
+                        loadChatHistory(); // Reload to show updated counts
+                    }
+                } catch (error) {
+                    logAICoach("Error clearing old chats:", error);
+                    alert('Failed to clear old chats. Please try again.');
+                }
+            });
         }
 
         async function sendChatMessage() {
@@ -1327,6 +1624,17 @@ if (window.aiCoachLauncherInitialized) {
                 return;
             }
 
+            // Check chat limit before sending
+            if (totalChatCount >= 200) {
+                const warningMsg = document.createElement('p');
+                warningMsg.className = 'ai-chat-message ai-chat-message-bot';
+                warningMsg.style.cssText = 'background-color: #fff3cd; border-left: 3px solid #ffc107;';
+                warningMsg.innerHTML = `<em>AI Coach:</em> You've reached the 200 chat limit. Please clear some old chats to continue.`;
+                chatDisplay.appendChild(warningMsg);
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                return;
+            }
+
             // Display user message
             const userMessageElement = document.createElement('p');
             userMessageElement.className = 'ai-chat-message ai-chat-message-user';
@@ -1339,6 +1647,24 @@ if (window.aiCoachLauncherInitialized) {
             thinkingIndicator.style.display = 'block';
             chatSendButton.disabled = true;
             chatInput.disabled = true;
+
+            // Add thinking indicator as a temporary chat message
+            const thinkingMessage = document.createElement('div');
+            thinkingMessage.id = 'aiCoachTempThinkingMessage';
+            thinkingMessage.className = 'ai-chat-message ai-chat-message-bot';
+            thinkingMessage.style.cssText = `
+                background: #f0f8ff !important;
+                border: 1px solid #d0e8ff !important;
+                position: relative;
+            `;
+            thinkingMessage.innerHTML = `
+                <em>AI Coach:</em> 
+                <span style="color: #3498db; font-weight: 500;">
+                    🤔 Analyzing your question<span class="thinking-dots"><span></span><span></span><span></span></span>
+                </span>
+            `;
+            chatDisplay.appendChild(thinkingMessage);
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
 
             // Construct chat history from displayed messages
             const chatHistory = [];
@@ -1355,15 +1681,15 @@ if (window.aiCoachLauncherInitialized) {
                 if (!role) { // Infer role if data-role is not set (e.g. initial bot message)
                     if (msgElement.classList.contains('ai-chat-message-bot')) {
                          role = 'assistant';
-                         content = msgElement.innerHTML.replace(/<em>AI Coach:<\/em>\\s*/, '');
+                         content = msgElement.innerHTML.replace(/<em>AI Coach:<\/em>\s*/, '');
                     } else if (msgElement.classList.contains('ai-chat-message-user')) {
                          role = 'user';
-                         content = msgElement.textContent.replace(/You:\\s*/, '');
+                         content = msgElement.textContent.replace(/You:\s*/, '');
                     } else {
                         return; // Skip if role cannot be determined
                     }
                 } else {
-                     content = msgElement.textContent.replace(/^(You:|<em>AI Coach:\\s*)/, '');
+                     content = msgElement.textContent.replace(/^(You:|<em>AI Coach:\s*)/, '');
                 }
                 chatHistory.push({ role: role, content: content });
             });
@@ -1384,8 +1710,7 @@ if (window.aiCoachLauncherInitialized) {
                     payload.initial_ai_context = {
                         student_overview_summary: currentLLMInsightsForChat.student_overview_summary,
                         academic_benchmark_analysis: currentLLMInsightsForChat.academic_benchmark_analysis,
-                        questionnaire_interpretation_and_reflection_summary: currentLLMInsightsForChat.questionnaire_interpretation_and_reflection_summary,
-                        student_level: studentLevelForContext // Pass studentLevelForContext here
+                        questionnaire_interpretation_and_reflection_summary: currentLLMInsightsForChat.questionnaire_interpretation_and_reflection_summary
                     };
                     logAICoach("Sending chat with initial_ai_context:", payload.initial_ai_context);
                 }
@@ -1401,6 +1726,12 @@ if (window.aiCoachLauncherInitialized) {
                 thinkingIndicator.style.display = 'none';
                 chatSendButton.disabled = false;
                 chatInput.disabled = false;
+                
+                // Remove temporary thinking message in error case too
+                const tempThinkingMsgError = document.getElementById('aiCoachTempThinkingMessage');
+                if (tempThinkingMsgError) {
+                    tempThinkingMsgError.remove();
+                }
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: "An unknown error occurred communicating with the AI chat."}));
@@ -1412,29 +1743,100 @@ if (window.aiCoachLauncherInitialized) {
                 botMessageElement.className = 'ai-chat-message ai-chat-message-bot';
                 botMessageElement.setAttribute('data-role', 'assistant'); // For history reconstruction
                 
-                let botResponseHtml = `<em>AI Coach:</em> ${data.ai_response}`;
-
-                // Enhance activity mentions if a PDF is available
-                if (data.suggested_activities_in_chat && data.suggested_activities_in_chat.length > 0) {
-                    data.suggested_activities_in_chat.forEach(activity => {
-                        if (activity.name && activity.pdf_link && activity.pdf_link !== '#') {
-                            // Create a regex to find the activity name, case-insensitive, and ensure it's not already linked
-                            const activityNameRegex = new RegExp(`\\b${activity.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b(?!</a>|\\s*\\(PDF\\))`, 'gi');
-                            // Check if the AI response specifically mentions that resources are available for *this* activity or a similar phrase
-                            // This is a simple check; more sophisticated NLP might be needed if AI phrasing varies greatly.
-                            const resourceMentionRegex = new RegExp(`(?:resources?|materials?|PDFs?)(?:\\s+(?:are|is))?\\s+available\\s+(?:for|to support|related to)(?:\\s+this|\\s+it|\\s+"${activity.name}")`, 'i');
-
-                            if (botResponseHtml.match(activityNameRegex) && (botResponseHtml.match(resourceMentionRegex) || data.ai_response.includes(activity.name))) { // Simpler check if AI just mentions name for now
-                                botResponseHtml = botResponseHtml.replace(activityNameRegex, 
-                                    `<a href="${activity.pdf_link}" target="_blank" class="ai-coach-activity-link" title="Open PDF for ${activity.name}">${activity.name} (View Resource)</a>`);
-                            }
+                // Process the AI response to make activity references clickable
+                let processedResponse = data.ai_response;
+                const suggestedActivities = data.suggested_activities_in_chat || [];
+                
+                // Create a map of activity names to their data for easy lookup
+                const activityMap = {};
+                suggestedActivities.forEach(activity => {
+                    activityMap[activity.name] = activity;
+                    // Also map with ID for ID-based references
+                    activityMap[`${activity.name} (ID: ${activity.id})`] = activity;
+                });
+                
+                // Replace activity mentions with clickable links
+                suggestedActivities.forEach(activity => {
+                    // Pattern 1: "Activity Name (ID: XX)"
+                    const pattern1 = new RegExp(`${activity.name}\\s*\\(ID:\\s*${activity.id}\\)`, 'gi');
+                    processedResponse = processedResponse.replace(pattern1, 
+                        `<a href="#" class="ai-coach-activity-link" data-activity='${JSON.stringify(activity).replace(/'/g, '&apos;')}' style="color: #3498db; text-decoration: underline; font-weight: 500;">${activity.name} (ID: ${activity.id})</a>`
+                    );
+                    
+                    // Pattern 2: Just "Activity Name" if it's clearly in a suggestion context
+                    const pattern2 = new RegExp(`(?:activity:|try the|consider|suggest|recommend)\\s*["']?${activity.name}["']?`, 'gi');
+                    processedResponse = processedResponse.replace(pattern2, (match) => {
+                        // Only replace if not already replaced
+                        if (!match.includes('ai-coach-activity-link')) {
+                            const prefix = match.substring(0, match.indexOf(activity.name));
+                            return `${prefix}<a href="#" class="ai-coach-activity-link" data-activity='${JSON.stringify(activity).replace(/'/g, '&apos;')}' style="color: #3498db; text-decoration: underline; font-weight: 500;">${activity.name}</a>`;
+                        }
+                        return match;
+                    });
+                });
+                
+                botMessageElement.innerHTML = `<em>AI Coach:</em> ${processedResponse}`;
+                chatDisplay.appendChild(botMessageElement);
+                
+                // Add click handlers to activity links
+                const activityLinks = botMessageElement.querySelectorAll('.ai-coach-activity-link');
+                activityLinks.forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        try {
+                            const activityData = JSON.parse(link.getAttribute('data-activity'));
+                            showActivityModal(activityData);
+                        } catch (error) {
+                            logAICoach("Error parsing activity data:", error);
                         }
                     });
+                });
+                
+                // If there are suggested activities, also add a quick links section
+                if (suggestedActivities.length > 0) {
+                    const quickLinksElement = document.createElement('div');
+                    quickLinksElement.style.cssText = `
+                        margin-top: 10px;
+                        padding: 10px;
+                        background: #f0f8ff;
+                        border-radius: 5px;
+                        border-left: 3px solid #3498db;
+                    `;
+                    quickLinksElement.innerHTML = '<strong style="color: #2c3e50; font-size: 0.9em;">📚 Quick Activity Links:</strong>';
+                    
+                    const linksList = document.createElement('ul');
+                    linksList.style.cssText = 'margin: 5px 0 0 0; padding-left: 20px;';
+                    
+                    suggestedActivities.forEach(activity => {
+                        const listItem = document.createElement('li');
+                        listItem.style.cssText = 'margin: 3px 0;';
+                        listItem.innerHTML = `
+                            <a href="#" class="ai-coach-activity-quick-link" 
+                               data-activity='${JSON.stringify(activity).replace(/'/g, '&apos;')}'
+                               style="color: #3498db; text-decoration: none; font-size: 0.9em;">
+                                ${activity.name} <span style="color: #666;">(${activity.vespa_element})</span>
+                            </a>
+                        `;
+                        linksList.appendChild(listItem);
+                    });
+                    
+                    quickLinksElement.appendChild(linksList);
+                    chatDisplay.appendChild(quickLinksElement);
+                    
+                    // Add click handlers to quick links
+                    const quickLinks = quickLinksElement.querySelectorAll('.ai-coach-activity-quick-link');
+                    quickLinks.forEach(link => {
+                        link.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            try {
+                                const activityData = JSON.parse(link.getAttribute('data-activity'));
+                                showActivityModal(activityData);
+                            } catch (error) {
+                                logAICoach("Error parsing activity data from quick link:", error);
+                            }
+                        });
+                    });
                 }
-
-                botMessageElement.innerHTML = botResponseHtml;
-                chatDisplay.appendChild(botMessageElement);
-
             } catch (error) {
                 logAICoach("Error sending chat message:", error);
                 const errorMessageElement = document.createElement('p');
@@ -1449,6 +1851,43 @@ if (window.aiCoachLauncherInitialized) {
             chatDisplay.scrollTop = chatDisplay.scrollHeight;
         }
 
+        // Common problems organized by VESPA element
+        const commonProblems = {
+            "Vision": [
+                { id: "vision_1", text: "Student lacks clear goals or aspirations" },
+                { id: "vision_2", text: "Student seems unmotivated about their future" },
+                { id: "vision_3", text: "Student doesn't see the relevance of their studies" }
+            ],
+            "Effort": [
+                { id: "effort_1", text: "Poor homework completion rates" },
+                { id: "effort_2", text: "Student gives up easily when faced with challenges" },
+                { id: "effort_3", text: "Inconsistent effort across different subjects" }
+            ],
+            "Systems": [
+                { id: "systems_1", text: "Difficulty sticking to deadlines" },
+                { id: "systems_2", text: "Poor organization of notes and materials" },
+                { id: "systems_3", text: "No effective revision system in place" }
+            ],
+            "Practice": [
+                { id: "practice_1", text: "Student doesn't review or practice regularly" },
+                { id: "practice_2", text: "Relies on last-minute cramming" },
+                { id: "practice_3", text: "Doesn't use feedback to improve" }
+            ],
+            "Attitude": [
+                { id: "attitude_1", text: "Fixed mindset - believes ability is unchangeable" },
+                { id: "attitude_2", text: "Negative self-talk affecting performance" },
+                { id: "attitude_3", text: "Blames external factors for poor results" }
+            ]
+        };
+
+        // Handle problem selector button - MODIFIED to show modal
+        const problemButton = document.getElementById('aiCoachProblemButton');
+        if (problemButton) {
+            problemButton.addEventListener('click', () => {
+                showProblemSelectorModal(commonProblems, chatInput);
+            });
+        }
+
         if (chatSendButton) {
             chatSendButton.addEventListener('click', sendChatMessage);
         }
@@ -1460,6 +1899,113 @@ if (window.aiCoachLauncherInitialized) {
             });
         }
         logAICoach("Chat interface added and event listeners set up.");
+    }
+
+    // --- NEW: Function to show problem selector modal ---
+    function showProblemSelectorModal(commonProblems, chatInput) {
+        logAICoach("Showing problem selector modal");
+        
+        // Remove existing modal if present
+        const existingModal = document.getElementById('aiCoachProblemModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Create modal structure
+        const modal = document.createElement('div');
+        modal.id = 'aiCoachProblemModal';
+        modal.className = 'ai-coach-modal-overlay';
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'ai-coach-modal-content';
+        
+        // Apply saved zoom level to modal
+        const savedZoom = localStorage.getItem('aiCoachTextZoom');
+        if (savedZoom) {
+            const zoom = parseInt(savedZoom, 10);
+            modalContent.style.fontSize = `${zoom * 14 / 100}px`;
+        }
+        
+        // Modal header
+        const modalHeader = document.createElement('div');
+        modalHeader.className = 'ai-coach-problem-modal-header';
+        modalHeader.innerHTML = `
+            <h3>Select a Common Challenge</h3>
+            <p>Choose a specific problem to get targeted coaching advice</p>
+            <button class="ai-coach-modal-close">&times;</button>
+        `;
+        
+        // Modal body
+        const modalBody = document.createElement('div');
+        modalBody.className = 'ai-coach-problem-modal-body';
+        
+        // Create categories with VESPA colors
+        Object.entries(commonProblems).forEach(([vespaElement, problems]) => {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = `ai-coach-problem-category vespa-${vespaElement.toLowerCase()}`;
+            
+            const categoryTitle = document.createElement('h4');
+            categoryTitle.textContent = vespaElement;
+            categoryDiv.appendChild(categoryTitle);
+            
+            problems.forEach(problem => {
+                const problemItem = document.createElement('div');
+                problemItem.className = 'ai-coach-problem-item';
+                problemItem.textContent = problem.text;
+                problemItem.dataset.problemId = problem.id;
+                problemItem.dataset.vespaElement = vespaElement;
+                
+                // Click handler
+                problemItem.addEventListener('click', () => {
+                    // Populate chat input with the problem
+                    if (chatInput) {
+                        chatInput.value = `I need help with: ${problem.text} (${vespaElement} related)`;
+                        chatInput.focus();
+                    }
+                    // Close modal
+                    closeModal();
+                });
+                
+                categoryDiv.appendChild(problemItem);
+            });
+            
+            modalBody.appendChild(categoryDiv);
+        });
+        
+        // Assemble modal
+        modalContent.appendChild(modalHeader);
+        modalContent.appendChild(modalBody);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        // Trigger animations
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            modalContent.style.transform = 'scale(1)';
+        }, 10);
+        
+        // Close handlers
+        const closeModal = () => {
+            modal.style.opacity = '0';
+            modalContent.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        };
+        
+        modalHeader.querySelector('.ai-coach-modal-close').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        
+        // ESC key to close
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
     }
 
     // --- Helper function to determine max points for visual scale ---
@@ -1859,4 +2405,236 @@ if (window.aiCoachLauncherInitialized) {
             chartContainer.innerHTML = '<p style="color:red; text-align:center;">Error rendering chart.</p>';
         }
     }
+
+    // --- Function to create and show activity modal with PDF ---
+    function showActivityModal(activity) {
+        logAICoach("Showing activity modal for:", activity);
+        
+        // Remove existing modal if present
+        const existingModal = document.getElementById('aiCoachActivityModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Create modal structure
+        const modal = document.createElement('div');
+        modal.id = 'aiCoachActivityModal';
+        modal.className = 'ai-coach-modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'ai-coach-modal-content';
+        modalContent.style.cssText = `
+            background: white;
+            width: 90%;
+            max-width: 900px;
+            height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        `;
+        
+        // Apply saved zoom level to modal
+        const savedZoom = localStorage.getItem('aiCoachTextZoom');
+        if (savedZoom) {
+            const zoom = parseInt(savedZoom, 10);
+            modalContent.style.fontSize = `${zoom * 14 / 100}px`;
+        }
+        
+        // Modal header
+        const modalHeader = document.createElement('div');
+        modalHeader.style.cssText = `
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        `;
+        
+        modalHeader.innerHTML = `
+            <div>
+                <h3 style="margin: 0; color: #333;">${activity.name}</h3>
+                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">
+                    VESPA Element: <strong>${activity.vespa_element}</strong> | Activity ID: <strong>${activity.id}</strong>
+                </p>
+            </div>
+            <button class="ai-coach-modal-close" style="
+                background: none;
+                border: none;
+                font-size: 1.5em;
+                cursor: pointer;
+                padding: 5px 10px;
+                color: #666;
+                transition: color 0.2s;
+            ">&times;</button>
+        `;
+        
+        // Modal body with summary and PDF
+        const modalBody = document.createElement('div');
+        modalBody.style.cssText = `
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        `;
+        
+        // Activity summary section
+        if (activity.short_summary && activity.short_summary !== 'N/A') {
+            const summarySection = document.createElement('div');
+            summarySection.style.cssText = `
+                background: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+                border-left: 4px solid #3498db;
+            `;
+            summarySection.innerHTML = `
+                <h4 style="margin: 0 0 10px 0; color: #333;">Activity Summary:</h4>
+                <p style="margin: 0; color: #555; line-height: 1.6;">${activity.short_summary}</p>
+            `;
+            modalBody.appendChild(summarySection);
+        }
+        
+        // PDF viewer section
+        const pdfSection = document.createElement('div');
+        pdfSection.style.cssText = `
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            min-height: 400px;
+            background: #f5f5f5;
+            position: relative;
+        `;
+        
+        if (activity.pdf_link && activity.pdf_link !== '#') {
+            // Try to embed PDF
+            const pdfEmbed = document.createElement('iframe');
+            pdfEmbed.src = activity.pdf_link;
+            pdfEmbed.style.cssText = `
+                width: 100%;
+                height: 100%;
+                border: none;
+            `;
+            pdfEmbed.title = `PDF viewer for ${activity.name}`;
+            
+            // Add loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                color: #666;
+            `;
+            loadingDiv.innerHTML = `
+                <div class="loader" style="margin: 0 auto 10px;"></div>
+                <p>Loading PDF...</p>
+            `;
+            
+            pdfSection.appendChild(loadingDiv);
+            pdfSection.appendChild(pdfEmbed);
+            
+            // Handle PDF load events
+            pdfEmbed.onload = () => {
+                logAICoach("PDF iframe loaded successfully");
+                loadingDiv.style.display = 'none';
+            };
+            
+            pdfEmbed.onerror = () => {
+                logAICoach("PDF iframe failed to load");
+                pdfSection.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <p style="margin-bottom: 20px;">Unable to display PDF in this view.</p>
+                        <a href="${activity.pdf_link}" target="_blank" class="p-button p-component" style="
+                            display: inline-block;
+                            padding: 10px 20px;
+                            text-decoration: none;
+                            background: #3498db;
+                            color: white;
+                            border-radius: 4px;
+                        ">Open PDF in New Tab</a>
+                    </div>
+                `;
+            };
+            
+            // Add fallback link below iframe
+            const fallbackLink = document.createElement('p');
+            fallbackLink.style.cssText = 'text-align: center; margin-top: 10px; font-size: 0.9em;';
+            fallbackLink.innerHTML = `
+                <a href="${activity.pdf_link}" target="_blank" style="color: #3498db; text-decoration: underline;">
+                    Open PDF in new tab if viewer doesn't load
+                </a>
+            `;
+            modalBody.appendChild(fallbackLink);
+        } else {
+            pdfSection.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <p>No PDF available for this activity.</p>
+                </div>
+            `;
+        }
+        
+        modalBody.appendChild(pdfSection);
+        
+        // Assemble modal
+        modalContent.appendChild(modalHeader);
+        modalContent.appendChild(modalBody);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        // Trigger animations
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            modalContent.style.transform = 'scale(1)';
+        }, 10);
+        
+        // Close handlers
+        const closeModal = () => {
+            modal.style.opacity = '0';
+            modalContent.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        };
+        
+        modal.querySelector('.ai-coach-modal-close').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        
+        // ESC key to close
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+    }
+
+    // --- Enhanced sendChatMessage function to handle activity suggestions ---
+    // (This replaces part of the existing sendChatMessage function in addChatInterface)
+    
+    window.initializeAICoachLauncher = initializeAICoachLauncher;
 } 

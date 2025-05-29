@@ -1643,12 +1643,14 @@ def get_all_knack_records(object_key, filters=None, max_pages=20):
 @app.route('/api/v1/chat_turn', methods=['POST'])
 def chat_turn():
     data = request.get_json()
-    app.logger.info(f"Received request for /api/v1/chat_turn with data: {str(data)[:500]}...") # Log more data
+    app.logger.info(f"Received request for /api/v1/chat_turn with data: {str(data)[:500]}...")
 
     student_object10_id = data.get('student_object10_record_id')
     chat_history = data.get('chat_history', []) 
     current_tutor_message = data.get('current_tutor_message')
-    initial_ai_context = data.get('initial_ai_context') # Get the new context
+    initial_ai_context = data.get('initial_ai_context') 
+    student_level_from_context = initial_ai_context.get('student_level') if initial_ai_context else None
+    app.logger.info(f"Chat turn: Student level from context: {student_level_from_context}")
 
     if not student_object10_id or not current_tutor_message:
         app.logger.error("chat_turn: Missing student_object10_record_id or current_tutor_message.")
@@ -1656,23 +1658,18 @@ def chat_turn():
     
     if not OPENAI_API_KEY:
         app.logger.error("chat_turn: OpenAI API key not configured.")
-        # Save tutor message even if AI can't respond
         save_chat_message_to_knack(student_object10_id, "Tutor", current_tutor_message)
         return jsonify({"ai_response": "I am currently unable to respond (AI not configured). Your message has been logged."}), 200
 
-    # 1. Save Tutor's message to Knack
     tutor_message_saved_id = save_chat_message_to_knack(student_object10_id, "Tutor", current_tutor_message)
     if not tutor_message_saved_id:
         app.logger.error(f"chat_turn: Failed to save tutor's message to Knack for student {student_object10_id}.")
-        # Decide if we should still try to get an AI response or return an error
-        # For now, let's attempt to proceed but the frontend should be aware of potential save failures.
 
-    # 2. Prepare prompt for LLM (Simplified for now, will need student context later)
-    # TODO: Fetch student context (name, key VESPA scores, initial AI summary) to provide to LLM
-    # For now, just use the history and current message.
+    # Prepare student_level_for_prompt for use in the system message string
+    student_level_for_prompt = student_level_from_context if student_level_from_context else 'unknown'
     
     messages_for_llm = [
-        {"role": "system", "content": """You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. \
+        {"role": "system", "content": f"""You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. \
 You are a highly informed colleague, an AI academic mentor, partnering with the tutor. Your tone should be collaborative, supportive, and insightful. \
 Use precise and technical language where it adds clarity and demonstrates knowledge (e.g., citing research or specific concepts from the provided knowledge base context), but ensure your overall communication is accessible and not overly dense. \
 Avoid a patronizing tone. Your goal is to empower the tutor with practical, actionable advice for their coaching conversations.
@@ -1680,28 +1677,28 @@ Avoid a patronizing tone. Your goal is to empower the tutor with practical, acti
 IMPORTANT GUIDELINES:
 1. Your primary goal is to help the tutor have an effective coaching conversation with their student.
 2. DO NOT just list or repeat knowledge base items verbatim. Synthesize and adapt.
-3. When you draw upon specific research, theories, or named insights from the provided 'Coaching Insights' or activity descriptions (like those from coaching_insights.json), briefly reference them to add weight to your suggestions (e.g., 'Drawing from research on [Concept X]...' or 'The [Insight Name] insight suggests...').
+3. When you draw upon specific research, theories, or named insights from the provided 'Coaching Insights' or activity descriptions (like those from coaching_insights.json), briefly reference them to add weight to your suggestions (e.g., 'Drawing from research on [Concept X]...' or 'The [Insight Name] insight suggests...'). Consider the student's level ({student_level_for_prompt}) when selecting insights.
 4. When suggesting activities:
    - Explain WHY it's relevant to the student's specific situation, possibly linking it to a concept from the coaching insights.
    - Suggest HOW the tutor might introduce it (e.g., "You could explore the concept of... using an activity like [Activity Name]").
    - If a resource link (PDF) is indicated as available for an activity in the context I provide you, you can mention that resources are available for it.
    - Do NOT include activity IDs in your response.
    - CRITICAL: Only recommend activities that are explicitly provided to you in the '--- Provided VESPA Activities ---' section of the context. Do not invent activities or refer to activities not listed there.
-   - IMPORTANT: If the tutor mentions a specific VESPA element problem (e.g., "Practice related"), ensure you include AT LEAST ONE activity from that element if suitable activities are provided in the context.
+   - Consider the student's level ({student_level_for_prompt}) when choosing. Level-agnostic (Handbook) activities are suitable for all.
+   - IMPORTANT: If the tutor mentions a specific VESPA element problem (e.g., "Practice related"), ensure you include AT LEAST ONE activity from that element if suitable activities (considering level) are provided in the context.
    - You may also suggest complementary activities from other elements if they address root causes and are provided in the context.
 5. When providing coaching questions:
-   - The 'Relevant Coaching Questions' from the knowledge base (like coaching_questions_knowledge_base.json) are for your inspiration to help the tutor formulate their own approaches. Synthesize these ideas rather than listing the questions directly. Explain how these questions can help the student discover their own solutions.
-6. Keep responses concise but actionable - busy tutors need clear next steps.
+   - The 'Relevant Coaching Questions' from the knowledge base (like coaching_questions_knowledge_base.json) are for your inspiration. Synthesize these ideas. Explain how these questions can help the student discover their own solutions, considering the student's level ({student_level_for_prompt}) if possible.
+6. Keep responses concise but actionable.
 7. Use an encouraging, professional tone that empowers the tutor.
 8. BALANCE your response:
-   - If addressing a symptom (e.g., not practicing), consider both direct solutions (Practice activities) AND root causes (Vision/motivation) if relevant activities/insights are provided.
-   - Always include at least one activity from the element mentioned in the problem if a suitable one is available in the '--- Provided VESPA Activities ---' section.
-9. The 'Relevant Reflective Statements' (like from 100 statements - 2023.txt) can offer insight into the student's possible thinking or can be adapted into questions or discussion points for the tutor. Use them to add depth to your advice.
+   - If addressing a symptom, consider both direct solutions AND root causes if relevant activities/insights (considering level) are provided.
+   - Always include at least one activity from the element mentioned in the problem if a suitable one (considering level) is available in the '--- Provided VESPA Activities ---' section.
+9. The 'Relevant Reflective Statements' (like from 100 statements - 2023.txt) can offer insight or be adapted into discussion points. If RAG provides them, consider if they align with the student's current context or reported issues, and how they might illuminate the student's perspective.
 
 Remember: You're coaching the tutor, not the student directly."""}
     ]
 
-    # Prepend initial AI context if available
     if initial_ai_context:
         context_preamble = "Key previously generated insights for this student (use this as context for the current chat):\n"
         if initial_ai_context.get('student_overview_summary'):
@@ -1710,17 +1707,34 @@ Remember: You're coaching the tutor, not the student directly."""}
             context_preamble += f"- Academic Benchmark Analysis: {initial_ai_context['academic_benchmark_analysis']}\n"
         if initial_ai_context.get('questionnaire_interpretation_and_reflection_summary'):
             context_preamble += f"- Questionnaire Interpretation: {initial_ai_context['questionnaire_interpretation_and_reflection_summary']}\n"
-        
+        if student_level_from_context: # Add student level to initial context if available
+             context_preamble += f"- Student Level: {student_level_from_context}\n"
+
         retrieved_context_parts = []
         suggested_activities_for_response = [] 
 
         if current_tutor_message:
-            common_words = {"is", "a", "the", "and", "to", "of", "it", "in", "for", "on", "with", "as", "an", "at", "by", "what", "how", "tell", "me", "about"}
-            keywords = [word for word in current_tutor_message.lower().replace('?', '').replace('.', '').split() if word not in common_words and len(word) > 2]
-            app.logger.info(f"chat_turn RAG: Extracted keywords from tutor message '{current_tutor_message}': {keywords}")
+            common_words = {
+                "is", "a", "the", "and", "to", "of", "it", "in", "for", "on", "with", "as", "an", "at", "by", 
+                "what", "how", "tell", "me", "about", "can", "you", "help", "student", "student's", "students",
+                "i", "am", "my", "need", "her", "his", "him", "she", "he", "they", "them", "their", "concern", 
+                "concerned", "issue", "problem", "regard", "regarding", "with", "this", "that", "these", "those",
+                "think", "thinking", "feel", "feels", "feeling", "suggest", "suggestion", "suggestions", "advice", "idea", "ideas",
+                "get", "give", "have", "has", "had", "do", "does", "did", "some", "any", "lot", "little", "bit",
+                "very", "really", "quite", "much", "more", "less", "also", "too", "well", "good", "bad", "okay",
+                "would", "should", "could", "may", "might", "must", "will", "shall", "from", "make", "making",
+                "example", "examples", "way", "ways", "try", "trying", "want", "wants", "talk", "talking"
+            }
+            # Clean keywords more thoroughly
+            cleaned_message = current_tutor_message.lower()
+            for char_to_replace in ['?', '.', ',', '\'s', '\"', '\'']:
+                cleaned_message = cleaned_message.replace(char_to_replace, '')
+            
+            keywords = [word for word in cleaned_message.split() if word not in common_words and len(word) > 2]
+            app.logger.info(f"chat_turn RAG: Extracted keywords: {keywords} from message: '{current_tutor_message}'")
 
             vespa_element_from_problem = None
-            message_lower = current_tutor_message.lower()
+            message_lower = current_tutor_message.lower() # Use original lowercased message for element detection
             if "(vision related)" in message_lower or "vision related" in message_lower:
                 vespa_element_from_problem = "VISION"
             elif "(effort related)" in message_lower or "effort related" in message_lower:
@@ -1750,7 +1764,7 @@ Remember: You're coaching the tutor, not the student directly."""}
                         if found_insights_count >= 2: break
                 if found_insights_count > 0:
                     retrieved_context_parts.append("\nRelevant Coaching Insights you might consider:")
-                    retrieved_context_parts.extend(found_insights[-found_insights_count:]) 
+                    retrieved_context_parts.extend(found_insights) 
                     app.logger.info(f"chat_turn RAG: Found {found_insights_count} relevant coaching insights.")
                 else:
                     app.logger.info("chat_turn RAG: No relevant coaching insights found.")
@@ -1759,11 +1773,8 @@ Remember: You're coaching the tutor, not the student directly."""}
             
             # Search VESPA_ACTIVITIES_DATA
             if VESPA_ACTIVITIES_DATA:
-                app.logger.info(f"chat_turn RAG: Searching VESPA_ACTIVITIES_DATA ({len(VESPA_ACTIVITIES_DATA)} items) for keywords: {keywords}")
-                element_matching_activities = []
-                other_relevant_activities = [] # Corrected variable name
-                found_activities_count = 0
-                current_found_activities_text_for_prompt = [] # Corrected variable name
+                app.logger.info(f"chat_turn RAG: Searching VESPA_ACTIVITIES_DATA ({len(VESPA_ACTIVITIES_DATA)} items). Keywords: {keywords}. Student Level: {student_level_from_context}")
+                all_matched_activities_with_level_info = []
 
                 for activity in VESPA_ACTIVITIES_DATA:
                     activity_text_to_search = (str(activity.get('keywords', [])).lower() +
@@ -1771,7 +1782,8 @@ Remember: You're coaching the tutor, not the student directly."""}
                                                str(activity.get('short_summary', '')).lower() +
                                                str(activity.get('vespa_element', '')).lower())
                     
-                    is_keyword_match = any(kw in activity_text_to_search for kw in keywords)
+                    activity_level = activity.get('level', '') 
+                    is_keyword_match = any(kw in activity_text_to_search for kw in keywords) if keywords else False # check if keywords is not empty
                     is_element_match_from_problem = vespa_element_from_problem and activity.get('vespa_element', '').upper() == vespa_element_from_problem
 
                     if is_keyword_match or is_element_match_from_problem:
@@ -1780,35 +1792,54 @@ Remember: You're coaching the tutor, not the student directly."""}
                             "name": activity.get('name', 'N/A'),
                             "short_summary": activity.get('short_summary', 'N/A'),
                             "pdf_link": activity.get('pdf_link', '#'),
-                            "vespa_element": activity.get('vespa_element','N/A')
+                            "vespa_element": activity.get('vespa_element','N/A'),
+                            "level": activity_level,
+                            "is_element_match": is_element_match_from_problem
                         }
-                        if is_element_match_from_problem:
-                            element_matching_activities.append(activity_data)
-                        elif is_keyword_match:
-                            other_relevant_activities.append(activity_data)
+                        all_matched_activities_with_level_info.append(activity_data)
                 
-                for activity_data in element_matching_activities[:2]:
-                    pdf_available_text = " (Resource PDF available)" if activity_data['pdf_link'] and activity_data['pdf_link'] != '#' else ""
-                    current_found_activities_text_for_prompt.append(f"- Name: {activity_data['name']}, VESPA Element: {activity_data['vespa_element']}{pdf_available_text}. Summary: {activity_data['short_summary'][:100]}...")
-                    suggested_activities_for_response.append(activity_data)
-                    found_activities_count += 1
+                def sort_key_activities(act):
+                    score = 0
+                    if act['is_element_match']: 
+                        score += 100
+                    
+                    if student_level_from_context:
+                        if act['level'] == student_level_from_context: 
+                            score += 50
+                        elif act['level'] == '' or not act['level']: 
+                            score += 25
+                        elif student_level_from_context == "Level 2" and act['level'] == "Level 3":
+                            score += 10 
+                        elif student_level_from_context == "Level 3" and act['level'] == "Level 2":
+                            score += 10
+                    else: 
+                        if act['level'] == '' or not act['level']:
+                             score += 25
+                    return score
+
+                all_matched_activities_with_level_info.sort(key=sort_key_activities, reverse=True)
+                app.logger.info(f"Sorted RAG activities (Top 5): {[(a['name'], a['level'], a['is_element_match'], sort_key_activities(a)) for a in all_matched_activities_with_level_info[:5]]}")
+
+                found_activities_count = 0
+                current_found_activities_text_for_prompt = []
+                processed_activity_ids = set()
+                for activity_data in all_matched_activities_with_level_info:
                     if found_activities_count >= 3: break
-                
-                remaining_slots = 3 - found_activities_count
-                for activity_data in other_relevant_activities[:remaining_slots]: # Use corrected variable name
-                    if not any(existing_act['id'] == activity_data['id'] for existing_act in suggested_activities_for_response):
+                    if activity_data['id'] not in processed_activity_ids:
                         pdf_available_text = " (Resource PDF available)" if activity_data['pdf_link'] and activity_data['pdf_link'] != '#' else ""
-                        current_found_activities_text_for_prompt.append(f"- Name: {activity_data['name']}, VESPA Element: {activity_data['vespa_element']}{pdf_available_text}. Summary: {activity_data['short_summary'][:100]}...")
+                        level_display = f"Level: {activity_data.get('level')}" if activity_data.get('level') else 'Level: Agnostic (Handbook)'
+                        current_found_activities_text_for_prompt.append(f"- Name: {activity_data['name']}, VESPA Element: {activity_data['vespa_element']}{pdf_available_text}. {level_display}. Summary: {activity_data['short_summary'][:100]}...")
                         suggested_activities_for_response.append(activity_data)
+                        processed_activity_ids.add(activity_data['id'])
                         found_activities_count += 1
                 
-                if current_found_activities_text_for_prompt: # Use corrected variable name
+                if current_found_activities_text_for_prompt: 
                     retrieved_context_parts.append("\n--- Provided VESPA Activities ---")
-                    retrieved_context_parts.append("ONLY use the following activities if you choose to suggest one. For each, I've provided its Name, VESPA element, a Summary, and whether a PDF is available. When suggesting an activity, use its Name. Do NOT mention the ID. If a PDF is indicated as available, you can state that resources are available for it:")
-                    if vespa_element_from_problem and element_matching_activities:
+                    retrieved_context_parts.append("ONLY use the following activities if you choose to suggest one. For each, I've provided its Name, VESPA element, a Summary, Level and whether a PDF is available. When suggesting an activity, use its Name. Do NOT mention the ID. If a PDF is indicated as available, you can state that resources are available for it:")
+                    if vespa_element_from_problem and any(a['is_element_match'] for a in all_matched_activities_with_level_info): # Check if any actual element matches were found
                         retrieved_context_parts.append(f"NOTE: Activities from {vespa_element_from_problem} element are prioritized if relevant, as the problem was identified as {vespa_element_from_problem}-related.")
                     retrieved_context_parts.extend(current_found_activities_text_for_prompt)
-                    app.logger.info(f"chat_turn RAG: Found {found_activities_count} relevant VESPA activities ({len(element_matching_activities)} from matching element). LLM prompt text: {current_found_activities_text_for_prompt}")
+                    app.logger.info(f"chat_turn RAG: Found {found_activities_count} relevant VESPA activities for LLM. LLM prompt text: {current_found_activities_text_for_prompt}")
                 else:
                     app.logger.info("chat_turn RAG: No relevant VESPA activities found to provide to LLM.")
                     retrieved_context_parts.append("\n--- Provided VESPA Activities ---")
@@ -1821,13 +1852,14 @@ Remember: You're coaching the tutor, not the student directly."""}
                 app.logger.info(f"chat_turn RAG: Searching REFLECTIVE_STATEMENTS_DATA ({len(REFLECTIVE_STATEMENTS_DATA)} items) for keywords: {keywords}")
                 found_statements_count = 0
                 current_found_statements = []
-                for statement in REFLECTIVE_STATEMENTS_DATA:
-                    if any(kw in statement.lower() for kw in keywords):
-                        current_found_statements.append(f"- Statement: \"{statement[:150]}...\"")
-                        found_statements_count += 1
-                        if found_statements_count >= 2: break
+                if keywords:
+                    for statement_text in REFLECTIVE_STATEMENTS_DATA:
+                        if any(kw in statement_text.lower() for kw in keywords):
+                            current_found_statements.append(f"- Statement: \"{statement_text[:150]}...\"")
+                            found_statements_count += 1
+                            if found_statements_count >= 2: break
                 if current_found_statements:
-                    retrieved_context_parts.append("\nRelevant Reflective Statements the tutor could adapt:")
+                    retrieved_context_parts.append("\nRelevant Reflective Statements (from 100 statements - 2023.txt) the tutor could adapt:")
                     retrieved_context_parts.extend(current_found_statements)
                     app.logger.info(f"chat_turn RAG: Found {found_statements_count} relevant reflective statements.")
                 else:
@@ -1843,6 +1875,7 @@ Remember: You're coaching the tutor, not the student directly."""}
                 app.logger.info(f"chat_turn RAG: Searching coaching_kb for relevant questions. Keywords: {keywords}. Trigger: {search_coaching_questions}.")
                 found_coaching_questions_count = 0
                 current_found_coaching_questions = []
+                # Search general introductory questions
                 if coaching_kb.get('generalIntroductoryQuestions'):
                     for q_text in coaching_kb['generalIntroductoryQuestions']:
                         if any(kw in q_text.lower() for kw in keywords) or search_coaching_questions:
@@ -1850,23 +1883,30 @@ Remember: You're coaching the tutor, not the student directly."""}
                             found_coaching_questions_count += 1
                             if found_coaching_questions_count >= 3: break
                 
+                # Search VESPA specific questions if count is still low
                 if found_coaching_questions_count < 3 and coaching_kb.get('vespaSpecificCoachingQuestions'):
-                    for vespa_element, levels in coaching_kb['vespaSpecificCoachingQuestions'].items():
+                    for vespa_element, levels_data in coaching_kb['vespaSpecificCoachingQuestions'].items(): # renamed levels to levels_data
                         if found_coaching_questions_count >= 3: break
-                        for level, scores in levels.items():
-                            if found_coaching_questions_count >= 3: break
-                            for score_type, questions_list in scores.items():
+                        # Determine student level for KB lookup (e.g. "Level 3", "Level 2")
+                        kb_student_level_key = student_level_from_context if student_level_from_context in levels_data else None
+                        if not kb_student_level_key and student_level_from_context == "Level 3" and "Level 2" in levels_data: # Fallback
+                            kb_student_level_key = "Level 2"
+                        elif not kb_student_level_key and student_level_from_context == "Level 2" and "Level 3" in levels_data: # Fallback
+                             kb_student_level_key = "Level 3"
+                        
+                        if kb_student_level_key and levels_data.get(kb_student_level_key):
+                            for score_type, questions_list in levels_data[kb_student_level_key].items():
                                 if found_coaching_questions_count >= 3: break
                                 for q_text in questions_list:
-                                    if any(kw in q_text.lower() for kw in keywords) or (search_coaching_questions and any(kw in vespa_element.lower() for kw in keywords)):
-                                        current_found_coaching_questions.append(f"- {vespa_element} ({score_type}): {q_text}")
+                                    if any(kw in q_text.lower() for kw in keywords) or \
+                                       (search_coaching_questions and (any(kw in vespa_element.lower() for kw in keywords) or any(kw in score_type.lower() for kw in keywords))):
+                                        current_found_coaching_questions.append(f"- {vespa_element} ({kb_student_level_key} - {score_type}): {q_text}")
                                         found_coaching_questions_count += 1
                                         if found_coaching_questions_count >= 3: break
-                                    elif search_coaching_questions and found_coaching_questions_count < 2:
-                                        if not keywords: 
-                                            current_found_coaching_questions.append(f"- {vespa_element} ({score_type}): {q_text}")
-                                            found_coaching_questions_count += 1
-                                            if found_coaching_questions_count >= 2: break
+                                    elif search_coaching_questions and found_coaching_questions_count < 2 and not keywords: # Broader match if no keywords
+                                        current_found_coaching_questions.append(f"- {vespa_element} ({kb_student_level_key} - {score_type}): {q_text}")
+                                        found_coaching_questions_count += 1
+                                        if found_coaching_questions_count >= 2: break 
                 if current_found_coaching_questions:
                     retrieved_context_parts.append("\nRelevant Coaching Questions from Knowledge Base (for your inspiration to help the tutor):")
                     retrieved_context_parts.extend(current_found_coaching_questions)
@@ -1875,10 +1915,12 @@ Remember: You're coaching the tutor, not the student directly."""}
                     app.logger.info("chat_turn RAG: No specific coaching questions found from KB.")
             else:
                 app.logger.info("chat_turn RAG: Skipped searching coaching_kb.")
+        else: # if not current_tutor_message (though this path might be unlikely if function requires it)
+            app.logger.info("chat_turn RAG: No current_tutor_message, skipping keyword-based RAG.")
 
-        # This block for assembling context_preamble must be indented within the `if initial_ai_context:` block
-        if retrieved_context_parts: # Check if RAG actually found anything to add
-            app.logger.info(f"chat_turn RAG: Final retrieved_context_parts: {retrieved_context_parts}")
+
+        if retrieved_context_parts: 
+            app.logger.info(f"chat_turn RAG: Final retrieved_context_parts count: {len(retrieved_context_parts)}")
             context_preamble += "\n\n--- Additional Context Retrieved from Knowledge Bases (Based on Tutor's Query) ---\n"
             context_preamble += "Use the following information to formulate your response. Remember the guidelines on synthesizing, explaining relevance, and practical application.\n"
             if vespa_element_from_problem:
@@ -1889,6 +1931,9 @@ Remember: You're coaching the tutor, not the student directly."""}
         context_preamble += "\n\nGiven the student's overall profile (from initial context) and any specific items just retrieved from the knowledge bases (detailed above), please respond to the tutor's latest message. Adhere to all persona and response guidelines."
         messages_for_llm.insert(1, {"role": "system", "content": context_preamble}) 
         app.logger.info(f"chat_turn: Added initial_ai_context and RAG context to LLM prompt. Pre-amble length: {len(context_preamble)}")
+    else: # if not initial_ai_context
+        app.logger.info("chat_turn: No initial_ai_context provided. Proceeding without RAG for this turn.")
+
 
     # Add existing chat history
     for message in chat_history:
@@ -1898,12 +1943,12 @@ Remember: You're coaching the tutor, not the student directly."""}
 
     ai_response_text = "An error occurred while generating my response."
     try:
-        app.logger.info(f"chat_turn: Sending to LLM: {messages_for_llm}")
+        app.logger.info(f"chat_turn: Sending to LLM. Number of messages: {len(messages_for_llm)}. First system message length: {len(messages_for_llm[0]['content'])}. Second system message (context) length (if present): {len(messages_for_llm[1]['content']) if len(messages_for_llm) > 1 and messages_for_llm[1]['role'] == 'system' else 'N/A'}")
         response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo", # Consider gpt-4-turbo-preview if context is very long or complexity is high
             messages=messages_for_llm,
-            max_tokens=250, # Adjust as needed
-            temperature=0.7,
+            max_tokens=350, # Increased slightly for potentially more nuanced responses
+            temperature=0.65, # Slightly adjusted for a balance of creativity and consistency
             n=1,
             stop=None
         )
@@ -1914,14 +1959,11 @@ Remember: You're coaching the tutor, not the student directly."""}
         app.logger.error(f"chat_turn: Error calling OpenAI API: {e}")
         # ai_response_text will remain the default error message
 
-    # 3. Save AI's response to Knack
     ai_message_saved_id = save_chat_message_to_knack(student_object10_id, "AI Coach", ai_response_text)
     if not ai_message_saved_id:
         app.logger.error(f"chat_turn: Failed to save AI's response to Knack for student {student_object10_id}.")
-        # Frontend should be resilient to this.
 
     return jsonify({"ai_response": ai_response_text, "suggested_activities_in_chat": suggested_activities_for_response})
-
 
 def save_chat_message_to_knack(student_obj10_id, sender, message_text):
     """Saves a chat message to the new Object_118 in Knack."""
