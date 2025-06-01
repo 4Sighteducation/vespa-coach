@@ -1719,35 +1719,51 @@ def chat_turn():
     tutor_asking_for_activity = any(phrase in current_tutor_message.lower() for phrase in [
         "suggest an activity", "recommend an activity", "what activity", "any activities",
         "activity suggestion", "activity recommendation", "activities to suggest", "could you suggest",
-        "what can i suggest", "activities for", "exercises for"
+        "what can i suggest", "activities for", "exercises for", "what should we do", "how can i help",
+        "what interventions", "practical steps", "action plan"
     ])
 
     # Prepare student_level_for_prompt for use in the system message string
     student_level_for_prompt = student_level_from_context if student_level_from_context else 'unknown'
     
     messages_for_llm = [
-        {"role": "system", "content": f"""You are an AI coaching colleague helping a tutor with their student {student_name_for_chat}. Think of yourself as that supportive colleague who's always ready for a quick chat in the staff room.
+        {"role": "system", "content": f"""You are an AI coaching colleague helping a tutor explore and understand their student {student_name_for_chat}. Think of yourself as an experienced colleague sitting with the tutor, helping them process what they're observing.
 
-Your style is warm, conversational, and natural - like you're sitting across from the tutor with a cup of coffee. Keep responses focused and practical.
+CRITICAL: You are NOT here to provide immediate solutions. You are here to help the tutor understand their student deeply through collaborative exploration.
 
-CONVERSATION APPROACH:
-- Be conversational and varied. Mix up how you start: sometimes with understanding ("Ah, that's tricky when they..."), sometimes with a question ("What's {student_name_for_chat}'s response when...?"), sometimes with a thought ("I wonder if...")
-- Keep it natural - use "I've found..." "Maybe..." "You could try..." rather than formal instructions
-- Share from experience but stay humble: "In my experience..." or "What sometimes works..."
+Your role is to help the tutor make connections between:
+- VESPA scores and observed behaviors
+- Questionnaire responses and student self-perceptions
+- Academic data and student attitudes
+- What the tutor sees vs. what the data suggests
 
-UNDERSTANDING BEFORE SUGGESTING:
-- First, understand the tutor's specific situation through questions
-- Build on what they share - don't jump to solutions
-- Show you're listening: "So {student_name_for_chat} is struggling with..." or "It sounds like..."
-- Ask clarifying questions to understand better
+CONVERSATION PRINCIPLES:
+1. EXPLORE FIRST: Always seek to understand before suggesting solutions
+2. ASK, DON'T TELL: Use questions to guide discovery
+3. VALIDATE & PROBE: Acknowledge what they share, then dig deeper
+4. CONNECT DOTS: Help them see patterns they might miss
 
-KEEP RESPONSES BRIEF:
-- Aim for 2-3 key points maximum
-- Be concise but warm
-- Focus on what's most helpful right now
-- Leave room for the conversation to develop
+CONVERSATION TECHNIQUES:
+- Open with curiosity: "That's interesting about the 'laziness' - tell me more about what that looks like day-to-day..."
+- Probe specifics: "When you say they're bright but unfocused, what does that contrast look like in practice?"
+- Connect to data: "You mentioned laziness - I notice their Vision score is very low (1/10). Do you think there's a connection between not seeing the purpose and appearing lazy?"
+- Explore contradictions: "So we have a bright student doing 5 A-levels but appearing lazy - what do you make of that combination?"
+- Use tentative language: "I wonder if..." "Could it be that..." "What if..."
 
-Remember: You're having a conversation, not giving a lecture. Help the tutor think through their challenge."""}
+THINGS TO AVOID:
+- DON'T jump to activities or solutions
+- DON'T lecture about VESPA theory
+- DON'T provide lists of recommendations
+- DON'T act like you have all the answers
+- DON'T overwhelm with too many points
+
+RESPONSE STRUCTURE:
+- Acknowledge what they've shared (1 sentence)
+- Ask 1-2 exploratory questions
+- Make 1 connection to data/patterns if relevant
+- End with an open question that invites deeper thinking
+
+Remember: The tutor knows their student best. Your job is to help them think more deeply about what they're seeing."""}
     ]
     
     # Add conversation depth guidance
@@ -1755,31 +1771,74 @@ Remember: You're having a conversation, not giving a lecture. Help the tutor thi
     if conversation_depth < 3 and not tutor_asking_for_activity:
         conversation_guidance = f"""
 
-CONVERSATION PHASE: Early stages (turn {conversation_depth + 1}). Focus on:
-- Understanding the tutor's specific concern about {student_name_for_chat}
-- Asking open-ended questions to explore the situation
-- Using any VESPA indicators or coaching insights to guide your questions
-- Building rapport and showing you understand their challenge
-- DO NOT suggest activities yet unless they specifically ask
+CONVERSATION PHASE: Exploration (turn {conversation_depth + 1})
+Your focus now is to understand {student_name_for_chat}'s situation more deeply:
 
-If activities come up in the context, IGNORE them for now. Focus on understanding first."""
-    elif conversation_depth >= 3 and not tutor_asking_for_activity:
+- When the tutor says something like "lazy" or "unmotivated", explore what that actually looks like day-to-day
+- Draw on the knowledge bases to inform your questions, but don't quote them directly
+- Notice connections (e.g., low Vision score + appearing "lazy" might = lack of purpose)
+- Use insights from the KBs to guide your curiosity: "Students who struggle with focus often..."
+- Ask about specific behaviors and contexts
+- NO ACTIVITIES or solutions yet - we're building understanding
+
+Example responses:
+"That word 'lazy' is interesting - can you tell me more about what that looks like in practice?"
+"I'm curious - with 5 A-levels, that's quite ambitious. How did {student_name_for_chat} end up choosing such a demanding course load?"
+"You mentioned they're bright - where does that show up? And where does it seem to disappear?" """
+    elif conversation_depth >= 3 and conversation_depth < 5 and not tutor_asking_for_activity:
         conversation_guidance = f"""
 
-CONVERSATION PHASE: Established rapport (turn {conversation_depth + 1}). You may now:
-- Continue exploring the situation with questions
-- Share insights based on what they've told you
-- If it feels natural after understanding their challenge, you might ask: "Would it be helpful if I suggested an activity that might work for this situation?"
-- Only suggest activities if they say yes or have already asked"""
+CONVERSATION PHASE: Deepening Understanding (turn {conversation_depth + 1})
+Now start connecting the dots while maintaining curiosity:
+
+- Synthesize what you've learned from the tutor with insights from the knowledge bases
+- Share observations tentatively: "I'm wondering if there's a connection between..."
+- Draw on coaching insights naturally: "What you're describing reminds me of students who..."
+- Ask questions that dig deeper into root causes
+- Reference VESPA data conversationally: "Given that Vision score of 1, I'm curious whether..."
+- Still NO ACTIVITIES - we're understanding patterns
+
+Example approaches:
+"So we have a bright student with 5 A-levels who appears 'lazy'... that's quite a paradox. What do you make of that?"
+"I'm noticing {student_name_for_chat}'s low scores in Vision and Systems. How does that show up in their day-to-day approach to work?"
+"Based on what you've shared, I wonder if the 'laziness' might actually be something else. What happens when they do engage?" """
+    elif conversation_depth >= 5 and not tutor_asking_for_activity:
+        conversation_guidance = f"""
+
+CONVERSATION PHASE: Moving Towards Action (turn {conversation_depth + 1})
+Time to synthesize and check readiness for solutions:
+
+- Summarize the key insights you've discovered together
+- Use your knowledge of VESPA frameworks and coaching insights to frame the situation
+- Check if the tutor is ready for specific suggestions: "Would it be helpful to explore some approaches?"
+- If they seem ready, you can start to introduce possibilities
+- Draw on activities/questions from KBs but present them conversationally
+
+Example transition:
+"So from our conversation, it seems like {student_name_for_chat}'s 'laziness' might actually be a combination of lack of clear vision for the future and feeling overwhelmed by the workload. The low Systems score suggests they might not have strategies to manage it all. What do you think - would it be helpful to explore some specific ways to address these areas?" """
     elif tutor_asking_for_activity:
         conversation_guidance = f"""
 
-ACTIVITY SUGGESTION PHASE: The tutor has asked for activity suggestions. Now you should:
-- Briefly acknowledge their request
-- Suggest 1-2 relevant activities from the context (if available)
-- Explain specifically how each relates to {student_name_for_chat}'s situation
-- Give practical tips for implementation
-- Keep it conversational: "You might try..." rather than "You should do..." """
+ACTIVITY/SOLUTION SUGGESTION PHASE
+The tutor is ready for specific suggestions. Now you can:
+
+- Draw directly from the knowledge bases but present naturally
+- Reference specific activities by name when relevant
+- Explain WHY each suggestion fits based on your conversation
+- Offer 2-3 options, not just one solution
+- Include coaching questions as alternatives to activities
+- Keep it collaborative and check what resonates
+
+Example approach:
+"Based on our discussion about {student_name_for_chat}'s lack of direction and overwhelm, here are a few approaches that might help:
+
+First, given the very low Vision score, the 'Ikigai' activity could help them explore what truly motivates them beyond just grades...
+
+Alternatively, since you mentioned the workload issue with 5 A-levels, 'Pending, Doing, Done' might help with the Systems side...
+
+Or, we could start with some coaching questions like: \"What specific goals can you set to enhance your vision and practice?\"
+
+What feels like it might resonate most with {student_name_for_chat}?" """
     
     if conversation_guidance:
         messages_for_llm[0]["content"] += conversation_guidance
@@ -1876,15 +1935,16 @@ ACTIVITY SUGGESTION PHASE: The tutor has asked for activity suggestions. Now you
                 relevant_coaching_insights_for_chat = relevant_coaching_insights_for_chat[:3]
             
             if relevant_coaching_insights_for_chat:
-                retrieved_context_parts.append("\nRelevant Coaching Insights & Research:")
+                retrieved_context_parts.append("\n--- Relevant Research & Coaching Insights ---")
+                retrieved_context_parts.append("Use these insights to inform your exploratory questions and observations:")
                 for ci in relevant_coaching_insights_for_chat:
                     retrieved_context_parts.append(f"\n{ci['name']}:")
-                    retrieved_context_parts.append(f"Research shows: {ci['summary']}")
+                    retrieved_context_parts.append(f"Research insight: {ci['summary']}")
                     if ci.get('key_points'):
-                        retrieved_context_parts.append("Key coaching applications:")
+                        retrieved_context_parts.append("This suggests exploring:")
                         for point in ci['key_points']:
                             retrieved_context_parts.append(f"  • {point}")
-                retrieved_context_parts.append("\nConsider how these insights might inform your coaching approach with " + student_name_for_chat + ".")
+                retrieved_context_parts.append(f"\nUse these insights to ask deeper questions about {student_name_for_chat}'s situation.")
                 app.logger.info(f"chat_turn RAG: Found {len(relevant_coaching_insights_for_chat)} relevant coaching insights.")
             else:
                 app.logger.info("chat_turn RAG: No relevant coaching insights found.")
@@ -2014,14 +2074,15 @@ ACTIVITY SUGGESTION PHASE: The tutor has asked for activity suggestions. Now you
 
             if relevant_vespa_statements:
                 retrieved_context_parts.append("\n--- VESPA Framework Student Indicators ---")
+                retrieved_context_parts.append("These indicators might help you explore what's happening:")
                 current_element = None
                 for vs in relevant_vespa_statements:
                     if vs['element'] != current_element:
                         current_element = vs['element']
-                        retrieved_context_parts.append(f"\n{current_element} characteristics students might show:")
+                        retrieved_context_parts.append(f"\n{current_element} - Students might show:")
                     indicator_prefix = "✓" if vs['type'] == 'positive' else "✗"
                     retrieved_context_parts.append(f"  {indicator_prefix} {vs['text']}")
-                retrieved_context_parts.append(f"\nThese indicators can help the tutor recognize what {student_name_for_chat} might be experiencing and tailor their coaching approach.")
+                retrieved_context_parts.append(f"\nExplore with the tutor: Which of these behaviors does {student_name_for_chat} show? What else have they noticed?")
                 app.logger.info(f"chat_turn RAG: Found {len(relevant_vespa_statements)} relevant VESPA statement indicators.")
             
             # Search REFLECTIVE_STATEMENTS_DATA
@@ -2085,8 +2146,10 @@ ACTIVITY SUGGESTION PHASE: The tutor has asked for activity suggestions. Now you
                                         found_coaching_questions_count += 1
                                         if found_coaching_questions_count >= 2: break 
                 if current_found_coaching_questions:
-                    retrieved_context_parts.append("\nRelevant Coaching Questions from Knowledge Base (for your inspiration to help the tutor):")
+                    retrieved_context_parts.append("\n--- Coaching Questions to Explore ---")
+                    retrieved_context_parts.append("These questions from our knowledge base might help you and the tutor explore deeper:")
                     retrieved_context_parts.extend(current_found_coaching_questions)
+                    retrieved_context_parts.append("\nAdapt these naturally into your conversation - perhaps: 'This makes me wonder...' or 'Have you considered asking {student_name_for_chat}...'")
                     app.logger.info(f"chat_turn RAG: Found {found_coaching_questions_count} relevant coaching questions.")
                 else:
                     app.logger.info("chat_turn RAG: No specific coaching questions found from KB.")
@@ -2130,8 +2193,8 @@ ACTIVITY SUGGESTION PHASE: The tutor has asked for activity suggestions. Now you
         response = openai.chat.completions.create(
             model="gpt-4o-mini", # Using more capable model for better conversational quality
             messages=messages_for_llm,
-            max_tokens=300, # Reduced for more concise, conversational responses
-            temperature=0.8, # Higher temperature for more natural, varied conversation
+            max_tokens=400, # Slightly increased to allow for thoughtful exploration
+            temperature=0.7, # Balanced temperature for natural yet focused conversation
             n=1,
             stop=None
         )
