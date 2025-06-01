@@ -1711,49 +1711,78 @@ def chat_turn():
     if not tutor_message_saved_id:
         app.logger.error(f"chat_turn: Failed to save tutor's message to Knack for student {student_object10_id}.")
 
+    # Calculate conversation depth (number of back-and-forth exchanges)
+    conversation_depth = len([msg for msg in chat_history if msg.get('role') == 'user'])
+    app.logger.info(f"Conversation depth: {conversation_depth} tutor messages")
+    
+    # Check if tutor is explicitly asking for activities
+    tutor_asking_for_activity = any(phrase in current_tutor_message.lower() for phrase in [
+        "suggest an activity", "recommend an activity", "what activity", "any activities",
+        "activity suggestion", "activity recommendation", "activities to suggest", "could you suggest",
+        "what can i suggest", "activities for", "exercises for"
+    ])
+
     # Prepare student_level_for_prompt for use in the system message string
     student_level_for_prompt = student_level_from_context if student_level_from_context else 'unknown'
     
     messages_for_llm = [
-        {"role": "system", "content": f"""You are an AI coaching colleague helping a tutor support their student {student_name_for_chat}. You're like an experienced co-tutor who's always ready to brainstorm and share insights.
+        {"role": "system", "content": f"""You are an AI coaching colleague helping a tutor with their student {student_name_for_chat}. Think of yourself as that supportive colleague who's always ready for a quick chat in the staff room.
 
-Your style is warm, conversational, and empowering - like chatting with a trusted colleague who really gets it. You help tutors see possibilities and feel confident in their coaching.
+Your style is warm, conversational, and natural - like you're sitting across from the tutor with a cup of coffee. Keep responses focused and practical.
 
 CONVERSATION APPROACH:
-- Be natural and varied. Sometimes start with empathy ("That's a really common challenge with Vision..."), sometimes with a question ("Have you noticed if {student_name_for_chat} struggles more with..."), sometimes with an insight ("You know what often works well here...").
-- Use the tutor's name if provided, or phrases like "Hey," "I've found that..." to keep it personal
-- Share experiences like "In my experience with students who..." or "What I've seen work well is..."
-- Acknowledge the tutor's expertise: "You probably already know this, but..." or "Building on what you're already doing..."
+- Be conversational and varied. Mix up how you start: sometimes with understanding ("Ah, that's tricky when they..."), sometimes with a question ("What's {student_name_for_chat}'s response when...?"), sometimes with a thought ("I wonder if...")
+- Keep it natural - use "I've found..." "Maybe..." "You could try..." rather than formal instructions
+- Share from experience but stay humble: "In my experience..." or "What sometimes works..."
 
-WHEN DISCUSSING VESPA:
-- Reference VESPA elements naturally in context, not as a rigid framework
-- Use the VESPA statements (if provided in RAG context) to understand what the student might be experiencing
-- Connect VESPA insights to real student behaviors the tutor might observe
-- Remember: VESPA is a tool for understanding, not a box to put students in
+UNDERSTANDING BEFORE SUGGESTING:
+- First, understand the tutor's specific situation through questions
+- Build on what they share - don't jump to solutions
+- Show you're listening: "So {student_name_for_chat} is struggling with..." or "It sounds like..."
+- Ask clarifying questions to understand better
 
-WHEN SUGGESTING ACTIVITIES:
-- Only suggest activities explicitly listed in '--- Provided VESPA Activities ---' section
-- Explain WHY it fits this specific student's needs
-- Give practical tips: "You might introduce this by..." or "Works best when..."
-- Consider timing: "Once {student_name_for_chat} seems ready..." or "Maybe start with..."
-- Mention if resources (PDFs) are available
-- Never invent activities or use IDs
+KEEP RESPONSES BRIEF:
+- Aim for 2-3 key points maximum
+- Be concise but warm
+- Focus on what's most helpful right now
+- Leave room for the conversation to develop
 
-WHEN PROVIDING COACHING STRATEGIES:
-- Use 'Relevant Coaching Questions' as inspiration, not scripts
-- Suggest question types and explain their purpose
-- Model how to adapt questions for {student_name_for_chat}'s level ({student_level_for_prompt})
-- Share what responses might reveal about the student
-
-IMPORTANT REMINDERS:
-- You're empowering the tutor, not instructing them
-- Build on previous conversations when history shows liked messages [Tutor Liked This]
-- Use research/insights naturally: "That growth mindset research shows..." not "According to insight X..."
-- Keep it practical and actionable
-- Acknowledge complexity: "Every student is different, but..."
-
-Remember: Great coaching is about connection first, techniques second. Help the tutor feel confident and equipped to make that connection with {student_name_for_chat}."""}
+Remember: You're having a conversation, not giving a lecture. Help the tutor think through their challenge."""}
     ]
+    
+    # Add conversation depth guidance
+    conversation_guidance = ""
+    if conversation_depth < 3 and not tutor_asking_for_activity:
+        conversation_guidance = f"""
+
+CONVERSATION PHASE: Early stages (turn {conversation_depth + 1}). Focus on:
+- Understanding the tutor's specific concern about {student_name_for_chat}
+- Asking open-ended questions to explore the situation
+- Using any VESPA indicators or coaching insights to guide your questions
+- Building rapport and showing you understand their challenge
+- DO NOT suggest activities yet unless they specifically ask
+
+If activities come up in the context, IGNORE them for now. Focus on understanding first."""
+    elif conversation_depth >= 3 and not tutor_asking_for_activity:
+        conversation_guidance = f"""
+
+CONVERSATION PHASE: Established rapport (turn {conversation_depth + 1}). You may now:
+- Continue exploring the situation with questions
+- Share insights based on what they've told you
+- If it feels natural after understanding their challenge, you might ask: "Would it be helpful if I suggested an activity that might work for this situation?"
+- Only suggest activities if they say yes or have already asked"""
+    elif tutor_asking_for_activity:
+        conversation_guidance = f"""
+
+ACTIVITY SUGGESTION PHASE: The tutor has asked for activity suggestions. Now you should:
+- Briefly acknowledge their request
+- Suggest 1-2 relevant activities from the context (if available)
+- Explain specifically how each relates to {student_name_for_chat}'s situation
+- Give practical tips for implementation
+- Keep it conversational: "You might try..." rather than "You should do..." """
+    
+    if conversation_guidance:
+        messages_for_llm[0]["content"] += conversation_guidance
 
     if initial_ai_context:
         context_preamble = "Key previously generated insights for this student (use this as context for the current chat):\n"
@@ -1927,17 +1956,22 @@ Remember: Great coaching is about connection first, techniques second. Help the 
                 
                 app.logger.info(f"chat_turn RAG: Top {found_activities_count} activities selected for LLM prompt: {[(a['name'], a['level']) for a in suggested_activities_for_response]}") # ADDED LOG
 
-                if current_found_activities_text_for_prompt: 
+                # Only include activities in RAG context if conversation is mature enough OR tutor is asking
+                include_activities_in_rag = conversation_depth >= 3 or tutor_asking_for_activity
+                
+                if current_found_activities_text_for_prompt and include_activities_in_rag: 
                     retrieved_context_parts.append("\n--- Provided VESPA Activities ---")
                     retrieved_context_parts.append("ONLY use the following activities if you choose to suggest one. For each, I've provided its Name, VESPA element, a Summary, Level and whether a PDF is available. When suggesting an activity, use its Name. Do NOT mention the ID. If a PDF is indicated as available, you can state that resources are available for it:")
                     if vespa_element_from_problem and any(a['is_element_match'] for a in all_matched_activities_with_level_info): # Check if any actual element matches were found
                         retrieved_context_parts.append(f"NOTE: Activities from {vespa_element_from_problem} element are prioritized if relevant, as the problem was identified as {vespa_element_from_problem}-related.")
                     retrieved_context_parts.extend(current_found_activities_text_for_prompt)
                     app.logger.info(f"chat_turn RAG: Found {found_activities_count} relevant VESPA activities for LLM. LLM prompt text: {current_found_activities_text_for_prompt}")
+                elif current_found_activities_text_for_prompt and conversation_depth >= 2:
+                    # Add a note that activities are available but not shown yet
+                    retrieved_context_parts.append(f"\n[Note: There are relevant activities available that could be suggested once you better understand the tutor's needs.]")
+                    app.logger.info(f"chat_turn RAG: {found_activities_count} activities found but not included in context yet (conversation depth: {conversation_depth})")
                 else:
                     app.logger.info("chat_turn RAG: No relevant VESPA activities found to provide to LLM.")
-                    retrieved_context_parts.append("\n--- Provided VESPA Activities ---")
-                    retrieved_context_parts.append("No specific VESPA activities from the knowledge base were found relevant to the current query. Do not suggest any activities unless they are listed here.")
             else:
                 app.logger.info("chat_turn RAG: Skipped searching VESPA_ACTIVITIES_DATA (KB empty).")
 
@@ -2096,7 +2130,7 @@ Remember: Great coaching is about connection first, techniques second. Help the 
         response = openai.chat.completions.create(
             model="gpt-4o-mini", # Using more capable model for better conversational quality
             messages=messages_for_llm,
-            max_tokens=400, # Increased for more complete responses
+            max_tokens=300, # Reduced for more concise, conversational responses
             temperature=0.8, # Higher temperature for more natural, varied conversation
             n=1,
             stop=None
