@@ -2016,7 +2016,11 @@ How do these options sound for {student_name_for_chat}?" """
                         pdf_available_text = " (Resource PDF available)" if activity_data['pdf_link'] and activity_data['pdf_link'] != '#' else ""
                         level_display = f"Level: {activity_data.get('level')}" if activity_data.get('level') else 'Level: Agnostic (Handbook)'
                         current_found_activities_text_for_prompt.append(f"- Name: {activity_data['name']}, VESPA Element: {activity_data['vespa_element']}{pdf_available_text}. {level_display}. Summary: {activity_data['short_summary'][:100]}...")
-                        suggested_activities_for_response.append(activity_data)
+                        
+                        # Only add to the list for frontend if conditions are met
+                        if conversation_depth >= 3 or tutor_asking_for_activity:
+                            suggested_activities_for_response.append(activity_data)
+                        
                         processed_activity_ids.add(activity_data['id'])
                         found_activities_count += 1
                 
