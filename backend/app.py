@@ -97,6 +97,7 @@ alps_bands_wjec = load_json_file('knowledge_base/alpsBands_wjec.json')
 # --- Load New Knowledge Bases ---
 COACHING_INSIGHTS_DATA = load_json_file('knowledge_base/coaching_insights.json')
 VESPA_ACTIVITIES_DATA = load_json_file('knowledge_base/vespa_activities_kb.json')
+VESPA_STATEMENTS_DATA = load_json_file('knowledge_base/vespa-statements.json')  # Load VESPA statements KB
 REFLECTIVE_STATEMENTS_DATA = []
 try:
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -148,6 +149,11 @@ if not REFLECTIVE_STATEMENTS_DATA:
 else:
     # Already logged success or failure during loading
     pass
+
+if not VESPA_STATEMENTS_DATA:
+    app.logger.warning("VESPA Statements KB (vespa-statements.json) is empty or failed to load.")
+else:
+    app.logger.info(f"Successfully loaded VESPA Statements KB.")
 
 
 # --- Helper Functions ---
@@ -1681,7 +1687,7 @@ def chat_turn():
     current_tutor_message = data.get('current_tutor_message')
     initial_ai_context = data.get('initial_ai_context') 
     student_level_from_context = initial_ai_context.get('student_level') if initial_ai_context else None
-    app.logger.info(f"Chat turn: Student level from context: {student_level_from_context}")
+    app.logger.info(f"Chat turn: student_object10_id: {student_object10_id}, Student level from initial_ai_context: {student_level_from_context}") # ADDED LOG
 
     # --- Student Name for Personalization (Fetch if not in initial_ai_context) ---
     student_name_for_chat = "the student"
@@ -1709,33 +1715,44 @@ def chat_turn():
     student_level_for_prompt = student_level_from_context if student_level_from_context else 'unknown'
     
     messages_for_llm = [
-        {"role": "system", "content": f"""You are an AI assistant helping a tutor analyze a student's VESPA profile and coaching needs. \
-You are a highly informed colleague, an AI academic mentor, partnering with the tutor. Your tone should be collaborative, supportive, insightful, and notably conversational and chatty. \
-Think of it like you're brainstorming with a fellow experienced tutor. For example, instead of formal phrasing like \'To address the student's challenge... an activity is...\', try something more like, \'Hey, for that challenge {student_name_for_chat} is facing with relevance, why not try the "Ikigai" activity? It's great for helping students connect their studies to personal goals because...\'. \
-Use precise and technical language where it adds clarity and demonstrates knowledge (e.g., citing research or specific concepts from the provided knowledge base context), but weave it naturally into this chatty, collegial style. \
-Avoid a patronizing tone. Your goal is to empower the tutor with practical, actionable advice.
+        {"role": "system", "content": f"""You are an AI coaching colleague helping a tutor support their student {student_name_for_chat}. You're like an experienced co-tutor who's always ready to brainstorm and share insights.
 
-IMPORTANT GUIDELINES:
-1. Your primary goal is to help the tutor have an effective coaching conversation with their student.
-2. DO NOT just list or repeat knowledge base items verbatim. Synthesize and adapt.
-3. When you draw upon specific research, theories, or named insights from the provided \'Coaching Insights\' or activity descriptions (like those from coaching_insights.json), briefly reference them to add weight to your suggestions (e.g., \'You know that research on [Concept X]...? That ties in well here...\' or \'That [Insight Name] insight could be really useful because...\'). Consider the student\'s level ({student_level_for_prompt}) when selecting insights.
-4. When suggesting activities:
-   - Explain WHY it\'s relevant, possibly linking it to a concept from the coaching insights. (e.g., \"The 'XYZ' activity could be just the ticket here because it taps into...")
-   - Suggest HOW the tutor might introduce it. (e.g., \"You could kick it off by asking Kai about...")
-   - If a resource link (PDF) is indicated as available for an activity in the context I provide you, you can mention that resources are available for it.
-   - Do NOT include activity IDs in your response.
-   - CRITICAL: Only recommend activities that are explicitly provided to you in the \'--- Provided VESPA Activities ---\' section of the context. Do not invent or misidentify activities.
-   - Consider the student\'s level ({student_level_for_prompt}) when choosing. Level-agnostic (Handbook) activities are suitable for all.
-   - IMPORTANT: If the tutor mentions a specific VESPA element problem, try to include an activity from that element if a suitable one (considering level) is provided in your context.
-   - You can also suggest complementary activities from other elements if they address root causes and are provided.
-5. When providing coaching questions:
-   - The \'Relevant Coaching Questions\' are for your inspiration. Don't just list them. Instead, suggest approaches or types of questions the tutor could ask. Explain how these help the student, considering their level ({student_level_for_prompt}).
-6. Keep responses concise but actionable, friendly, and encouraging.
-7. Use an encouraging, professional, yet chatty and collegial tone.
-8. BALANCE your response. Consider direct solutions and root causes if relevant activities/insights (considering level) are provided.
-9. The \'Relevant Reflective Statements\' (from 100 statements - 2023.txt) can spark ideas for discussion points or help understand the student. If RAG finds some, think about how they might shed light on what the student is experiencing.
+Your style is warm, conversational, and empowering - like chatting with a trusted colleague who really gets it. You help tutors see possibilities and feel confident in their coaching.
 
-Remember: You\'re coaching the tutor, not the student directly. Keep it conversational! If the provided chat history indicates a recent unfinished topic, a recently suggested activity, or a message the tutor previously 'liked' (marked with [Tutor Liked This]), consider referencing it naturally in your response to show continuity and build on prior interaction. For example: 'Last time, we were discussing X for {student_name_for_chat}, how did that go?' or 'I remember you liked the suggestion about activity Y, any thoughts on trying that with {student_name_for_chat}?'"""}
+CONVERSATION APPROACH:
+- Be natural and varied. Sometimes start with empathy ("That's a really common challenge with Vision..."), sometimes with a question ("Have you noticed if {student_name_for_chat} struggles more with..."), sometimes with an insight ("You know what often works well here...").
+- Use the tutor's name if provided, or phrases like "Hey," "I've found that..." to keep it personal
+- Share experiences like "In my experience with students who..." or "What I've seen work well is..."
+- Acknowledge the tutor's expertise: "You probably already know this, but..." or "Building on what you're already doing..."
+
+WHEN DISCUSSING VESPA:
+- Reference VESPA elements naturally in context, not as a rigid framework
+- Use the VESPA statements (if provided in RAG context) to understand what the student might be experiencing
+- Connect VESPA insights to real student behaviors the tutor might observe
+- Remember: VESPA is a tool for understanding, not a box to put students in
+
+WHEN SUGGESTING ACTIVITIES:
+- Only suggest activities explicitly listed in '--- Provided VESPA Activities ---' section
+- Explain WHY it fits this specific student's needs
+- Give practical tips: "You might introduce this by..." or "Works best when..."
+- Consider timing: "Once {student_name_for_chat} seems ready..." or "Maybe start with..."
+- Mention if resources (PDFs) are available
+- Never invent activities or use IDs
+
+WHEN PROVIDING COACHING STRATEGIES:
+- Use 'Relevant Coaching Questions' as inspiration, not scripts
+- Suggest question types and explain their purpose
+- Model how to adapt questions for {student_name_for_chat}'s level ({student_level_for_prompt})
+- Share what responses might reveal about the student
+
+IMPORTANT REMINDERS:
+- You're empowering the tutor, not instructing them
+- Build on previous conversations when history shows liked messages [Tutor Liked This]
+- Use research/insights naturally: "That growth mindset research shows..." not "According to insight X..."
+- Keep it practical and actionable
+- Acknowledge complexity: "Every student is different, but..."
+
+Remember: Great coaching is about connection first, techniques second. Help the tutor feel confident and equipped to make that connection with {student_name_for_chat}."""}
     ]
 
     if initial_ai_context:
@@ -1788,31 +1805,64 @@ Remember: You\'re coaching the tutor, not the student directly. Keep it conversa
             if vespa_element_from_problem:
                 app.logger.info(f"chat_turn RAG: Detected VESPA element from problem: {vespa_element_from_problem}")
 
-            # Search COACHING_INSIGHTS_DATA
-            if COACHING_INSIGHTS_DATA and keywords:
+            # Search COACHING_INSIGHTS_DATA with enhanced relevance scoring
+            relevant_coaching_insights_for_chat = []
+            if COACHING_INSIGHTS_DATA and isinstance(COACHING_INSIGHTS_DATA, list):
                 app.logger.info(f"chat_turn RAG: Searching COACHING_INSIGHTS_DATA ({len(COACHING_INSIGHTS_DATA)} items) for keywords: {keywords}")
-                found_insights_count = 0
-                found_insights = []
-                for insight in COACHING_INSIGHTS_DATA:
-                    insight_text_to_search = (str(insight.get('keywords', [])).lower() + 
-                                              str(insight.get('name', '')).lower() + 
-                                              str(insight.get('description', '')).lower())
-                    if any(kw in insight_text_to_search for kw in keywords):
-                        found_insights.append(f"- Insight: {insight.get('name', 'N/A')} (Description: {insight.get('description', 'N/A')[:100]}...)")
-                        found_insights_count += 1
-                        if found_insights_count >= 2: break
-                if found_insights_count > 0:
-                    retrieved_context_parts.append("\nRelevant Coaching Insights you might consider:")
-                    retrieved_context_parts.extend(found_insights) 
-                    app.logger.info(f"chat_turn RAG: Found {found_insights_count} relevant coaching insights.")
-                else:
-                    app.logger.info("chat_turn RAG: No relevant coaching insights found.")
+                # Get more insights and be more generous with relevance scoring
+                for insight in COACHING_INSIGHTS_DATA[:50]:  # Check more insights
+                    if isinstance(insight, dict):
+                        insight_name = insight.get('name', '').lower()
+                        insight_summary = insight.get('summary', '').lower()
+                        insight_description = insight.get('description', '').lower()
+                        insight_tags = [tag.lower() for tag in insight.get('tags', [])]
+                        insight_keywords = [kw.lower() for kw in insight.get('keywords', [])]
+                        
+                        # Calculate relevance score more generously
+                        relevance_score = 0
+                        
+                        # Check for keyword matches
+                        all_insight_text = insight_name + ' ' + insight_summary + ' ' + insight_description + ' ' + ' '.join(insight_tags) + ' ' + ' '.join(insight_keywords)
+                        for keyword in keywords:
+                            if len(keyword) > 3 and keyword in all_insight_text:
+                                relevance_score += 2
+                        
+                        # Check for VESPA element match
+                        if vespa_element_from_problem:
+                            element_lower = vespa_element_from_problem.lower()
+                            if element_lower in insight_tags or element_lower in insight_name or element_lower in insight_summary:
+                                relevance_score += 3
+                        
+                        # Include insights with any relevance
+                        if relevance_score > 0 and len(relevant_coaching_insights_for_chat) < 4:  # Increased to 4
+                            relevant_coaching_insights_for_chat.append({
+                                'name': insight.get('name'),
+                                'summary': insight.get('summary') or insight.get('description', '')[:200],
+                                'key_points': insight.get('key_points', [])[:3],  # Get key points if available
+                                'relevance': relevance_score
+                            })
+                
+                # Sort by relevance and take top insights
+                relevant_coaching_insights_for_chat.sort(key=lambda x: x['relevance'], reverse=True)
+                relevant_coaching_insights_for_chat = relevant_coaching_insights_for_chat[:3]
+            
+            if relevant_coaching_insights_for_chat:
+                retrieved_context_parts.append("\nRelevant Coaching Insights & Research:")
+                for ci in relevant_coaching_insights_for_chat:
+                    retrieved_context_parts.append(f"\n{ci['name']}:")
+                    retrieved_context_parts.append(f"Research shows: {ci['summary']}")
+                    if ci.get('key_points'):
+                        retrieved_context_parts.append("Key coaching applications:")
+                        for point in ci['key_points']:
+                            retrieved_context_parts.append(f"  • {point}")
+                retrieved_context_parts.append("\nConsider how these insights might inform your coaching approach with " + student_name_for_chat + ".")
+                app.logger.info(f"chat_turn RAG: Found {len(relevant_coaching_insights_for_chat)} relevant coaching insights.")
             else:
-                app.logger.info("chat_turn RAG: Skipped searching COACHING_INSIGHTS_DATA (KB empty or no keywords).")
+                app.logger.info("chat_turn RAG: No relevant coaching insights found.")
             
             # Search VESPA_ACTIVITIES_DATA
             if VESPA_ACTIVITIES_DATA:
-                app.logger.info(f"chat_turn RAG: Searching VESPA_ACTIVITIES_DATA ({len(VESPA_ACTIVITIES_DATA)} items). Keywords: {keywords}. Student Level: {student_level_from_context}")
+                app.logger.info(f"chat_turn RAG: Searching VESPA_ACTIVITIES_DATA ({len(VESPA_ACTIVITIES_DATA)} items). Keywords: {keywords}. Student Level from context: {student_level_from_context}") # MODIFIED LOG to show level
                 all_matched_activities_with_level_info = []
 
                 for activity in VESPA_ACTIVITIES_DATA:
@@ -1837,6 +1887,8 @@ Remember: You\'re coaching the tutor, not the student directly. Keep it conversa
                         }
                         all_matched_activities_with_level_info.append(activity_data)
                 
+                app.logger.info(f"chat_turn RAG: Initial matched activities BEFORE sorting ({len(all_matched_activities_with_level_info)} found): {[(a['name'], a['level']) for a in all_matched_activities_with_level_info]}") # ADDED LOG
+
                 def sort_key_activities(act):
                     score = 0
                     if act['is_element_match']: 
@@ -1858,7 +1910,7 @@ Remember: You\'re coaching the tutor, not the student directly. Keep it conversa
                     return score
 
                 all_matched_activities_with_level_info.sort(key=sort_key_activities, reverse=True)
-                app.logger.info(f"Sorted RAG activities (Top 5): {[(a['name'], a['level'], a['is_element_match'], sort_key_activities(a)) for a in all_matched_activities_with_level_info[:5]]}")
+                app.logger.info(f"Sorted RAG activities (Top 5 with sort scores): {[(a['name'], a['level'], a['is_element_match'], sort_key_activities(a)) for a in all_matched_activities_with_level_info[:5]]}") # MODIFIED LOG to show sort score
 
                 found_activities_count = 0
                 current_found_activities_text_for_prompt = []
@@ -1873,6 +1925,8 @@ Remember: You\'re coaching the tutor, not the student directly. Keep it conversa
                         processed_activity_ids.add(activity_data['id'])
                         found_activities_count += 1
                 
+                app.logger.info(f"chat_turn RAG: Top {found_activities_count} activities selected for LLM prompt: {[(a['name'], a['level']) for a in suggested_activities_for_response]}") # ADDED LOG
+
                 if current_found_activities_text_for_prompt: 
                     retrieved_context_parts.append("\n--- Provided VESPA Activities ---")
                     retrieved_context_parts.append("ONLY use the following activities if you choose to suggest one. For each, I've provided its Name, VESPA element, a Summary, Level and whether a PDF is available. When suggesting an activity, use its Name. Do NOT mention the ID. If a PDF is indicated as available, you can state that resources are available for it:")
@@ -1887,6 +1941,55 @@ Remember: You\'re coaching the tutor, not the student directly. Keep it conversa
             else:
                 app.logger.info("chat_turn RAG: Skipped searching VESPA_ACTIVITIES_DATA (KB empty).")
 
+            # Add relevant VESPA statements from vespa-statements.json
+            relevant_vespa_statements = []
+            if VESPA_STATEMENTS_DATA and isinstance(VESPA_STATEMENTS_DATA, dict):
+                vespa_statements_list = VESPA_STATEMENTS_DATA.get('vespa_statements', {}).get('statements', [])
+                if vespa_statements_list and isinstance(vespa_statements_list, list) and (keywords or vespa_element_from_problem):
+                    # Filter statements by category matching our inferred element or keywords
+                    for statement_obj in vespa_statements_list:
+                        if isinstance(statement_obj, dict):
+                            statement_category = statement_obj.get('category', '').lower()
+                            statement_keywords = [kw.lower() for kw in statement_obj.get('keywords', [])]
+                            
+                            # Check if this statement's category matches our inferred element
+                            if (vespa_element_from_problem and statement_category == vespa_element_from_problem.lower()) or \
+                               (not vespa_element_from_problem and any(kw in statement_keywords for kw in keywords)):
+                                
+                                if len(relevant_vespa_statements) < 4:
+                                    # Get both positive and negative indicators for balance
+                                    indicators = statement_obj.get('student_indicators', {})
+                                    if 'positive' in indicators and len(relevant_vespa_statements) < 2:
+                                        for indicator in indicators['positive'][:1]:  # Take 1 positive
+                                            relevant_vespa_statements.append({
+                                                'element': statement_category.capitalize(),
+                                                'type': 'positive',
+                                                'text': indicator
+                                            })
+                                    if 'negative' in indicators:
+                                        for indicator in indicators['negative'][:1]:  # Take 1 negative
+                                            if len(relevant_vespa_statements) < 4:
+                                                relevant_vespa_statements.append({
+                                                    'element': statement_category.capitalize(),
+                                                    'type': 'negative',
+                                                    'text': indicator
+                                                })
+                            
+                            if len(relevant_vespa_statements) >= 4:
+                                break
+
+            if relevant_vespa_statements:
+                retrieved_context_parts.append("\n--- VESPA Framework Student Indicators ---")
+                current_element = None
+                for vs in relevant_vespa_statements:
+                    if vs['element'] != current_element:
+                        current_element = vs['element']
+                        retrieved_context_parts.append(f"\n{current_element} characteristics students might show:")
+                    indicator_prefix = "✓" if vs['type'] == 'positive' else "✗"
+                    retrieved_context_parts.append(f"  {indicator_prefix} {vs['text']}")
+                retrieved_context_parts.append(f"\nThese indicators can help the tutor recognize what {student_name_for_chat} might be experiencing and tailor their coaching approach.")
+                app.logger.info(f"chat_turn RAG: Found {len(relevant_vespa_statements)} relevant VESPA statement indicators.")
+            
             # Search REFLECTIVE_STATEMENTS_DATA
             if REFLECTIVE_STATEMENTS_DATA and keywords:
                 app.logger.info(f"chat_turn RAG: Searching REFLECTIVE_STATEMENTS_DATA ({len(REFLECTIVE_STATEMENTS_DATA)} items) for keywords: {keywords}")
@@ -1991,10 +2094,10 @@ Remember: You\'re coaching the tutor, not the student directly. Keep it conversa
     try:
         app.logger.info(f"chat_turn: Sending to LLM. Number of messages: {len(messages_for_llm)}. First system message length: {len(messages_for_llm[0]['content'])}. Second system message (context) length (if present): {len(messages_for_llm[1]['content']) if len(messages_for_llm) > 1 and messages_for_llm[1]['role'] == 'system' else 'N/A'}")
         response = openai.chat.completions.create(
-            model="gpt-3.5-turbo", # Consider gpt-4-turbo-preview if context is very long or complexity is high
+            model="gpt-4o-mini", # Using more capable model for better conversational quality
             messages=messages_for_llm,
-            max_tokens=350, # Increased slightly for potentially more nuanced responses
-            temperature=0.65, # Slightly adjusted for a balance of creativity and consistency
+            max_tokens=400, # Increased for more complete responses
+            temperature=0.8, # Higher temperature for more natural, varied conversation
             n=1,
             stop=None
         )

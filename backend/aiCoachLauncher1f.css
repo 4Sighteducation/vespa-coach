@@ -904,3 +904,192 @@ body.ai-coach-resizing * {
     color: #555 !important; /* Darker grey for the unliked heart */
     /* opacity: 1 !important; */ /* Ensure full opacity for the icon itself if needed */
 }
+
+/* Styles for externally controlled Student Report Component */
+/* Note: These selectors target elements based on the provided HTML. */
+/* They may need adjustment and the use of !important might be necessary. */
+/* Relying on data-v- attributes can be brittle if the external component updates. */
+
+/* Style the main card of the student reports */
+/* Using the data-v attribute for specificity, though it might change */
+div.card[data-v-7afa4eb2] {
+    border: 1px solid #cccccc !important;
+    background-color: #f9f9f9 !important;
+    padding: 15px !important;
+}
+
+/* Style the header text "Student Reports" */
+/* Targeting by ID is generally more stable if the ID is unique */
+div.card[data-v-7afa4eb2] #header h1#header-text {
+    color: #005a9c !important; /* Example: a shade of blue */
+    font-size: 1.8em !important;
+    text-transform: uppercase !important;
+}
+
+/* Style the cycle filter buttons */
+div.card[data-v-7afa4eb2] #cycle-filter.p-selectbutton .p-button {
+    background-color: #e0e0e0 !important;
+    color: #333333 !important;
+    border-color: #c0c0c0 !important;
+}
+
+div.card[data-v-7afa4eb2] #cycle-filter.p-selectbutton .p-button.p-highlight {
+    background-color: var(--vespa-effort-color) !important; /* Using one of your theme colors */
+    color: white !important;
+    border-color: var(--vespa-effort-color) !important;
+}
+
+
+/* Style the datatable component */
+div.card[data-v-7afa4eb2] .p-datatable.p-component[data-v-b7d9c24a] {
+    margin-top: 15px !important;
+}
+
+/* Style column titles in the table */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th .p-column-title {
+    color: #333333 !important;
+    font-weight: 600 !important;
+    font-size: 0.95em !important;
+}
+
+/* Style the table cells */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td {
+    font-size: 0.9em !important;
+    color: #444444 !important;
+}
+
+/* Example: Style the 'Report' buttons in the table */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td .view-report-button {
+    background-color: var(--vespa-vision-color) !important; /* Using one of your theme colors */
+    color: white !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    font-size: 0.85em !important;
+}
+
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td .view-report-button:hover {
+    opacity: 0.85 !important;
+}
+
+/* Style the search input in the filter row */
+div.card[data-v-7afa4eb2] .p-datatable .p-filter-column input.p-inputtext.p-column-filter {
+    border: 1px solid #ced4da !important;
+    padding: 8px !important;
+}
+
+div.card[data-v-7afa4eb2] .p-datatable .p-filter-column input.p-inputtext.p-column-filter:focus {
+    border-color: #86b4f0 !important; /* Using effort color for focus */
+    box-shadow: 0 0 0 0.2rem rgba(134, 180, 240, 0.25) !important;
+}
+
+/* Style the paginator */
+div.card[data-v-7afa4eb2] .p-paginator-bottom .p-paginator {
+    background-color: #f8f9fa !important;
+    border-top: 1px solid #dee2e6 !important;
+    padding: 10px !important;
+}
+
+div.card[data-v-7afa4eb2] .p-paginator-bottom .p-paginator .p-paginator-page.p-highlight {
+    background-color: var(--vespa-systems-color) !important; /* Using one of your theme colors */
+    color: white !important;
+    border-color: var(--vespa-systems-color) !important;
+}
+
+/* Enhanced Styling for Student Report Table */
+
+/* Custom Scrollbars for Report Response and Action Plan text areas */
+/* Targeting the span within the 11th and 12th td elements */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11) > span[data-v-b7d9c24a],
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) > span[data-v-b7d9c24a] {
+    scrollbar-width: thin !important; /* For Firefox */
+    scrollbar-color: #adb5bd #f1f3f5 !important; /* For Firefox - thumb and track */
+    padding-right: 5px !important; /* Add a little padding so text doesn't touch scrollbar */
+}
+
+/* WebKit (Chrome, Safari, Edge) scrollbar styles */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11) > span[data-v-b7d9c24a]::-webkit-scrollbar,
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) > span[data-v-b7d9c24a]::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11) > span[data-v-b7d9c24a]::-webkit-scrollbar-track,
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) > span[data-v-b7d9c24a]::-webkit-scrollbar-track {
+    background: #f1f3f5 !important;
+    border-radius: 4px !important;
+}
+
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11) > span[data-v-b7d9c24a]::-webkit-scrollbar-thumb,
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) > span[data-v-b7d9c24a]::-webkit-scrollbar-thumb {
+    background: #adb5bd !important;
+    border-radius: 4px !important;
+}
+
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11) > span[data-v-b7d9c24a]::-webkit-scrollbar-thumb:hover,
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) > span[data-v-b7d9c24a]::-webkit-scrollbar-thumb:hover {
+    background: #868e96 !important;
+}
+
+/* VESPA Column Styling (V, E, S, P, A, O) - 5th to 10th columns */
+/* Headers */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(5),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(6),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(7),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(8),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(9),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(10) {
+    width: 40px !important; /* Reduced width */
+    text-align: center !important;
+}
+
+/* Data cells */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(5),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(6),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(7),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(8),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(9),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(10) {
+    width: 40px !important; /* Reduced width */
+    font-size: 1.05em !important; /* Slightly larger font */
+    font-weight: bold !important; /* Bolder numbers */
+    text-align: center !important; /* Centered numbers */
+    padding: 8px 4px !important; /* Adjust padding */
+}
+
+/* Student Name and Group Column Styling - 1st and 2nd columns */
+/* Headers */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(1), /* Student Name */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(2) { /* Group */
+    width: 110px !important; /* Reduced width from 130px */
+}
+
+/* Data cells */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(1), /* Student Name */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(2) { /* Group */
+    width: 110px !important; /* Reduced width from 130px */
+    word-break: break-word; /* Helps prevent overly wide cells if names are long */
+}
+
+/* Optional: Adjust padding for all header cells for a tighter look */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th .p-column-header-content {
+    padding: 0.8rem 0.5rem !important; /* Reduced padding */
+}
+
+/* Optional: Adjust padding for all body cells for a tighter look */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td {
+    padding: 0.8rem 0.5rem !important; /* Consistent padding */
+}
+
+/* Ensure the Report Response and Action Plan columns still have enough space */
+/* Overriding the general td padding for these specific columns if needed */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) {
+    padding: 0.8rem 0.8rem !important; /* Give them a bit more horizontal padding */
+}
+
+/* Make the "Report" button column (3rd column) a bit more compact if desired */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(3),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(3) {
+    width: 80px !important; /* Reduced from 100px */
+    padding: 8px 4px !important;
+    text-align: center !important;
+}

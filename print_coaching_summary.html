@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coaching Summary</title>
+    <link rel="stylesheet" href="print_coaching_summary_styles.css">
+</head>
+<body>
+    <header class="no-print page-header">
+        <h1>Student Coaching Summary</h1>
+        <button id="printButton" onclick="window.print()" class="action-button">Print Summary</button>
+    </header>
+
+    <main id="summaryContent" class="summary-container">
+        <section id="studentInfo" class="summary-section">
+            <h2>Student Information</h2>
+            <div class="info-grid">
+                <p><strong>Name:</strong> <span id="studentName">[Loading...]</span></p>
+                <p><strong>Group:</strong> <span id="studentGroup">[Loading...]</span></p>
+                <p><strong>Date Generated:</strong> <span id="currentDate">[Loading...]</span></p>
+            </div>
+        </section>
+
+        <section id="vespaScores" class="summary-section">
+            <h3>VESPA Profile</h3>
+            <table id="vespaTable">
+                <thead>
+                    <tr>
+                        <th>V</th>
+                        <th>E</th>
+                        <th>S</th>
+                        <th>P</th>
+                        <th>A</th>
+                        <th>Overall</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="vespaV">[...]</td>
+                        <td id="vespaE">[...]</td>
+                        <td id="vespaS">[...]</td>
+                        <td id="vespaP">[...]</td>
+                        <td id="vespaA">[...]</td>
+                        <td id="vespaOverall">[...]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="reportResponse" class="summary-section">
+            <h3>Student's Report Response</h3>
+            <div id="responseText" class="text-content">[Loading...]</div>
+        </section>
+
+        <section id="actionPlan" class="summary-section">
+            <h3>Agreed Action Plan</h3>
+            <div id="actionPlanText" class="text-content">[Loading...]</div>
+        </section>
+        
+        <section id="coachingFocus" class="summary-section">
+            <h3>Key Coaching Focus Areas</h3>
+            <div id="coachingFocusText" class="text-content">[This could be manually entered or fetched if available]</div>
+        </section>
+
+        <section id="notes" class="summary-section no-print">
+             <h3>Tutor Notes (not printed)</h3>
+             <textarea id="tutorNotes" placeholder="Add any private notes here. This section will not be printed."></textarea>
+        </section>
+    </main>
+
+    <footer class="no-print page-footer">
+        <p>AI VESPA Coach Summary Tool</p>
+    </footer>
+
+    <script src="print_coaching_summary.js"></script>
+</body>
+</html> 

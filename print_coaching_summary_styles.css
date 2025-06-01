@@ -1,0 +1,208 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    color: #212529;
+    line-height: 1.6;
+}
+
+.page-header {
+    background-color: #4a5568; /* Darker blue-grey */
+    color: white;
+    padding: 15px 30px;
+    text-align: center;
+    border-bottom: 4px solid #2c3e50; /* Even darker border */
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 1.8em;
+}
+
+.action-button {
+    background-color: #3498db; /* Bright blue */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+    margin-top: 10px;
+}
+
+.action-button:hover {
+    background-color: #2980b9; /* Darker blue on hover */
+}
+
+.summary-container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 25px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.summary-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.summary-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.summary-section h2 {
+    font-size: 1.5em;
+    color: #2c3e50; /* Dark blue-grey */
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #79A6DC; /* Light blue accent */
+    padding-bottom: 8px;
+}
+
+.summary-section h3 {
+    font-size: 1.25em;
+    color: #34495e; /* Slightly lighter blue-grey */
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.info-grid p {
+    margin: 5px 0;
+    background-color: #f8f9fa;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+#vespaTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#vespaTable th, #vespaTable td {
+    border: 1px solid #dee2e6;
+    padding: 10px;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+#vespaTable th {
+    background-color: #e9ecef;
+    font-weight: 600;
+}
+
+#vespaTable td {
+    font-weight: bold;
+}
+
+.text-content {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid #e9ecef;
+    white-space: pre-wrap; /* Preserve line breaks from original text */
+    font-size: 0.95em;
+}
+
+#tutorNotes {
+    width: calc(100% - 22px); /* Account for padding and border */
+    min-height: 100px;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.95em;
+    margin-top: 5px;
+}
+
+.page-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 15px;
+    font-size: 0.9em;
+    color: #6c757d;
+    background-color: #e9ecef;
+}
+
+/* Print Styles */
+@media print {
+    body {
+        margin: 0.5in;
+        font-size: 10pt;
+        color: #000000;
+        background-color: #ffffff;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .summary-container {
+        width: 100%;
+        margin: 0 auto;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    .summary-section {
+        page-break-inside: avoid;
+        border-bottom: 1px solid #cccccc; /* Lighter border for print */
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .summary-section h2 {
+        font-size: 14pt;
+        border-bottom: 2px solid #999999;
+        color: #000000;
+    }
+
+    .summary-section h3 {
+        font-size: 12pt;
+        color: #000000;
+    }
+
+    .info-grid p,
+    .text-content {
+        background-color: #ffffff;
+        border: 1px solid #dddddd;
+        font-size: 9pt;
+    }
+
+    #vespaTable th, #vespaTable td {
+        border: 1px solid #aaaaaa;
+        padding: 6px;
+        font-size: 10pt;
+    }
+
+    #vespaTable th {
+        background-color: #eeeeee;
+    }
+
+    a {
+        text-decoration: none;
+        color: #000000 !important;
+    }
+    a[href]:after {
+        content: " (" attr(href) ")"; /* Show URLs in print if needed, can be removed */
+        font-size: 0.8em;
+        color: #555555;
+    }
+} 

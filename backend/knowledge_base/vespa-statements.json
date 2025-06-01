@@ -1,0 +1,4070 @@
+{
+    "vespa_statements": {
+      "metadata": {
+        "version": "1.0",
+        "total_statements": 101,
+        "categories": [
+          "vision",
+          "effort",
+          "systems",
+          "practice",
+          "attitude"
+        ],
+        "usage_instructions": "Use these statements to guide conversations with students, pose reflective questions, identify areas for improvement, and provide targeted suggestions."
+      },
+      "statements": [
+        {
+          "id": "V01",
+          "category": "vision",
+          "statement": "I have personal bests I'm trying to beat when I submit new work",
+          "keywords": [
+            "personal best",
+            "improvement",
+            "goals",
+            "achievement"
+          ],
+          "student_indicators": {
+            "positive": [
+              "mentions previous grades",
+              "talks about improvement",
+              "sets targets"
+            ],
+            "negative": [
+              "no clear goals",
+              "doesn't track progress",
+              "lacks motivation"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What's your personal best in this subject so far?",
+              "How far have you come this year?",
+              "What progress can you see?",
+              "How do you measure your growth?"
+            ],
+            "suggestions": [
+              "Compare current work to work from months ago",
+              "List skills you've gained this term"
+            ]
+          },
+          "related_statements": [
+            "A02",
+            "A15",
+            "A01"
+          ],
+          "difficulty_level": "low",
+          "related_activity_ids": [
+            "VI21",
+            "VI25",
+            "VI30"
+          ]
+        },
+        {
+          "id": "V02",
+          "category": "vision",
+          "statement": "I have a clear idea of what I need to know in order to understand everything well, so I ask the teacher to clarify tasks that I'm not 100% clear on",
+          "keywords": [
+            "clarity",
+            "understanding",
+            "communication",
+            "questions",
+            "asking for help",
+            "comprehension"
+          ],
+          "student_indicators": {
+            "positive": [
+              "asks clarifying questions in class",
+              "emails teachers with specific queries",
+              "identifies gaps in understanding proactively",
+              "comfortable admitting when unsure"
+            ],
+            "negative": [
+              "proceeds with tasks without full understanding",
+              "hesitates to ask questions",
+              "assumes knowledge they don't have",
+              "submits work with misunderstandings"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What's your approach when a teacher explains something and you don't quite get it?",
+              "How easy or difficult do you find it to ask for clarification in front of others?",
+              "Can you think of a time asking a question really helped you understand something better?"
+            ],
+            "suggestions": [
+              "If you're unsure about a task, try pinpointing exactly what part is confusing. It's easier to ask a specific question than a general one.",
+              "Remember, asking for clarification is a sign of engagement and wanting to learn, not a weakness. Teachers appreciate it!"
+            ]
+          },
+          "related_statements": [
+            "V09",
+            "E08",
+            "E16",
+            "A14"
+          ],
+          "related_activity_ids": [],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V01",
+          "category": "vision",
+          "statement": "I have personal bests I'm trying to beat when I submit new work",
+          "keywords": [
+            "personal best",
+            "improvement",
+            "goals",
+            "achievement"
+          ],
+          "student_indicators": {
+            "positive": [
+              "mentions previous grades",
+              "talks about improvement",
+              "sets targets"
+            ],
+            "negative": [
+              "no clear goals",
+              "doesn't track progress",
+              "lacks motivation"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What's your personal best in this subject so far?",
+              "How far have you come this year?",
+              "What progress can you see?",
+              "How do you measure your growth?"
+            ],
+            "suggestions": [
+              "Compare current work to work from months ago",
+              "List skills you've gained this term"
+            ]
+          },
+          "related_statements": [
+            "A02",
+            "A15",
+            "A01"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V02",
+          "category": "vision",
+          "statement": "I have a clear idea of what I need to know in order to understand everything well, so I ask the teacher to clarify tasks that I'm not 100% clear on",
+          "keywords": [
+            "clarity",
+            "understanding",
+            "communication",
+            "questions"
+          ],
+          "student_indicators": {
+            "positive": [
+              "asks questions",
+              "seeks clarification",
+              "identifies gaps"
+            ],
+            "negative": [
+              "proceeds without understanding",
+              "afraid to ask",
+              "assumes knowledge"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you feel comfortable asking questions when you're unsure?",
+              "What stops you from seeking clarification when needed?",
+              "How do you identify what you don't understand?"
+            ],
+            "suggestions": [
+              "Write down questions as they occur to you during lessons",
+              "Practice asking for clarification - it shows engagement, not weakness"
+            ]
+          },
+          "related_statements": [
+            "V09",
+            "E16",
+            "A14"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V03",
+          "category": "vision",
+          "statement": "I have begun researching how other people got to where they were",
+          "keywords": [
+            "role models",
+            "career paths",
+            "research",
+            "inspiration"
+          ],
+          "student_indicators": {
+            "positive": [
+              "mentions role models",
+              "researches careers",
+              "curious about success stories"
+            ],
+            "negative": [
+              "no clear direction",
+              "hasn't considered pathways",
+              "lacks inspiration"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Who inspires you in your field of interest?",
+              "Have you looked into how successful people in your area achieved their goals?",
+              "What career paths are you curious about?"
+            ],
+            "suggestions": [
+              "Research one person per week who succeeded in your area of interest",
+              "Watch interviews or read biographies of people you admire"
+            ]
+          },
+          "related_statements": [
+            "V14",
+            "V06"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "V04",
+          "category": "vision",
+          "statement": "I have imagined what a good set of exam results look like for me. I have written them down somewhere, like a commitment to myself",
+          "keywords": [
+            "goals",
+            "visualization",
+            "commitment",
+            "exam results"
+          ],
+          "student_indicators": {
+            "positive": [
+              "has specific grade targets",
+              "written goals",
+              "clear vision"
+            ],
+            "negative": [
+              "vague about goals",
+              "no written targets",
+              "unclear expectations"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Have you written down your target grades?",
+              "What would your ideal exam results look like?",
+              "Where do you keep your academic goals?"
+            ],
+            "suggestions": [
+              "Write your target grades and put them somewhere visible",
+              "Create a vision board or document with your academic goals"
+            ]
+          },
+          "related_statements": [
+            "V01",
+            "V13",
+            "S09"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V05",
+          "category": "vision",
+          "statement": "I have mental lists of things I hope for, from small to big academic achievements",
+          "keywords": [
+            "aspirations",
+            "achievement",
+            "goals",
+            "planning"
+          ],
+          "student_indicators": {
+            "positive": [
+              "mentions various goals",
+              "thinks about achievements",
+              "has aspirations"
+            ],
+            "negative": [
+              "no clear aspirations",
+              "doesn't think ahead",
+              "lacks ambition"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What small academic wins are you working towards?",
+              "What's your biggest academic aspiration?",
+              "How do you keep track of your goals?"
+            ],
+            "suggestions": [
+              "Create a 'achievement ladder' from small daily wins to big goals",
+              "Celebrate small victories as steps toward larger achievements"
+            ]
+          },
+          "related_statements": [
+            "V04",
+            "V13",
+            "A02"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V06",
+          "category": "vision",
+          "statement": "I have started to find out about current affairs by reading a news site, watching TV news or choosing a documentary to watch",
+          "keywords": [
+            "current affairs",
+            "awareness",
+            "knowledge",
+            "engagement"
+          ],
+          "student_indicators": {
+            "positive": [
+              "mentions news topics",
+              "aware of current events",
+              "watches documentaries"
+            ],
+            "negative": [
+              "disconnected from world",
+              "no news consumption",
+              "lacks awareness"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you stay informed about what's happening in the world?",
+              "What news sources do you find most interesting?",
+              "How might current events relate to your studies?"
+            ],
+            "suggestions": [
+              "Spend 10 minutes daily reading news relevant to your subjects",
+              "Watch one documentary per week related to your studies"
+            ]
+          },
+          "related_statements": [
+            "V03",
+            "V17",
+            "E12"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V07",
+          "category": "vision",
+          "statement": "I have thought about what good work looks like, and I'm aware of that as I work",
+          "keywords": [
+            "quality",
+            "standards",
+            "awareness",
+            "excellence"
+          ],
+          "student_indicators": {
+            "positive": [
+              "understands quality",
+              "has standards",
+              "self-aware"
+            ],
+            "negative": [
+              "unclear on quality",
+              "no standards",
+              "just completes tasks"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you define 'good work' in your subjects?",
+              "What makes the difference between average and excellent work?",
+              "Do you have examples of excellent work to guide you?"
+            ],
+            "suggestions": [
+              "Collect examples of high-quality work to use as models",
+              "Before starting, visualize what excellent work would look like"
+            ]
+          },
+          "related_statements": [
+            "E11",
+            "P11",
+            "S02"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "V08",
+          "category": "vision",
+          "statement": "I know why school is important to me - I have thought it through, maybe even written it down",
+          "keywords": [
+            "purpose",
+            "motivation",
+            "reflection",
+            "importance"
+          ],
+          "student_indicators": {
+            "positive": [
+              "clear purpose",
+              "articulates importance",
+              "motivated"
+            ],
+            "negative": [
+              "unclear purpose",
+              "just going through motions",
+              "lacks motivation"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Why is your education important to you personally?",
+              "How does school connect to your future goals?",
+              "Have you written down your 'why' for studying?"
+            ],
+            "suggestions": [
+              "Write a personal mission statement for your education",
+              "Reflect on how each subject connects to your future goals"
+            ]
+          },
+          "related_statements": [
+            "V04",
+            "A15",
+            "E12"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "V09",
+          "category": "vision",
+          "statement": "I like to ask questions for clarification in lessons and make contributions such as volunteering answers or offering opinions",
+          "keywords": [
+            "participation",
+            "engagement",
+            "questions",
+            "contribution"
+          ],
+          "student_indicators": {
+            "positive": [
+              "asks questions",
+              "participates",
+              "shares opinions"
+            ],
+            "negative": [
+              "passive in class",
+              "never asks questions",
+              "afraid to contribute"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What holds you back from participating in class?",
+              "How comfortable are you with asking questions?",
+              "When did you last volunteer an answer in class?"
+            ],
+            "suggestions": [
+              "Set a goal to ask one question per lesson",
+              "Prepare one comment or opinion before each class"
+            ]
+          },
+          "related_statements": [
+            "V02",
+            "A14",
+            "E09"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "V10",
+          "category": "vision",
+          "statement": "I often have another class member I compete against",
+          "keywords": [
+            "competition",
+            "motivation",
+            "peers",
+            "challenge"
+          ],
+          "student_indicators": {
+            "positive": [
+              "mentions friendly competition",
+              "motivated by peers",
+              "challenges self"
+            ],
+            "negative": [
+              "works in isolation",
+              "no peer motivation",
+              "avoids competition"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you have a study buddy or friendly rival?",
+              "How does healthy competition motivate you?",
+              "Who in your class pushes you to do better?"
+            ],
+            "suggestions": [
+              "Find a study partner with similar goals for friendly competition",
+              "Use peer success as motivation, not intimidation"
+            ]
+          },
+          "related_statements": [
+            "V11",
+            "A05",
+            "P20"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "V11",
+          "category": "vision",
+          "statement": "I often talk to my friends about my subjects, going over complicated topics or sharing enthusiasms",
+          "keywords": [
+            "collaboration",
+            "discussion",
+            "enthusiasm",
+            "peer learning"
+          ],
+          "student_indicators": {
+            "positive": [
+              "discusses subjects",
+              "shares enthusiasm",
+              "collaborative learning"
+            ],
+            "negative": [
+              "studies alone",
+              "doesn't discuss work",
+              "lacks enthusiasm"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you discuss your subjects with friends?",
+              "How does talking about topics help your understanding?",
+              "What subjects excite you enough to share with others?"
+            ],
+            "suggestions": [
+              "Start a study group for your most challenging subject",
+              "Share one interesting thing you learned each day with a friend"
+            ]
+          },
+          "related_statements": [
+            "V10",
+            "P20",
+            "E17"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V12",
+          "category": "vision",
+          "statement": "I seek extra material (textbooks, articles, handouts, revision sites) to deepen my understanding of a topic",
+          "keywords": [
+            "resources",
+            "initiative",
+            "depth",
+            "understanding"
+          ],
+          "student_indicators": {
+            "positive": [
+              "finds extra resources",
+              "goes beyond minimum",
+              "curious"
+            ],
+            "negative": [
+              "only uses given materials",
+              "no initiative",
+              "surface learning"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What extra resources have you found helpful?",
+              "How do you find additional learning materials?",
+              "What topics would you like to explore more deeply?"
+            ],
+            "suggestions": [
+              "Ask teachers for recommended reading lists",
+              "Explore one new resource per week for your challenging subjects"
+            ]
+          },
+          "related_statements": [
+            "E15",
+            "V17",
+            "P14"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "V13",
+          "category": "vision",
+          "statement": "I set targets, like a grade or a certain type of feedback, to work towards",
+          "keywords": [
+            "targets",
+            "goals",
+            "feedback",
+            "direction"
+          ],
+          "student_indicators": {
+            "positive": [
+              "sets specific targets",
+              "goal-oriented",
+              "tracks progress"
+            ],
+            "negative": [
+              "no targets",
+              "aimless",
+              "doesn't track progress"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What specific targets are you working towards?",
+              "How do you decide what targets to set?",
+              "What type of feedback are you aiming for?"
+            ],
+            "suggestions": [
+              "Set SMART targets for each subject",
+              "Focus on process goals as well as grade goals"
+            ]
+          },
+          "related_statements": [
+            "V01",
+            "V04",
+            "E09"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V14",
+          "category": "vision",
+          "statement": "I take an interest in certain careers or courses and seek out video clips or online articles about them, just to see if they might be for me",
+          "keywords": [
+            "careers",
+            "exploration",
+            "future",
+            "research"
+          ],
+          "student_indicators": {
+            "positive": [
+              "explores careers",
+              "researches options",
+              "future-focused"
+            ],
+            "negative": [
+              "no career thoughts",
+              "hasn't explored options",
+              "uncertain future"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What careers have you been exploring?",
+              "How do you research potential career paths?",
+              "What courses or universities interest you?"
+            ],
+            "suggestions": [
+              "Watch one career-focused video per week",
+              "Create a folder of interesting career resources"
+            ]
+          },
+          "related_statements": [
+            "V03",
+            "V06",
+            "V18"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V15",
+          "category": "vision",
+          "statement": "I try and get involved in school life, joining clubs, helping others and building relationships that will help me as I go along",
+          "keywords": [
+            "involvement",
+            "networking",
+            "relationships",
+            "participation"
+          ],
+          "student_indicators": {
+            "positive": [
+              "joins clubs",
+              "helps others",
+              "builds relationships"
+            ],
+            "negative": [
+              "isolated",
+              "no involvement",
+              "misses opportunities"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What clubs or activities are you involved in?",
+              "How do you build helpful relationships at school?",
+              "What opportunities might you be missing?"
+            ],
+            "suggestions": [
+              "Join one new club or activity this term",
+              "Volunteer for a school event to meet new people"
+            ]
+          },
+          "related_statements": [
+            "V11",
+            "A14",
+            "A16"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V16",
+          "category": "vision",
+          "statement": "I want teachers to say good things about me at parents' evenings, and work to make sure those things are more likely to happen",
+          "keywords": [
+            "reputation",
+            "impression",
+            "feedback",
+            "relationships"
+          ],
+          "student_indicators": {
+            "positive": [
+              "considers teacher perspective",
+              "works on relationships",
+              "reputation aware"
+            ],
+            "negative": [
+              "doesn't consider impressions",
+              "poor relationships",
+              "unaware"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What would you like teachers to say about you?",
+              "How do you build positive relationships with teachers?",
+              "What impression do you think you give?"
+            ],
+            "suggestions": [
+              "Act on feedback to show you're listening",
+              "Thank teachers for their help to build positive relationships"
+            ]
+          },
+          "related_statements": [
+            "V09",
+            "E16",
+            "A14"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "V17",
+          "category": "vision",
+          "statement": "I'm happy to watch a film or read a book-chapter connected to my learning so I can find out more and make connections",
+          "keywords": [
+            "enrichment",
+            "connections",
+            "interest",
+            "depth"
+          ],
+          "student_indicators": {
+            "positive": [
+              "seeks connections",
+              "watches related content",
+              "makes links"
+            ],
+            "negative": [
+              "compartmentalizes learning",
+              "no enrichment",
+              "surface level"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What films or books have enhanced your understanding?",
+              "How do you make connections between different sources?",
+              "What subject would you like to explore through film or literature?"
+            ],
+            "suggestions": [
+              "Ask teachers for film/book recommendations for each topic",
+              "Keep a log of connections between different sources"
+            ]
+          },
+          "related_statements": [
+            "V06",
+            "V12",
+            "E12"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V18",
+          "category": "vision",
+          "statement": "If the teacher suggests an out-of-class activity or opportunity, I consider it",
+          "keywords": [
+            "opportunities",
+            "openness",
+            "enrichment",
+            "engagement"
+          ],
+          "student_indicators": {
+            "positive": [
+              "takes opportunities",
+              "open to suggestions",
+              "engaged"
+            ],
+            "negative": [
+              "dismisses opportunities",
+              "closed minded",
+              "misses chances"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What opportunities have you taken recently?",
+              "How do you decide which activities to pursue?",
+              "What's stopped you from taking certain opportunities?"
+            ],
+            "suggestions": [
+              "Say yes to at least one opportunity per term",
+              "Ask teachers about upcoming opportunities"
+            ]
+          },
+          "related_statements": [
+            "V14",
+            "V15",
+            "E15"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V19",
+          "category": "vision",
+          "statement": "My attendance and punctuality are very good, and I work to maintain them",
+          "keywords": [
+            "attendance",
+            "punctuality",
+            "reliability",
+            "commitment"
+          ],
+          "student_indicators": {
+            "positive": [
+              "excellent attendance",
+              "always punctual",
+              "reliable"
+            ],
+            "negative": [
+              "poor attendance",
+              "often late",
+              "unreliable"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you ensure good attendance and punctuality?",
+              "What impact does attendance have on your learning?",
+              "What challenges affect your attendance?"
+            ],
+            "suggestions": [
+              "Set multiple alarms to ensure punctuality",
+              "Track your attendance and set improvement goals"
+            ]
+          },
+          "related_statements": [
+            "V20",
+            "S13",
+            "E07"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "V20",
+          "category": "vision",
+          "statement": "When entering a lesson, I'm focussed and immediately look for the starter task",
+          "keywords": [
+            "focus",
+            "readiness",
+            "engagement",
+            "preparation"
+          ],
+          "student_indicators": {
+            "positive": [
+              "arrives ready",
+              "immediately engaged",
+              "prepared"
+            ],
+            "negative": [
+              "slow to start",
+              "unfocused",
+              "unprepared"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you prepare yourself before entering a lesson?",
+              "What helps you focus at the start of class?",
+              "What distracts you when entering a lesson?"
+            ],
+            "suggestions": [
+              "Arrive 2 minutes early to prepare mentally",
+              "Review previous lesson notes before entering"
+            ]
+          },
+          "related_statements": [
+            "V19",
+            "E13",
+            "S13"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "E01",
+          "category": "effort",
+          "statement": "I can increase periods of concentration if I have to - I know what my main distractions are, and how to turn them off so I can focus",
+          "keywords": [
+            "concentration",
+            "focus",
+            "distractions",
+            "self-awareness"
+          ],
+          "student_indicators": {
+            "positive": [
+              "identifies distractions",
+              "manages focus",
+              "self-aware"
+            ],
+            "negative": [
+              "easily distracted",
+              "can't focus",
+              "unaware of triggers"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What are your main distractions when studying?",
+              "How long can you concentrate before needing a break?",
+              "What strategies help you maintain focus?"
+            ],
+            "suggestions": [
+              "Use the Pomodoro Technique for focused study sessions",
+              "Create a distraction list to capture thoughts without acting on them"
+            ]
+          },
+          "related_statements": [
+            "E13",
+            "S15",
+            "A08"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "E02",
+          "category": "effort",
+          "statement": "I challenge myself when studying topics which I am not familiar with, working harder to understand them and revisiting them for checks more often",
+          "keywords": [
+            "challenge",
+            "persistence",
+            "difficult topics",
+            "revision"
+          ],
+          "student_indicators": {
+            "positive": [
+              "tackles difficult topics",
+              "revisits material",
+              "persistent"
+            ],
+            "negative": [
+              "avoids challenges",
+              "gives up easily",
+              "skips difficult parts"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you approach topics you find difficult?",
+              "When do you revisit challenging material?",
+              "What's your strategy for understanding new concepts?"
+            ],
+            "suggestions": [
+              "Schedule extra time for difficult topics",
+              "Break challenging topics into smaller, manageable parts"
+            ]
+          },
+          "related_statements": [
+            "E20",
+            "P06",
+            "A07"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "E03",
+          "category": "effort",
+          "statement": "I complete draft-work in advance and ask the teacher to take a quick look at it so I can make any changes before the real deadline",
+          "keywords": [
+            "drafts",
+            "feedback",
+            "preparation",
+            "improvement"
+          ],
+          "student_indicators": {
+            "positive": [
+              "creates drafts",
+              "seeks feedback",
+              "plans ahead"
+            ],
+            "negative": [
+              "last minute work",
+              "no drafts",
+              "avoids feedback"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you create drafts before final submissions?",
+              "How comfortable are you showing incomplete work to teachers?",
+              "When do you typically start assignments?"
+            ],
+            "suggestions": [
+              "Aim to complete drafts at least 3 days before deadlines",
+              "Ask teachers when they're available for draft reviews"
+            ]
+          },
+          "related_statements": [
+            "E06",
+            "E16",
+            "S08"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "E04",
+          "category": "effort",
+          "statement": "I don't mind putting in some work over the weekend reviewing difficult work or going through a study guide or website to stay on top of things",
+          "keywords": [
+            "weekend study",
+            "review",
+            "consistency",
+            "commitment"
+          ],
+          "student_indicators": {
+            "positive": [
+              "studies weekends",
+              "consistent effort",
+              "stays current"
+            ],
+            "negative": [
+              "no weekend work",
+              "falls behind",
+              "inconsistent"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you use weekends for academic work?",
+              "What's your weekend study routine?",
+              "How do you balance rest and study on weekends?"
+            ],
+            "suggestions": [
+              "Dedicate 2-3 hours on weekends for review and catch-up",
+              "Use Sunday evenings to prepare for the week ahead"
+            ]
+          },
+          "related_statements": [
+            "E07",
+            "S15",
+            "S17"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "E05",
+          "category": "effort",
+          "statement": "I generally know in advance what I plan to achieve in a study session rather than start it and just hope",
+          "keywords": [
+            "planning",
+            "goals",
+            "purpose",
+            "efficiency"
+          ],
+          "student_indicators": {
+            "positive": [
+              "plans sessions",
+              "has objectives",
+              "purposeful"
+            ],
+            "negative": [
+              "no planning",
+              "aimless study",
+              "inefficient"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you plan your study sessions?",
+              "What makes a study session successful for you?",
+              "Do you set specific goals before studying?"
+            ],
+            "suggestions": [
+              "Write 3 objectives before each study session",
+              "Review whether you met your goals after studying"
+            ]
+          },
+          "related_statements": [
+            "S01",
+            "S09",
+            "S16"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "E06",
+          "category": "effort",
+          "statement": "I go over work one last time before handing it in, just to check it's as good as I can make it",
+          "keywords": [
+            "review",
+            "quality",
+            "proofreading",
+            "standards"
+          ],
+          "student_indicators": {
+            "positive": [
+              "reviews work",
+              "quality focused",
+              "thorough"
+            ],
+            "negative": [
+              "rushes submission",
+              "no review",
+              "careless"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What's your final check process before submitting work?",
+              "How do you ensure quality in your submissions?",
+              "What mistakes do you commonly catch when reviewing?"
+            ],
+            "suggestions": [
+              "Create a submission checklist for all assignments",
+              "Read work aloud to catch errors"
+            ]
+          },
+          "related_statements": [
+            "E03",
+            "E11",
+            "V07"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "E07",
+          "category": "effort",
+          "statement": "I have an out-of-school routine for homework - doing it when I get home, or at the same time each day",
+          "keywords": [
+            "routine",
+            "consistency",
+            "homework",
+            "habits"
+          ],
+          "student_indicators": {
+            "positive": [
+              "has routine",
+              "consistent timing",
+              "good habits"
+            ],
+            "negative": [
+              "no routine",
+              "random timing",
+              "procrastinates"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What's your homework routine?",
+              "When do you find it easiest to complete homework?",
+              "How consistent is your study schedule?"
+            ],
+            "suggestions": [
+              "Establish a fixed homework time each day",
+              "Create a ritual to signal the start of homework time"
+            ]
+          },
+          "related_statements": [
+            "E04",
+            "S15",
+            "S17"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "E08",
+          "category": "effort",
+          "statement": "I often ask about the success criteria/requirements of the task so I'm more likely to produce quality work",
+          "keywords": [
+            "criteria",
+            "requirements",
+            "clarity",
+            "quality"
+          ],
+          "student_indicators": {
+            "positive": [
+              "seeks criteria",
+              "understands requirements",
+              "quality focused"
+            ],
+            "negative": [
+              "assumes requirements",
+              "unclear on criteria",
+              "guesses"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you always understand what's expected in assignments?",
+              "How do you clarify task requirements?",
+              "What happens when you're unsure about criteria?"
+            ],
+            "suggestions": [
+              "Ask for rubrics or mark schemes for all assignments",
+              "Clarify requirements before starting any task"
+            ]
+          },
+          "related_statements": [
+            "V02",
+            "E16",
+            "P11"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "E09",
+          "category": "effort",
+          "statement": "I often ask myself 'what can I also do?' and create my own extension criteria, aiming to impress my teacher",
+          "keywords": [
+            "extension",
+            "initiative",
+            "excellence",
+            "impression"
+          ],
+          "student_indicators": {
+            "positive": [
+              "goes beyond",
+              "self-directed",
+              "ambitious"
+            ],
+            "negative": [
+              "minimum effort",
+              "no extension",
+              "lacks initiative"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you go beyond basic requirements?",
+              "What extensions have you added to recent work?",
+              "How do you challenge yourself in assignments?"
+            ],
+            "suggestions": [
+              "Add one 'wow factor' element to each assignment",
+              "Ask teachers what would make work exceptional"
+            ]
+          },
+          "related_statements": [
+            "E11",
+            "V13",
+            "V09"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "E10",
+          "category": "effort",
+          "statement": "I often go looking for problems - seeking out topics I find hard and listing the questions I want to discuss with my teacher",
+          "keywords": [
+            "problems",
+            "challenges",
+            "questions",
+            "proactive"
+          ],
+          "student_indicators": {
+            "positive": [
+              "identifies weaknesses",
+              "prepares questions",
+              "proactive"
+            ],
+            "negative": [
+              "avoids problems",
+              "no questions",
+              "passive"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you identify areas where you need help?",
+              "What questions do you have ready for your teachers?",
+              "How do you approach your weak areas?"
+            ],
+            "suggestions": [
+              "Keep a question journal for each subject",
+              "Dedicate time weekly to identify problem areas"
+            ]
+          },
+          "related_statements": [
+            "E02",
+            "P06",
+            "A14"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "E11",
+          "category": "effort",
+          "statement": "I often go the extra mile to complete work to a really high standard, asking myself 'what would this look like if it were excellent?'",
+          "keywords": [
+            "excellence",
+            "standards",
+            "quality",
+            "extra mile"
+          ],
+          "student_indicators": {
+            "positive": [
+              "high standards",
+              "excellence focused",
+              "goes beyond"
+            ],
+            "negative": [
+              "satisficing",
+              "low standards",
+              "minimum effort"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What does excellent work mean to you?",
+              "How do you push yourself to excel?",
+              "When did you last go the extra mile?"
+            ],
+            "suggestions": [
+              "Before starting, visualize what excellent work looks like",
+              "Compare your work to exemplars before submitting"
+            ]
+          },
+          "related_statements": [
+            "E09",
+            "V07",
+            "E06"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "E12",
+          "category": "effort",
+          "statement": "I often try to see the value in the work my teachers set, and explain to myself why it's important, even if I sometimes have to persuade myself",
+          "keywords": [
+            "value",
+            "purpose",
+            "motivation",
+            "perspective"
+          ],
+          "student_indicators": {
+            "positive": [
+              "finds purpose",
+              "self-motivating",
+              "positive attitude"
+            ],
+            "negative": [
+              "sees no value",
+              "complains",
+              "unmotivated"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you find value in tasks you don't enjoy?",
+              "What helps you stay motivated with boring work?",
+              "Can you connect every task to a bigger purpose?"
+            ],
+            "suggestions": [
+              "Write down how each task develops useful skills",
+              "Connect boring tasks to your larger goals"
+            ]
+          },
+          "related_statements": [
+            "V08",
+            "A18",
+            "V12"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "E13",
+          "category": "effort",
+          "statement": "I often work without screens, headphones or alerts, switching everything off so it's just me and the task",
+          "keywords": [
+            "focus",
+            "distraction-free",
+            "concentration",
+            "environment"
+          ],
+          "student_indicators": {
+            "positive": [
+              "eliminates distractions",
+              "focused environment",
+              "disciplined"
+            ],
+            "negative": [
+              "always distracted",
+              "multitasking",
+              "unfocused"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How often do you work completely distraction-free?",
+              "What happens to your productivity without devices?",
+              "What's your biggest digital distraction?"
+            ],
+            "suggestions": [
+              "Try 'airplane mode' study sessions",
+              "Use app blockers during study time"
+            ]
+          },
+          "related_statements": [
+            "E01",
+            "V20",
+            "S04"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "E14",
+          "category": "effort",
+          "statement": "I set myself little tasks, like reading over the previous week's notes and try to find the answer to things I don't understand",
+          "keywords": [
+            "review",
+            "self-directed",
+            "understanding",
+            "initiative"
+          ],
+          "student_indicators": {
+            "positive": [
+              "self-directed tasks",
+              "regular review",
+              "fills gaps"
+            ],
+            "negative": [
+              "no review",
+              "passive learning",
+              "accumulates gaps"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What small tasks do you set yourself?",
+              "How often do you review previous work?",
+              "How do you identify what you don't understand?"
+            ],
+            "suggestions": [
+              "Spend 15 minutes each evening reviewing the day's notes",
+              "Create a 'don't understand' list to work through"
+            ]
+          },
+          "related_statements": [
+            "E10",
+            "S19",
+            "P10"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "E15",
+          "category": "effort",
+          "statement": "I sometimes approach teachers and ask for suggestions for additional resources or reading recommendations",
+          "keywords": [
+            "initiative",
+            "resources",
+            "teacher interaction",
+            "extension"
+          ],
+          "student_indicators": {
+            "positive": [
+              "seeks resources",
+              "proactive",
+              "engaged with teachers"
+            ],
+            "negative": [
+              "never asks",
+              "limited resources",
+              "passive"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "When did you last ask a teacher for extra resources?",
+              "What stops you from asking for recommendations?",
+              "How do you find additional learning materials?"
+            ],
+            "suggestions": [
+              "Ask each teacher for their 'top 3' resources",
+              "Request reading lists at the start of each topic"
+            ]
+          },
+          "related_statements": [
+            "V12",
+            "V18",
+            "E16"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "E16",
+          "category": "effort",
+          "statement": "I speak to teachers or students to check I know what to do before I start, to ensure my effort is targeted wisely",
+          "keywords": [
+            "clarification",
+            "efficiency",
+            "communication",
+            "preparation"
+          ],
+          "student_indicators": {
+            "positive": [
+              "seeks clarification",
+              "efficient effort",
+              "well-directed"
+            ],
+            "negative": [
+              "assumes understanding",
+              "wasted effort",
+              "misdirected"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you clarify tasks before starting?",
+              "How do you ensure your effort is well-directed?",
+              "What happens when you misunderstand requirements?"
+            ],
+            "suggestions": [
+              "Always confirm understanding before leaving class",
+              "Check with successful peers about their approach"
+            ]
+          },
+          "related_statements": [
+            "E08",
+            "V02",
+            "E03"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "E17",
+          "category": "effort",
+          "statement": "I watch what higher-achieving students do in class and sometimes steal behaviours from them",
+          "keywords": [
+            "observation",
+            "modeling",
+            "learning strategies",
+            "improvement"
+          ],
+          "student_indicators": {
+            "positive": [
+              "observes others",
+              "adopts strategies",
+              "learns from peers"
+            ],
+            "negative": [
+              "ignores others",
+              "no modeling",
+              "isolated learning"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What successful behaviors have you noticed in others?",
+              "Which classmates inspire better study habits?",
+              "What strategies would you like to adopt?"
+            ],
+            "suggestions": [
+              "Identify one successful behavior to adopt each week",
+              "Ask high achievers about their study methods"
+            ]
+          },
+          "related_statements": [
+            "V10",
+            "V11",
+            "A13"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "E18",
+          "category": "effort",
+          "statement": "If I'm given a choice of homeworks, I sometimes do both",
+          "keywords": [
+            "extra work",
+            "initiative",
+            "choice",
+            "commitment"
+          ],
+          "student_indicators": {
+            "positive": [
+              "does extra",
+              "takes opportunities",
+              "ambitious"
+            ],
+            "negative": [
+              "minimum effort",
+              "avoids extra",
+              "misses opportunities"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you approach optional work?",
+              "When did you last do extra homework?",
+              "What motivates you to go beyond requirements?"
+            ],
+            "suggestions": [
+              "Try doing both options once per month",
+              "Use optional work to explore interests"
+            ]
+          },
+          "related_statements": [
+            "E09",
+            "E11",
+            "V12"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "E19",
+          "category": "effort",
+          "statement": "Sometimes, I look ahead to what we're studying next and do some pre-learning before a lesson so I can arrive with questions",
+          "keywords": [
+            "pre-learning",
+            "preparation",
+            "proactive",
+            "questions"
+          ],
+          "student_indicators": {
+            "positive": [
+              "prepares ahead",
+              "pre-reads",
+              "arrives with questions"
+            ],
+            "negative": [
+              "unprepared",
+              "reactive learning",
+              "no preview"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you ever study ahead of lessons?",
+              "How might pre-learning help you?",
+              "What would you gain from arriving prepared?"
+            ],
+            "suggestions": [
+              "Spend 10 minutes previewing tomorrow's topics",
+              "Write down 2 questions before each new topic"
+            ]
+          },
+          "related_statements": [
+            "E10",
+            "S17",
+            "V09"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "E20",
+          "category": "effort",
+          "statement": "When a subject is tough, I try not to ignore it, but put more effort in instead",
+          "keywords": [
+            "persistence",
+            "challenge",
+            "difficulty",
+            "determination"
+          ],
+          "student_indicators": {
+            "positive": [
+              "faces challenges",
+              "increases effort",
+              "persistent"
+            ],
+            "negative": [
+              "avoids difficulty",
+              "gives up",
+              "neglects hard subjects"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you respond to difficult subjects?",
+              "What helps you persist when things get tough?",
+              "Which subject needs more of your effort?"
+            ],
+            "suggestions": [
+              "Allocate extra time to your most challenging subject",
+              "Reward yourself for tackling difficult work"
+            ]
+          },
+          "related_statements": [
+            "E02",
+            "A07",
+            "P06"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "S01",
+          "category": "systems",
+          "statement": "I can breakdown in small steps what I need to achieve, and often do things in more than one sitting rather than all at once",
+          "keywords": [
+            "planning",
+            "breakdown",
+            "steps",
+            "manageable"
+          ],
+          "student_indicators": {
+            "positive": [
+              "breaks down tasks",
+              "plans steps",
+              "manageable chunks"
+            ],
+            "negative": [
+              "overwhelmed",
+              "no planning",
+              "tries everything at once"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you break down large tasks?",
+              "What's your approach to big projects?",
+              "How do you make tasks feel manageable?"
+            ],
+            "suggestions": [
+              "Use the 'chunk it down' method for all big tasks",
+              "Plan tasks across multiple study sessions"
+            ]
+          },
+          "related_statements": [
+            "S09",
+            "S11",
+            "E05"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "S02",
+          "category": "systems",
+          "statement": "I can summarise and reshape information it so it feels like mine. I might re-write it, or use a table, chart, graph or mind-map",
+          "keywords": [
+            "summarizing",
+            "processing",
+            "ownership",
+            "formats"
+          ],
+          "student_indicators": {
+            "positive": [
+              "transforms information",
+              "creates summaries",
+              "multiple formats"
+            ],
+            "negative": [
+              "copies verbatim",
+              "no processing",
+              "single format"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you make information your own?",
+              "What formats work best for your learning?",
+              "When do you reshape information?"
+            ],
+            "suggestions": [
+              "Try a new format each week (mind map, table, etc.)",
+              "Rewrite key concepts in your own words"
+            ]
+          },
+          "related_statements": [
+            "S18",
+            "S20",
+            "P12"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "S03",
+          "category": "systems",
+          "statement": "I file my notes in the right place at the end of each day",
+          "keywords": [
+            "organization",
+            "filing",
+            "daily routine",
+            "consistency"
+          ],
+          "student_indicators": {
+            "positive": [
+              "files daily",
+              "organized",
+              "consistent"
+            ],
+            "negative": [
+              "disorganized",
+              "loses notes",
+              "irregular filing"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you organize your notes?",
+              "What's your end-of-day routine?",
+              "How often do you lose important papers?"
+            ],
+            "suggestions": [
+              "Set a daily alarm for filing time",
+              "Use color-coded folders for each subject"
+            ]
+          },
+          "related_statements": [
+            "S04",
+            "S07",
+            "S14"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "S04",
+          "category": "systems",
+          "statement": "I have an organised workspace at home and in school to study, with everything in its place so I can find it quickly",
+          "keywords": [
+            "workspace",
+            "organization",
+            "efficiency",
+            "environment"
+          ],
+          "student_indicators": {
+            "positive": [
+              "organized space",
+              "efficient setup",
+              "finds things easily"
+            ],
+            "negative": [
+              "cluttered",
+              "wastes time searching",
+              "disorganized"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Describe your study space organization",
+              "How much time do you waste looking for things?",
+              "What would an ideal workspace look like?"
+            ],
+            "suggestions": [
+              "Dedicate 10 minutes weekly to organizing your space",
+              "Create designated spots for all materials"
+            ]
+          },
+          "related_statements": [
+            "S05",
+            "S07",
+            "E13"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "S05",
+          "category": "systems",
+          "statement": "I keep my books and folders in one place in my room/home",
+          "keywords": [
+            "storage",
+            "organization",
+            "consistency",
+            "location"
+          ],
+          "student_indicators": {
+            "positive": [
+              "centralized storage",
+              "consistent location",
+              "organized"
+            ],
+            "negative": [
+              "scattered materials",
+              "loses things",
+              "no system"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Where do you keep your school materials?",
+              "How often do you misplace books or folders?",
+              "What's your storage system?"
+            ],
+            "suggestions": [
+              "Designate one specific area for all school materials",
+              "Use a shelf or box system for each subject"
+            ]
+          },
+          "related_statements": [
+            "S04",
+            "S03",
+            "S13"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "S06",
+          "category": "systems",
+          "statement": "I know what has been covered so far on my course, and ensure it's all there by checking my books against study websites, textbooks or knowledge organisers",
+          "keywords": [
+            "tracking",
+            "completeness",
+            "awareness",
+            "checking"
+          ],
+          "student_indicators": {
+            "positive": [
+              "tracks coverage",
+              "checks completeness",
+              "aware of gaps"
+            ],
+            "negative": [
+              "unaware of gaps",
+              "incomplete notes",
+              "no tracking"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you track what you've covered?",
+              "Are there gaps in your notes?",
+              "How do you ensure complete coverage?"
+            ],
+            "suggestions": [
+              "Create a checklist of topics for each subject",
+              "Regularly audit your notes against the syllabus"
+            ]
+          },
+          "related_statements": [
+            "S14",
+            "S18",
+            "P19"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "S07",
+          "category": "systems",
+          "statement": "I know where everything is all of the time and can access relevant notes during the lesson easily",
+          "keywords": [
+            "accessibility",
+            "organization",
+            "efficiency",
+            "preparation"
+          ],
+          "student_indicators": {
+            "positive": [
+              "finds things quickly",
+              "well organized",
+              "prepared"
+            ],
+            "negative": [
+              "can't find things",
+              "disorganized",
+              "wastes time"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How quickly can you find specific notes?",
+              "What system helps you stay organized?",
+              "When do you struggle to find materials?"
+            ],
+            "suggestions": [
+              "Use dividers and labels in all folders",
+              "Keep a contents page for each subject"
+            ]
+          },
+          "related_statements": [
+            "S03",
+            "S04",
+            "S14"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "S08",
+          "category": "systems",
+          "statement": "I look ahead to next week, checking what needs doing so that even when lots of deadlines come at once, I work out how to finish and submit everything",
+          "keywords": [
+            "planning",
+            "deadlines",
+            "foresight",
+            "prioritization"
+          ],
+          "student_indicators": {
+            "positive": [
+              "plans ahead",
+              "manages deadlines",
+              "proactive"
+            ],
+            "negative": [
+              "reactive",
+              "misses deadlines",
+              "last minute"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you track upcoming deadlines?",
+              "What's your weekly planning process?",
+              "How do you handle multiple deadlines?"
+            ],
+            "suggestions": [
+              "Use a weekly planner to visualize all deadlines",
+              "Sunday evening planning sessions for the week ahead"
+            ]
+          },
+          "related_statements": [
+            "S09",
+            "S17",
+            "E03"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "S09",
+          "category": "systems",
+          "statement": "I make mini-lists of tasks I have to do at the start of particular periods - like on a Monday, or over a weekend - and think about how to prioritise them",
+          "keywords": [
+            "lists",
+            "prioritization",
+            "planning",
+            "tasks"
+          ],
+          "student_indicators": {
+            "positive": [
+              "makes lists",
+              "prioritizes well",
+              "organized approach"
+            ],
+            "negative": [
+              "no lists",
+              "poor prioritization",
+              "random approach"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you decide what to prioritize?",
+              "What list-making system works for you?",
+              "When do you plan your tasks?"
+            ],
+            "suggestions": [
+              "Use the urgent/important matrix for priorities",
+              "Start each week with a prioritized task list"
+            ]
+          },
+          "related_statements": [
+            "S01",
+            "S11",
+            "S16"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "S10",
+          "category": "systems",
+          "statement": "I might set reminders for myself - alarms on my phone - or leave notes for myself so I don't forget things",
+          "keywords": [
+            "reminders",
+            "memory aids",
+            "technology",
+            "notes"
+          ],
+          "student_indicators": {
+            "positive": [
+              "uses reminders",
+              "proactive memory",
+              "systematic"
+            ],
+            "negative": [
+              "forgets tasks",
+              "no reminders",
+              "relies on memory"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What reminder systems do you use?",
+              "How do you ensure you don't forget important tasks?",
+              "What works best for your memory?"
+            ],
+            "suggestions": [
+              "Set recurring reminders for regular tasks",
+              "Use sticky notes in visible places"
+            ]
+          },
+          "related_statements": [
+            "S09",
+            "S16",
+            "S13"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "S11",
+          "category": "systems",
+          "statement": "I often list the things I have to do and figure out which order I need to do things to make the best use of my time",
+          "keywords": [
+            "sequencing",
+            "efficiency",
+            "planning",
+            "time management"
+          ],
+          "student_indicators": {
+            "positive": [
+              "sequences tasks",
+              "efficient ordering",
+              "time aware"
+            ],
+            "negative": [
+              "random order",
+              "inefficient",
+              "poor sequencing"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you decide the order of tasks?",
+              "What makes your study time efficient?",
+              "When do you feel most productive?"
+            ],
+            "suggestions": [
+              "Do hardest tasks when energy is highest",
+              "Batch similar tasks together"
+            ]
+          },
+          "related_statements": [
+            "S01",
+            "S09",
+            "E05"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "S12",
+          "category": "systems",
+          "statement": "I organise my work visually, maybe using colourful stationery or reminders so that I know how the course works",
+          "keywords": [
+            "visual organization",
+            "color coding",
+            "stationery",
+            "clarity"
+          ],
+          "student_indicators": {
+            "positive": [
+              "visual systems",
+              "color coding",
+              "clear organization"
+            ],
+            "negative": [
+              "no visual aids",
+              "monochrome",
+              "unclear structure"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do visual elements help your organization?",
+              "What color coding systems do you use?",
+              "How do you make information visually clear?"
+            ],
+            "suggestions": [
+              "Assign colors to different subjects or topics",
+              "Use highlighters to categorize information types"
+            ]
+          },
+          "related_statements": [
+            "S02",
+            "S14",
+            "S20"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "S13",
+          "category": "systems",
+          "statement": "I pack my bag for the next day the night before",
+          "keywords": [
+            "preparation",
+            "routine",
+            "planning",
+            "efficiency"
+          ],
+          "student_indicators": {
+            "positive": [
+              "prepares ahead",
+              "nightly routine",
+              "organized"
+            ],
+            "negative": [
+              "morning rush",
+              "forgets things",
+              "unprepared"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What's your evening preparation routine?",
+              "How often do you forget materials?",
+              "What would make mornings easier?"
+            ],
+            "suggestions": [
+              "Create a packing checklist for each day",
+              "Set a nightly reminder to pack your bag"
+            ]
+          },
+          "related_statements": [
+            "S10",
+            "V19",
+            "V20"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "S14",
+          "category": "systems",
+          "statement": "I review my notes to ensure they are organised in a beneficial order for revision, sticking in handouts, making a contents page or adding colourful headings",
+          "keywords": [
+            "review",
+            "organization",
+            "revision prep",
+            "structure"
+          ],
+          "student_indicators": {
+            "positive": [
+              "reviews organization",
+              "prepares for revision",
+              "structured notes"
+            ],
+            "negative": [
+              "messy notes",
+              "no review",
+              "unprepared for revision"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How revision-ready are your notes?",
+              "What organizational improvements do you make?",
+              "How do you structure notes for easy review?"
+            ],
+            "suggestions": [
+              "Add contents pages to all subject folders",
+              "Use consistent heading styles throughout"
+            ]
+          },
+          "related_statements": [
+            "S06",
+            "S07",
+            "S12"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "S15",
+          "category": "systems",
+          "statement": "I set aside time for study and resist the temptation to watch TV until it's been done",
+          "keywords": [
+            "discipline",
+            "priorities",
+            "time management",
+            "self-control"
+          ],
+          "student_indicators": {
+            "positive": [
+              "prioritizes study",
+              "good discipline",
+              "delayed gratification"
+            ],
+            "negative": [
+              "easily distracted",
+              "poor priorities",
+              "procrastinates"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you resist distractions?",
+              "What helps you prioritize study?",
+              "When is your protected study time?"
+            ],
+            "suggestions": [
+              "Use leisure activities as rewards after studying",
+              "Create non-negotiable study blocks"
+            ]
+          },
+          "related_statements": [
+            "E01",
+            "E04",
+            "E07"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "S16",
+          "category": "systems",
+          "statement": "I sometimes make quick daily lists - must finish this, have to do this, get started on this task, etc.",
+          "keywords": [
+            "daily planning",
+            "priorities",
+            "lists",
+            "organization"
+          ],
+          "student_indicators": {
+            "positive": [
+              "daily lists",
+              "clear priorities",
+              "organized"
+            ],
+            "negative": [
+              "no daily plan",
+              "unclear priorities",
+              "reactive"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What goes on your daily lists?",
+              "How do you categorize daily tasks?",
+              "What's your morning planning routine?"
+            ],
+            "suggestions": [
+              "Use must/should/could categories for daily tasks",
+              "Limit daily 'must do' items to 3-5 tasks"
+            ]
+          },
+          "related_statements": [
+            "S09",
+            "S10",
+            "E05"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "S17",
+          "category": "systems",
+          "statement": "I sometimes plan my week in advance, giving myself plenty of time to work on tasks",
+          "keywords": [
+            "weekly planning",
+            "time allocation",
+            "advance planning",
+            "buffer time"
+          ],
+          "student_indicators": {
+            "positive": [
+              "plans weekly",
+              "allocates time well",
+              "builds in buffer"
+            ],
+            "negative": [
+              "no weekly plan",
+              "poor time estimates",
+              "always rushed"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you plan your week?",
+              "Do you build in buffer time?",
+              "What tools help your weekly planning?"
+            ],
+            "suggestions": [
+              "Sunday planning sessions for the week",
+              "Add 25% extra time to all estimates"
+            ]
+          },
+          "related_statements": [
+            "S08",
+            "E04",
+            "E19"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "S18",
+          "category": "systems",
+          "statement": "I sometimes summarise everything we've learnt on one page, or a series of flash-cards, or a knowledge organiser",
+          "keywords": [
+            "summarizing",
+            "consolidation",
+            "revision tools",
+            "overview"
+          ],
+          "student_indicators": {
+            "positive": [
+              "creates summaries",
+              "consolidates learning",
+              "revision ready"
+            ],
+            "negative": [
+              "no summaries",
+              "scattered knowledge",
+              "unprepared"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you consolidate your learning?",
+              "What summary formats work best for you?",
+              "When do you create overviews?"
+            ],
+            "suggestions": [
+              "Create one-page summaries after each topic",
+              "Use flashcards for key concepts and definitions"
+            ]
+          },
+          "related_statements": [
+            "S02",
+            "S06",
+            "P10"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "S19",
+          "category": "systems",
+          "statement": "I spend small periods of time just double-checking I've done everything I need to or reviewing the last few days",
+          "keywords": [
+            "checking",
+            "review",
+            "completeness",
+            "reflection"
+          ],
+          "student_indicators": {
+            "positive": [
+              "regular checks",
+              "reviews progress",
+              "catches oversights"
+            ],
+            "negative": [
+              "no checking",
+              "misses tasks",
+              "no review"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How often do you check your progress?",
+              "What's your review routine?",
+              "How do you ensure nothing is missed?"
+            ],
+            "suggestions": [
+              "Daily 5-minute check-ins before bed",
+              "Weekly review sessions on Sundays"
+            ]
+          },
+          "related_statements": [
+            "E14",
+            "S08",
+            "A19"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "S20",
+          "category": "systems",
+          "statement": "I work out the best way to present a whole course and reorganise everything so it's clear and helpful for me",
+          "keywords": [
+            "course overview",
+            "reorganization",
+            "personalization",
+            "structure"
+          ],
+          "student_indicators": {
+            "positive": [
+              "reorganizes content",
+              "personalizes structure",
+              "clear overview"
+            ],
+            "negative": [
+              "uses default structure",
+              "no personalization",
+              "unclear overview"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you organize course content?",
+              "What structure works best for your learning?",
+              "Have you personalized your notes organization?"
+            ],
+            "suggestions": [
+              "Create your own course overview document",
+              "Reorganize notes to match your learning style"
+            ]
+          },
+          "related_statements": [
+            "S02",
+            "S12",
+            "S14"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "P01",
+          "category": "practice",
+          "statement": "I am not afraid to give a question a go, even if I am not fully sure the method I use on my first attempt will be a success",
+          "keywords": [
+            "confidence",
+            "attempt",
+            "risk-taking",
+            "courage"
+          ],
+          "student_indicators": {
+            "positive": [
+              "attempts questions",
+              "takes risks",
+              "confident"
+            ],
+            "negative": [
+              "avoids attempts",
+              "fear of failure",
+              "hesitant"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What stops you from attempting difficult questions?",
+              "How do you approach uncertainty in exams?",
+              "What happens when you're not sure of the method?"
+            ],
+            "suggestions": [
+              "Practice 'having a go' with low-stakes questions",
+              "Remember: attempting earns more marks than blank spaces"
+            ]
+          },
+          "related_statements": [
+            "A10",
+            "A07",
+            "P13"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P02",
+          "category": "practice",
+          "statement": "I analyse where I have gone wrong on exam or test questions by going through the feedback or checking a mark scheme",
+          "keywords": [
+            "analysis",
+            "feedback",
+            "mark schemes",
+            "improvement"
+          ],
+          "student_indicators": {
+            "positive": [
+              "analyzes errors",
+              "uses mark schemes",
+              "learns from mistakes"
+            ],
+            "negative": [
+              "ignores feedback",
+              "repeats errors",
+              "no analysis"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you use mark schemes?",
+              "What do you do with test feedback?",
+              "How do you learn from mistakes?"
+            ],
+            "suggestions": [
+              "Keep an error log with corrections",
+              "Rework questions using mark scheme guidance"
+            ]
+          },
+          "related_statements": [
+            "P11",
+            "A01",
+            "A09"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P03",
+          "category": "practice",
+          "statement": "I collect exam questions and organise them into groups: topic-by-topic or easy-medium-hard",
+          "keywords": [
+            "collection",
+            "organization",
+            "categorization",
+            "resources"
+          ],
+          "student_indicators": {
+            "positive": [
+              "collects questions",
+              "organizes by difficulty",
+              "systematic"
+            ],
+            "negative": [
+              "no collection",
+              "random practice",
+              "disorganized"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you organize practice questions?",
+              "Where do you find exam questions?",
+              "How do you track question difficulty?"
+            ],
+            "suggestions": [
+              "Create question banks for each topic",
+              "Label questions by difficulty and time needed"
+            ]
+          },
+          "related_statements": [
+            "P04",
+            "P14",
+            "P17"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P04",
+          "category": "practice",
+          "statement": "I do past paper questions, often for short intense bursts, dipping in and out like mini-exams",
+          "keywords": [
+            "past papers",
+            "practice",
+            "intensity",
+            "regular"
+          ],
+          "student_indicators": {
+            "positive": [
+              "regular practice",
+              "uses past papers",
+              "varied approach"
+            ],
+            "negative": [
+              "no past papers",
+              "irregular practice",
+              "avoids exams"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How often do you practice past papers?",
+              "What's your approach to exam practice?",
+              "How long are your practice sessions?"
+            ],
+            "suggestions": [
+              "Daily 15-minute past paper sessions",
+              "Mix full papers with targeted question practice"
+            ]
+          },
+          "related_statements": [
+            "P03",
+            "P13",
+            "P15"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "P05",
+          "category": "practice",
+          "statement": "I have a go at making my own exam style questions and marking my answers",
+          "keywords": [
+            "creation",
+            "self-assessment",
+            "understanding",
+            "active"
+          ],
+          "student_indicators": {
+            "positive": [
+              "creates questions",
+              "self-assesses",
+              "deep understanding"
+            ],
+            "negative": [
+              "passive practice",
+              "no creation",
+              "surface learning"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Have you tried creating your own questions?",
+              "How would making questions help you?",
+              "What would you test others on?"
+            ],
+            "suggestions": [
+              "Create 3 questions after each topic",
+              "Swap questions with study partners"
+            ]
+          },
+          "related_statements": [
+            "P17",
+            "P11",
+            "P02"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "P06",
+          "category": "practice",
+          "statement": "I have identified my weaker areas of understanding and focused more time on these areas",
+          "keywords": [
+            "weaknesses",
+            "targeting",
+            "self-awareness",
+            "focus"
+          ],
+          "student_indicators": {
+            "positive": [
+              "knows weaknesses",
+              "targets practice",
+              "strategic"
+            ],
+            "negative": [
+              "unaware of gaps",
+              "avoids weaknesses",
+              "unfocused"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What are your weakest topics?",
+              "How do you identify knowledge gaps?",
+              "How much time goes to weak areas?"
+            ],
+            "suggestions": [
+              "List topics by confidence level",
+              "Allocate 60% of revision to weak areas"
+            ]
+          },
+          "related_statements": [
+            "E02",
+            "E10",
+            "E20"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P07",
+          "category": "practice",
+          "statement": "I know how long each exam is and I am driven to know how long I will need to spend on each section. I time myself on each section to try to work this out",
+          "keywords": [
+            "timing",
+            "pacing",
+            "awareness",
+            "practice"
+          ],
+          "student_indicators": {
+            "positive": [
+              "knows exam timing",
+              "practices pacing",
+              "time aware"
+            ],
+            "negative": [
+              "unaware of timing",
+              "poor pacing",
+              "runs out of time"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you know the timing for all your exams?",
+              "How do you practice exam pacing?",
+              "Have you timed yourself on practice papers?"
+            ],
+            "suggestions": [
+              "Create a timing guide for each exam",
+              "Practice with a timer for every section"
+            ]
+          },
+          "related_statements": [
+            "P15",
+            "P04",
+            "S11"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P08",
+          "category": "practice",
+          "statement": "I know the different command words to expect in a test or exam and have listed them so I can revise each one",
+          "keywords": [
+            "command words",
+            "exam technique",
+            "understanding",
+            "preparation"
+          ],
+          "student_indicators": {
+            "positive": [
+              "knows command words",
+              "understands requirements",
+              "prepared"
+            ],
+            "negative": [
+              "unclear on commands",
+              "misinterprets questions",
+              "unprepared"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Can you explain different command words?",
+              "How do command words change your answers?",
+              "Which command words confuse you?"
+            ],
+            "suggestions": [
+              "Create a command word glossary with examples",
+              "Practice answering the same content with different commands"
+            ]
+          },
+          "related_statements": [
+            "P09",
+            "P11",
+            "E08"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "P09",
+          "category": "practice",
+          "statement": "I know the skills required in exams and tests, often I've practised using a range of unfamiliar data, photos, graphs, maps, questions etc so it doesn't matter if the wording is different on the day or examples are unfamiliar",
+          "keywords": [
+            "skills",
+            "adaptability",
+            "unfamiliar content",
+            "preparation"
+          ],
+          "student_indicators": {
+            "positive": [
+              "practices skills",
+              "handles unfamiliar content",
+              "adaptable"
+            ],
+            "negative": [
+              "memorizes only",
+              "struggles with new formats",
+              "inflexible"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you prepare for unfamiliar questions?",
+              "What skills do your exams test?",
+              "How confident are you with new data formats?"
+            ],
+            "suggestions": [
+              "Practice with questions from different exam boards",
+              "Work with unfamiliar examples weekly"
+            ]
+          },
+          "related_statements": [
+            "P08",
+            "P01",
+            "P17"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "P10",
+          "category": "practice",
+          "statement": "I know what I need to do with my notes in order to make them fit for retrieval/revision, and I spend time regularly checking I can recall them",
+          "keywords": [
+            "retrieval",
+            "recall",
+            "revision prep",
+            "active learning"
+          ],
+          "student_indicators": {
+            "positive": [
+              "practices retrieval",
+              "tests recall",
+              "active revision"
+            ],
+            "negative": [
+              "passive reading",
+              "no recall practice",
+              "ineffective revision"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you test your recall?",
+              "What makes notes good for revision?",
+              "How often do you practice retrieval?"
+            ],
+            "suggestions": [
+              "Use the cover-write-check method daily",
+              "Transform notes into recall questions"
+            ]
+          },
+          "related_statements": [
+            "P18",
+            "S18",
+            "E14"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P11",
+          "category": "practice",
+          "statement": "I like looking at model answers to understand how to reach the top of the mark scheme",
+          "keywords": [
+            "model answers",
+            "exemplars",
+            "standards",
+            "improvement"
+          ],
+          "student_indicators": {
+            "positive": [
+              "studies exemplars",
+              "understands excellence",
+              "aims high"
+            ],
+            "negative": [
+              "no models",
+              "unclear on excellence",
+              "low standards"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Where do you find model answers?",
+              "What do you learn from exemplars?",
+              "How do you apply model answer techniques?"
+            ],
+            "suggestions": [
+              "Collect A* examples for each question type",
+              "Annotate model answers to identify key features"
+            ]
+          },
+          "related_statements": [
+            "P02",
+            "E08",
+            "V07"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P12",
+          "category": "practice",
+          "statement": "I often lecture my notes out loud from memory as if I were teaching a class, to practice the kind of explanation the exam will require of me",
+          "keywords": [
+            "teaching",
+            "explanation",
+            "verbal practice",
+            "understanding"
+          ],
+          "student_indicators": {
+            "positive": [
+              "teaches content",
+              "explains clearly",
+              "deep understanding"
+            ],
+            "negative": [
+              "silent study only",
+              "can't explain",
+              "surface knowledge"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Have you tried teaching content out loud?",
+              "How well can you explain topics?",
+              "Who could you teach to test understanding?"
+            ],
+            "suggestions": [
+              "Teach topics to an imaginary class",
+              "Record yourself explaining key concepts"
+            ]
+          },
+          "related_statements": [
+            "P10",
+            "S02",
+            "V11"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P13",
+          "category": "practice",
+          "statement": "I re-use past paper questions, sometimes over and over, until I'm confident",
+          "keywords": [
+            "repetition",
+            "mastery",
+            "confidence",
+            "practice"
+          ],
+          "student_indicators": {
+            "positive": [
+              "repeats questions",
+              "builds confidence",
+              "achieves mastery"
+            ],
+            "negative": [
+              "one-time practice",
+              "no repetition",
+              "lacks confidence"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you repeat questions you got wrong?",
+              "How many times do you practice difficult questions?",
+              "What builds your confidence?"
+            ],
+            "suggestions": [
+              "Create a 'retry pile' for difficult questions",
+              "Space repetitions over several days"
+            ]
+          },
+          "related_statements": [
+            "P04",
+            "P01",
+            "A07"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P14",
+          "category": "practice",
+          "statement": "I seek out additional exam questions and mark schemes, even if they are from different exam boards",
+          "keywords": [
+            "resources",
+            "initiative",
+            "variety",
+            "preparation"
+          ],
+          "student_indicators": {
+            "positive": [
+              "finds resources",
+              "uses multiple sources",
+              "well-prepared"
+            ],
+            "negative": [
+              "limited resources",
+              "single source",
+              "underprepared"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Where do you find extra exam questions?",
+              "Do you use other exam boards' materials?",
+              "How do you expand your question bank?"
+            ],
+            "suggestions": [
+              "Check 3 different exam boards for each topic",
+              "Ask teachers for additional question sources"
+            ]
+          },
+          "related_statements": [
+            "P03",
+            "V12",
+            "E15"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P15",
+          "category": "practice",
+          "statement": "I set myself timed questions and work under exam conditions even when I don't feel like it",
+          "keywords": [
+            "discipline",
+            "exam conditions",
+            "timing",
+            "practice"
+          ],
+          "student_indicators": {
+            "positive": [
+              "practices timed work",
+              "simulates exams",
+              "disciplined"
+            ],
+            "negative": [
+              "avoids timed practice",
+              "no exam simulation",
+              "unprepared"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How often do you practice under exam conditions?",
+              "What stops you from timed practice?",
+              "How do you simulate exam pressure?"
+            ],
+            "suggestions": [
+              "Weekly timed practice sessions",
+              "Start with short timed bursts, build up"
+            ]
+          },
+          "related_statements": [
+            "P04",
+            "P07",
+            "S15"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "P16",
+          "category": "practice",
+          "statement": "I sometimes submit extra work for marking to ensure my teacher gives me a clear steer on how to improve",
+          "keywords": [
+            "feedback",
+            "extra work",
+            "improvement",
+            "initiative"
+          ],
+          "student_indicators": {
+            "positive": [
+              "seeks feedback",
+              "submits extra",
+              "improvement focused"
+            ],
+            "negative": [
+              "minimal submissions",
+              "avoids feedback",
+              "no extras"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Have you submitted extra work for feedback?",
+              "What stops you from seeking more feedback?",
+              "How could extra feedback help you?"
+            ],
+            "suggestions": [
+              "Submit one extra piece monthly for feedback",
+              "Ask teachers what extra work would be helpful"
+            ]
+          },
+          "related_statements": [
+            "E03",
+            "E09",
+            "A09"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P17",
+          "category": "practice",
+          "statement": "I sometimes try and 'think like an examiner' - imagining what possible questions might come up for a topic and listing them all",
+          "keywords": [
+            "prediction",
+            "examiner perspective",
+            "anticipation",
+            "preparation"
+          ],
+          "student_indicators": {
+            "positive": [
+              "predicts questions",
+              "thinks strategically",
+              "well-prepared"
+            ],
+            "negative": [
+              "no prediction",
+              "surprised by questions",
+              "reactive"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Can you predict likely exam questions?",
+              "How do you think like an examiner?",
+              "What patterns do you see in past questions?"
+            ],
+            "suggestions": [
+              "List 5 possible questions per topic",
+              "Analyze past paper patterns"
+            ]
+          },
+          "related_statements": [
+            "P03",
+            "P05",
+            "P09"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "P18",
+          "category": "practice",
+          "statement": "I will find opportunities to test myself on the knowledge I have gained by covering up information and trying to recall it",
+          "keywords": [
+            "self-testing",
+            "recall",
+            "active learning",
+            "retrieval"
+          ],
+          "student_indicators": {
+            "positive": [
+              "self-tests regularly",
+              "active recall",
+              "retention focused"
+            ],
+            "negative": [
+              "passive reading",
+              "no testing",
+              "poor retention"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you test your knowledge?",
+              "What self-testing methods work for you?",
+              "How often do you practice recall?"
+            ],
+            "suggestions": [
+              "End each study session with a mini-test",
+              "Use flashcards or apps for regular testing"
+            ]
+          },
+          "related_statements": [
+            "P10",
+            "P12",
+            "S18"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "P19",
+          "category": "practice",
+          "statement": "If there are gaps in my knowledge, I know it's my job to find out how to fill them",
+          "keywords": [
+            "responsibility",
+            "gaps",
+            "self-directed",
+            "ownership"
+          ],
+          "student_indicators": {
+            "positive": [
+              "takes responsibility",
+              "fills gaps",
+              "self-directed"
+            ],
+            "negative": [
+              "blames others",
+              "ignores gaps",
+              "passive"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you identify knowledge gaps?",
+              "Who's responsible for your learning?",
+              "What do you do when you find gaps?"
+            ],
+            "suggestions": [
+              "Regular knowledge audits against syllabus",
+              "Create action plans for filling gaps"
+            ]
+          },
+          "related_statements": [
+            "S06",
+            "E10",
+            "A04"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "P20",
+          "category": "practice",
+          "statement": "When I revise with my friends, we test each other rather than just copy each other's notes",
+          "keywords": [
+            "collaboration",
+            "testing",
+            "active revision",
+            "peers"
+          ],
+          "student_indicators": {
+            "positive": [
+              "tests with peers",
+              "active collaboration",
+              "effective revision"
+            ],
+            "negative": [
+              "copies notes only",
+              "passive group work",
+              "ineffective"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you revise with friends?",
+              "What makes group revision effective?",
+              "Do you test each other?"
+            ],
+            "suggestions": [
+              "Create quiz questions for group sessions",
+              "Take turns being the 'teacher'"
+            ]
+          },
+          "related_statements": [
+            "V10",
+            "V11",
+            "P18"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A01",
+          "category": "attitude",
+          "statement": "I allow myself time to be disappointed if something hasn't gone as well as I hoped, but I can move forward and make a list of what I need to improve",
+          "keywords": [
+            "resilience",
+            "processing",
+            "improvement",
+            "balance"
+          ],
+          "student_indicators": {
+            "positive": [
+              "processes disappointment",
+              "moves forward",
+              "improvement focused"
+            ],
+            "negative": [
+              "dwells on failure",
+              "stuck in disappointment",
+              "no action"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you handle disappointment?",
+              "What helps you move forward after setbacks?",
+              "Do you make improvement plans?"
+            ],
+            "suggestions": [
+              "Allow 24 hours to process, then plan improvements",
+              "Write three specific actions after each setback"
+            ]
+          },
+          "related_statements": [
+            "A04",
+            "A07",
+            "P02"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A02",
+          "category": "attitude",
+          "statement": "I can allow myself to be proud of what I have achieved, making a note of good news so I can return to it when I'm feeling less positive",
+          "keywords": [
+            "pride",
+            "achievements",
+            "positivity",
+            "record"
+          ],
+          "student_indicators": {
+            "positive": [
+              "celebrates success",
+              "records achievements",
+              "builds confidence"
+            ],
+            "negative": [
+              "dismisses success",
+              "no celebration",
+              "forgets positives"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you celebrate achievements?",
+              "Do you keep a record of successes?",
+              "What are you proud of recently?"
+            ],
+            "suggestions": [
+              "Keep a 'wins journal' for tough days",
+              "Share achievements with someone supportive"
+            ]
+          },
+          "related_statements": [
+            "A15",
+            "A17",
+            "V05"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "A03",
+          "category": "attitude",
+          "statement": "I don't allow negative thoughts to dominate, I try to express them in a more positive way; 'one thing this teaches me is...' or 'I know now that next time I need to...' or 'mistakes give me information on how to improve...'",
+          "keywords": [
+            "reframing",
+            "positivity",
+            "growth mindset",
+            "self-talk"
+          ],
+          "student_indicators": {
+            "positive": [
+              "reframes negatives",
+              "growth mindset",
+              "constructive thinking"
+            ],
+            "negative": [
+              "negative spiral",
+              "fixed mindset",
+              "destructive thoughts"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you reframe negative thoughts?",
+              "What's your self-talk like after mistakes?",
+              "Can you find lessons in setbacks?"
+            ],
+            "suggestions": [
+              "Practice reframing statements daily",
+              "Write positive versions of negative thoughts"
+            ]
+          },
+          "related_statements": [
+            "A18",
+            "A10",
+            "A04"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A04",
+          "category": "attitude",
+          "statement": "I expect to have setbacks, they are part of my learning process. I try and take responsibility for them rather than blame everyone else",
+          "keywords": [
+            "responsibility",
+            "setbacks",
+            "ownership",
+            "maturity"
+          ],
+          "student_indicators": {
+            "positive": [
+              "expects setbacks",
+              "takes responsibility",
+              "mature attitude"
+            ],
+            "negative": [
+              "surprised by failure",
+              "blames others",
+              "victim mentality"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you view setbacks?",
+              "Who's responsible when things go wrong?",
+              "What do setbacks teach you?"
+            ],
+            "suggestions": [
+              "Normalize setbacks as learning opportunities",
+              "Ask 'what can I control?' in difficult situations"
+            ]
+          },
+          "related_statements": [
+            "A01",
+            "A03",
+            "P19"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A05",
+          "category": "attitude",
+          "statement": "I find a group with students who are currently performing better than I am, as it gives me a chance to challenge myself when I try to match or beat them",
+          "keywords": [
+            "challenge",
+            "aspiration",
+            "competition",
+            "growth"
+          ],
+          "student_indicators": {
+            "positive": [
+              "seeks challenge",
+              "aspires higher",
+              "motivated by others"
+            ],
+            "negative": [
+              "stays comfortable",
+              "avoids challenge",
+              "intimidated"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Who challenges you academically?",
+              "How do you use peer success as motivation?",
+              "What happens when you're the smartest in the room?"
+            ],
+            "suggestions": [
+              "Join study groups with high achievers",
+              "See peer success as inspiration, not intimidation"
+            ]
+          },
+          "related_statements": [
+            "V10",
+            "E17",
+            "A13"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "A06",
+          "category": "attitude",
+          "statement": "I generally focus on written feedback rather than the mark or grade alone",
+          "keywords": [
+            "feedback",
+            "improvement",
+            "focus",
+            "growth"
+          ],
+          "student_indicators": {
+            "positive": [
+              "reads feedback",
+              "improvement focused",
+              "uses comments"
+            ],
+            "negative": [
+              "grade obsessed",
+              "ignores comments",
+              "misses opportunities"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you read all written feedback?",
+              "What matters more - grades or comments?",
+              "How do you use feedback?"
+            ],
+            "suggestions": [
+              "Read feedback before looking at grades",
+              "Act on one piece of feedback from each assignment"
+            ]
+          },
+          "related_statements": [
+            "A09",
+            "A12",
+            "P02"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "A07",
+          "category": "attitude",
+          "statement": "I generally keep trying on topics or questions I find hard, knowing that the longer I persist, the more likely I will succeed",
+          "keywords": [
+            "persistence",
+            "determination",
+            "grit",
+            "belief"
+          ],
+          "student_indicators": {
+            "positive": [
+              "persists",
+              "believes in effort",
+              "determined"
+            ],
+            "negative": [
+              "gives up easily",
+              "low persistence",
+              "defeatist"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How long do you persist with difficult work?",
+              "What helps you keep trying?",
+              "When do you feel like giving up?"
+            ],
+            "suggestions": [
+              "Set persistence goals - 'try for 20 minutes before seeking help'",
+              "Track how persistence leads to breakthroughs"
+            ]
+          },
+          "related_statements": [
+            "E02",
+            "E20",
+            "P01"
+          ],
+          "difficulty_level": "high"
+        },
+        {
+          "id": "A08",
+          "category": "attitude",
+          "statement": "I have some tactics I use if I am feeling demotivated - go for a run, walk my dog, visit my friend, take a break",
+          "keywords": [
+            "self-care",
+            "tactics",
+            "motivation",
+            "wellbeing"
+          ],
+          "student_indicators": {
+            "positive": [
+              "has strategies",
+              "self-aware",
+              "proactive wellbeing"
+            ],
+            "negative": [
+              "no strategies",
+              "stays stuck",
+              "spirals down"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What helps when you're demotivated?",
+              "What are your go-to mood boosters?",
+              "How do you reset when stuck?"
+            ],
+            "suggestions": [
+              "Create a 'motivation toolkit' list",
+              "Schedule regular breaks and rewards"
+            ]
+          },
+          "related_statements": [
+            "A15",
+            "E01",
+            "S15"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "A09",
+          "category": "attitude",
+          "statement": "I know constructive feedback is not an attack on my personality and this helps me action it rather than ignore it",
+          "keywords": [
+            "feedback",
+            "maturity",
+            "separation",
+            "action"
+          ],
+          "student_indicators": {
+            "positive": [
+              "separates feedback from self",
+              "acts on feedback",
+              "mature response"
+            ],
+            "negative": [
+              "takes feedback personally",
+              "defensive",
+              "ignores feedback"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you separate feedback from personal criticism?",
+              "What helps you act on feedback?",
+              "When is feedback hardest to hear?"
+            ],
+            "suggestions": [
+              "View feedback as data, not judgment",
+              "Thank teachers for specific feedback"
+            ]
+          },
+          "related_statements": [
+            "A06",
+            "A12",
+            "P02"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A10",
+          "category": "attitude",
+          "statement": "I know mistakes are information. I will give challenging work a go and try not to be afraid of making errors",
+          "keywords": [
+            "mistakes",
+            "learning",
+            "courage",
+            "growth"
+          ],
+          "student_indicators": {
+            "positive": [
+              "learns from mistakes",
+              "takes risks",
+              "growth mindset"
+            ],
+            "negative": [
+              "fears mistakes",
+              "avoids challenges",
+              "perfectionist"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you view mistakes?",
+              "What have mistakes taught you?",
+              "What stops you from taking risks?"
+            ],
+            "suggestions": [
+              "Keep a 'lessons from mistakes' journal",
+              "Celebrate 'productive failures'"
+            ]
+          },
+          "related_statements": [
+            "A03",
+            "P01",
+            "E10"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A11",
+          "category": "attitude",
+          "statement": "I know that sometimes, feedback is a reflection on my levels of effort or concentration. If I have to, I will accept I need to do more",
+          "keywords": [
+            "honesty",
+            "effort",
+            "acceptance",
+            "responsibility"
+          ],
+          "student_indicators": {
+            "positive": [
+              "honest self-assessment",
+              "accepts responsibility",
+              "adjusts effort"
+            ],
+            "negative": [
+              "denies problems",
+              "blames externally",
+              "no change"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Can you be honest about your effort levels?",
+              "When do you need to do more?",
+              "How do you know if you're working hard enough?"
+            ],
+            "suggestions": [
+              "Rate your effort honestly after each task",
+              "Ask yourself: 'Did I really give my best?'"
+            ]
+          },
+          "related_statements": [
+            "A04",
+            "A09",
+            "E11"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A12",
+          "category": "attitude",
+          "statement": "I read teacher feedback carefully and use this to re-draft work if I am unhappy with the grade",
+          "keywords": [
+            "feedback",
+            "improvement",
+            "action",
+            "standards"
+          ],
+          "student_indicators": {
+            "positive": [
+              "uses feedback",
+              "redrafts work",
+              "improvement focused"
+            ],
+            "negative": [
+              "ignores feedback",
+              "no redrafting",
+              "accepts mediocrity"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "Do you redraft work based on feedback?",
+              "How do you improve disappointing grades?",
+              "What stops you from redrafting?"
+            ],
+            "suggestions": [
+              "Ask teachers if you can resubmit improved work",
+              "Use feedback as a checklist for redrafts"
+            ]
+          },
+          "related_statements": [
+            "A06",
+            "A09",
+            "E03"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A13",
+          "category": "attitude",
+          "statement": "I see my peers' strengths as an opportunity to learn from them, for example by asking to revise as a pair, swapping notes or checking someone else's work",
+          "keywords": [
+            "collaboration",
+            "learning from others",
+            "openness",
+            "humility"
+          ],
+          "student_indicators": {
+            "positive": [
+              "learns from peers",
+              "collaborative",
+              "open minded"
+            ],
+            "negative": [
+              "jealous of others",
+              "works alone",
+              "competitive negatively"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you learn from successful peers?",
+              "Who could you learn from?",
+              "What stops you from asking for peer help?"
+            ],
+            "suggestions": [
+              "Partner with someone strong in your weak areas",
+              "Ask to see exemplar work from peers"
+            ]
+          },
+          "related_statements": [
+            "A05",
+            "E17",
+            "V11"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A14",
+          "category": "attitude",
+          "statement": "I seek help and support from peers and teachers when needed - I don't feel this is a sign of weakness",
+          "keywords": [
+            "help-seeking",
+            "support",
+            "confidence",
+            "maturity"
+          ],
+          "student_indicators": {
+            "positive": [
+              "seeks help",
+              "uses support",
+              "confident"
+            ],
+            "negative": [
+              "avoids help",
+              "sees weakness",
+              "struggles alone"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How comfortable are you asking for help?",
+              "What stops you from seeking support?",
+              "Who can you turn to for help?"
+            ],
+            "suggestions": [
+              "Asking for help shows strength, not weakness",
+              "Identify your support network"
+            ]
+          },
+          "related_statements": [
+            "V02",
+            "V09",
+            "E10"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "A15",
+          "category": "attitude",
+          "statement": "I sometimes force myself to be positive, for example by listing three good things that have recently happened",
+          "keywords": [
+            "positivity",
+            "gratitude",
+            "mindset",
+            "practice"
+          ],
+          "student_indicators": {
+            "positive": [
+              "practices positivity",
+              "finds good things",
+              "grateful"
+            ],
+            "negative": [
+              "stuck in negativity",
+              "can't see positives",
+              "pessimistic"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What are three good things from this week?",
+              "How do you shift to positive thinking?",
+              "When is positivity hardest?"
+            ],
+            "suggestions": [
+              "Daily gratitude practice - 3 good things",
+              "Share positives with a friend or family member"
+            ]
+          },
+          "related_statements": [
+            "A02",
+            "A08",
+            "V08"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "A16",
+          "category": "attitude",
+          "statement": "I try and be positive, help others be positive, and choose positive friends. When friends get overly negative I either tell them, or take a break from them",
+          "keywords": [
+            "positivity",
+            "influence",
+            "boundaries",
+            "environment"
+          ],
+          "student_indicators": {
+            "positive": [
+              "spreads positivity",
+              "sets boundaries",
+              "chooses well"
+            ],
+            "negative": [
+              "negative influences",
+              "no boundaries",
+              "brings others down"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do your friends affect your attitude?",
+              "Can you set boundaries with negative people?",
+              "Who lifts you up?"
+            ],
+            "suggestions": [
+              "Surround yourself with positive influences",
+              "Practice kind but firm boundaries"
+            ]
+          },
+          "related_statements": [
+            "A15",
+            "V15",
+            "V11"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A17",
+          "category": "attitude",
+          "statement": "I try not to feel embarrassed when I am praised, but accept the praise and reflect on why it was given",
+          "keywords": [
+            "praise",
+            "acceptance",
+            "reflection",
+            "confidence"
+          ],
+          "student_indicators": {
+            "positive": [
+              "accepts praise",
+              "reflects on success",
+              "confident"
+            ],
+            "negative": [
+              "deflects praise",
+              "embarrassed",
+              "dismissive"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you respond to praise?",
+              "What makes accepting praise difficult?",
+              "What does praise tell you?"
+            ],
+            "suggestions": [
+              "Practice saying 'thank you' to compliments",
+              "Reflect on what earned the praise"
+            ]
+          },
+          "related_statements": [
+            "A02",
+            "A19",
+            "V16"
+          ],
+          "difficulty_level": "low"
+        },
+        {
+          "id": "A18",
+          "category": "attitude",
+          "statement": "I use caring language and growth mindset to think about and discuss my learning; even when things have been hard I try not to criticise myself",
+          "keywords": [
+            "self-compassion",
+            "growth mindset",
+            "language",
+            "kindness"
+          ],
+          "student_indicators": {
+            "positive": [
+              "kind self-talk",
+              "growth language",
+              "self-compassionate"
+            ],
+            "negative": [
+              "self-critical",
+              "fixed mindset",
+              "harsh language"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "How do you talk to yourself about learning?",
+              "What language do you use after mistakes?",
+              "Would you talk to a friend that way?"
+            ],
+            "suggestions": [
+              "Replace 'I can't' with 'I can't yet'",
+              "Treat yourself with friend-like kindness"
+            ]
+          },
+          "related_statements": [
+            "A03",
+            "A10",
+            "E12"
+          ],
+          "difficulty_level": "medium"
+        },
+        {
+          "id": "A19",
+          "category": "attitude",
+          "statement": "When I improve a score or mark, I take time to recognise what I did to achieve it - perhaps making a note so I can make sure I repeat my success",
+          "keywords": [
+            "recognition",
+            "analysis",
+            "success",
+            "replication"
+          ],
+          "student_indicators": {
+            "positive": [
+              "analyzes success",
+              "recognizes effort",
+              "replicates strategies"
+            ],
+            "negative": [
+              "ignores success factors",
+              "no analysis",
+              "can't repeat"
+            ]
+          },
+          "ai_prompts": {
+            "questions": [
+              "What led to your recent improvements?",
+              "How do you replicate success?",
+              "Do you analyze what works?"
+            ],
+            "suggestions": [
+              "Keep a 'success strategies' list",
+              "Note what you did differently when you improve"
+            ]
+          },
+          "related_statements": [
+            "A02",
+            "A17",
+            "S19"
+          ],
+          "difficulty_level": "medium"
+        }
+      ]
+    }
+  }

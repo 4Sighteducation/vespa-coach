@@ -1,0 +1,98 @@
+/* Enhanced Styling for Student Report Table */
+
+/* Custom Scrollbars for Report Response and Action Plan text areas */
+/* Targeting the span within the 11th and 12th td elements */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11) > span[data-v-b7d9c24a],
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) > span[data-v-b7d9c24a] {
+    scrollbar-width: thin !important; /* For Firefox */
+    scrollbar-color: #adb5bd #f1f3f5 !important; /* For Firefox - thumb and track */
+    padding-right: 5px !important; /* Add a little padding so text doesn't touch scrollbar */
+}
+
+/* WebKit (Chrome, Safari, Edge) scrollbar styles */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11) > span[data-v-b7d9c24a]::-webkit-scrollbar,
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) > span[data-v-b7d9c24a]::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11) > span[data-v-b7d9c24a]::-webkit-scrollbar-track,
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) > span[data-v-b7d9c24a]::-webkit-scrollbar-track {
+    background: #f1f3f5 !important;
+    border-radius: 4px !important;
+}
+
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11) > span[data-v-b7d9c24a]::-webkit-scrollbar-thumb,
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) > span[data-v-b7d9c24a]::-webkit-scrollbar-thumb {
+    background: #adb5bd !important;
+    border-radius: 4px !important;
+}
+
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11) > span[data-v-b7d9c24a]::-webkit-scrollbar-thumb:hover,
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) > span[data-v-b7d9c24a]::-webkit-scrollbar-thumb:hover {
+    background: #868e96 !important;
+}
+
+/* VESPA Column Styling (V, E, S, P, A, O) - 5th to 10th columns */
+/* Headers */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(5),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(6),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(7),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(8),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(9),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(10) {
+    width: 40px !important; /* Reduced width */
+    text-align: center !important;
+}
+
+/* Data cells */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(5),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(6),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(7),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(8),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(9),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(10) {
+    width: 40px !important; /* Reduced width */
+    font-size: 1.05em !important; /* Slightly larger font */
+    font-weight: bold !important; /* Bolder numbers */
+    text-align: center !important; /* Centered numbers */
+    padding: 8px 4px !important; /* Adjust padding */
+}
+
+/* Student Name and Group Column Styling - 1st and 2nd columns */
+/* Headers */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(1), /* Student Name */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(2) { /* Group */
+    width: 110px !important; /* Reduced width from 130px */
+}
+
+/* Data cells */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(1), /* Student Name */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(2) { /* Group */
+    width: 110px !important; /* Reduced width from 130px */
+    word-break: break-word; /* Helps prevent overly wide cells if names are long */
+}
+
+/* Optional: Adjust padding for all header cells for a tighter look */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th .p-column-header-content {
+    padding: 0.8rem 0.5rem !important; /* Reduced padding */
+}
+
+/* Optional: Adjust padding for all body cells for a tighter look */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td {
+    padding: 0.8rem 0.5rem !important; /* Consistent padding */
+}
+
+/* Ensure the Report Response and Action Plan columns still have enough space */
+/* Overriding the general td padding for these specific columns if needed */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(11),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(12) {
+    padding: 0.8rem 0.8rem !important; /* Give them a bit more horizontal padding */
+}
+
+/* Make the "Report" button column (3rd column) a bit more compact if desired */
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-thead th:nth-child(3),
+div.card[data-v-7afa4eb2] .p-datatable .p-datatable-tbody td:nth-child(3) {
+    width: 80px !important; /* Reduced from 100px */
+    padding: 8px 4px !important;
+    text-align: center !important;
+}
