@@ -1873,6 +1873,7 @@ How do these options sound for {student_name_for_chat}?" """
 
         retrieved_context_parts = []
         suggested_activities_for_response = [] 
+        activity_names_for_llm_introduction = [] # NEW: To hold names of activities for LLM to introduce
 
         if current_tutor_message:
             common_words = {
@@ -2037,6 +2038,7 @@ How do these options sound for {student_name_for_chat}?" """
                         
                         if condition_to_add_activity:
                             suggested_activities_for_response.append(activity_data)
+                            activity_names_for_llm_introduction.append(activity_data['name']) # Add name for LLM
                         
                         processed_activity_ids.add(activity_data['id'])
                         found_activities_count += 1
@@ -2199,6 +2201,27 @@ How do these options sound for {student_name_for_chat}?" """
         context_preamble += "\n\nGiven the student's overall profile (from initial context) and any specific items just retrieved from the knowledge bases (detailed above), please respond to the tutor's latest message. Adhere to all persona and response guidelines."
         messages_for_llm.insert(1, {"role": "system", "content": context_preamble}) 
         app.logger.info(f"chat_turn: Added initial_ai_context and RAG context to LLM prompt. Pre-amble length: {len(context_preamble)}")
+
+        # NEW: Add instruction for LLM to introduce activities if they are being suggested
+        if activity_names_for_llm_introduction: # If we have activities for the frontend
+            activity_names_str = ", ".join(activity_names_for_llm_introduction)
+            first_activity_example = activity_names_for_llm_introduction[0] if activity_names_for_llm_introduction else "an activity" # Robust example
+            
+            introduction_prompt_for_llm = (
+                f"\n\n--- Activity Introduction Guidance ---\n"
+                f"I have identified some potentially relevant activities for {student_name_for_chat}: {activity_names_str}. "
+                f"In your response, please naturally weave in a mention of one or two of these by name. "
+                f"Briefly explain how it might help with the issue we're discussing. "
+                f"You can also let the tutor know that they can find these and other details in the 'Suggested Activities' quick links section. "
+                f"For example, you might say something like: 'Based on our discussion about [issue], the \"{first_activity_example}\" activity could be a useful tool to explore. You'll find it and others in the Suggested Activities links below.' " # Escaped quotes around {first_activity_example}
+                f"Make this feel like a natural part of the conversation."
+            )
+            # Append this to the main system prompt or the RAG context preamble
+            if len(messages_for_llm) > 1 and messages_for_llm[1]['role'] == 'system':
+                messages_for_llm[1]['content'] += introduction_prompt_for_llm
+            else:
+                messages_for_llm[0]['content'] += introduction_prompt_for_llm
+            app.logger.info(f"Added activity introduction guidance to LLM prompt for activities: {activity_names_str}")
     else: # if not initial_ai_context
         app.logger.info("chat_turn: No initial_ai_context provided. Proceeding without RAG for this turn.")
 
