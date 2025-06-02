@@ -1689,6 +1689,11 @@ def chat_turn():
     student_level_from_context = initial_ai_context.get('student_level') if initial_ai_context else None
     app.logger.info(f"Chat turn: student_object10_id: {student_object10_id}, Student level from initial_ai_context: {student_level_from_context}") # ADDED LOG
 
+    # --- NEW: Detect if a new topic is being initiated ---
+    new_topic_being_initiated = data.get('new_topic_initiated', False)
+    if new_topic_being_initiated:
+        app.logger.info(f"New topic initiated for student {student_object10_id}.")
+
     # --- Student Name for Personalization (Fetch if not in initial_ai_context) ---
     student_name_for_chat = "the student"
     if initial_ai_context and initial_ai_context.get('student_name'):
@@ -1722,6 +1727,10 @@ def chat_turn():
         "what can i suggest", "activities for", "exercises for", "what should we do", "how can i help",
         "what interventions", "practical steps", "action plan"
     ])
+
+    # Determine effective conversation depth for activity suggestions
+    effective_conversation_depth_for_activities = 0 if new_topic_being_initiated else conversation_depth
+    app.logger.info(f"Original conversation depth: {conversation_depth}, Effective depth for activities: {effective_conversation_depth_for_activities}, New topic flag: {new_topic_being_initiated}")
 
     # Prepare student_level_for_prompt for use in the system message string
     student_level_for_prompt = student_level_from_context if student_level_from_context else 'unknown'
@@ -1776,10 +1785,12 @@ Remember: The tutor knows their student best. Your job is to be a skilled questi
     
     # Add conversation depth guidance
     conversation_guidance = ""
-    if conversation_depth < 3 and not tutor_asking_for_activity:
+
+    # Use effective_conversation_depth_for_activities for phase determination
+    if effective_conversation_depth_for_activities < 3 and not tutor_asking_for_activity:
         conversation_guidance = f"""
 
-CONVERSATION PHASE: Initial Exploration (turn {conversation_depth + 1} for {student_name_for_chat})
+CONVERSATION PHASE: Initial Exploration (turn {effective_conversation_depth_for_activities + 1} for {student_name_for_chat})
 Your SOLE FOCUS is to help the tutor fully articulate their observations and concerns. You MUST NOT suggest any activities or solutions at this stage.
 
 - Start by acknowledging the tutor's input and asking open-ended questions to understand their perspective more deeply.
@@ -1792,10 +1803,10 @@ Example AI Responses (Focus on questions):
 "That sounds like a tricky situation with {student_name_for_chat}. When you say they seem 'lazy,' could you tell me more about what specific behaviors make you say that?"
 "It's interesting you mention {student_name_for_chat} is 'bright but unfocused.' In what specific tasks or subjects does their brightness shine through, and where does the lack of focus become most apparent?"
 "You've mentioned {student_name_for_chat} is doing 5 A-Levels, which is a significant workload. How do you see them managing the demands of that workload day-to-day?" """
-    elif conversation_depth >= 3 and conversation_depth < 5 and not tutor_asking_for_activity:
+    elif effective_conversation_depth_for_activities >= 3 and effective_conversation_depth_for_activities < 5 and not tutor_asking_for_activity:
         conversation_guidance = f"""
 
-CONVERSATION PHASE: Deepening Understanding & Connecting Dots (turn {conversation_depth + 1} for {student_name_for_chat})
+CONVERSATION PHASE: Deepening Understanding & Connecting Dots (turn {effective_conversation_depth_for_activities + 1} for {student_name_for_chat})
 Continue to prioritize the tutor's insights. You are guiding them to connect information. NO DIRECT SOLUTIONS or activity suggestions unless explicitly asked by the tutor.
 
 - Synthesize what the tutor has shared so far and ask questions that help them link their observations to potential underlying factors or data points (from initial_ai_context or RAG).
@@ -1809,10 +1820,10 @@ Example AI Responses (Focus on synthesis and deeper questioning):
 "So, it sounds like this 'laziness' you mentioned earlier with {student_name_for_chat} is particularly noticeable when it comes to [specific task/subject], even though they're clearly capable in other areas like [strength]. What do you think is different about [specific task/subject] for them?"
 "Given {student_name_for_chat}'s low Systems score (X/10) and the challenge of 5 A-Levels, I'm curious how they approach planning and organizing their work. What have you observed about their methods?"
 "We've talked about [observation A] and [observation B]. Do you see any underlying themes or connections emerging in {student_name_for_chat}'s approach that might explain both?" """
-    elif conversation_depth >= 5 and not tutor_asking_for_activity:
+    elif effective_conversation_depth_for_activities >= 5 and not tutor_asking_for_activity:
         conversation_guidance = f"""
 
-CONVERSATION PHASE: Moving Towards Potential Strategies (turn {conversation_depth + 1} for {student_name_for_chat})
+CONVERSATION PHASE: Moving Towards Potential Strategies (turn {effective_conversation_depth_for_activities + 1} for {student_name_for_chat})
 NOW, you can begin to gently transition towards exploring solutions, but the tutor MUST lead. Your role is to help them brainstorm or refine their own ideas first.
 
 - Summarize the key insights and patterns that you and the tutor have discussed so far regarding {student_name_for_chat}.
@@ -2018,7 +2029,13 @@ How do these options sound for {student_name_for_chat}?" """
                         current_found_activities_text_for_prompt.append(f"- Name: {activity_data['name']}, VESPA Element: {activity_data['vespa_element']}{pdf_available_text}. {level_display}. Summary: {activity_data['short_summary'][:100]}...")
                         
                         # Only add to the list for frontend if conditions are met
-                        if conversation_depth >= 3 or tutor_asking_for_activity:
+                        # Use effective_conversation_depth_for_activities for this check
+                        # Corrected and simplified conditional logic:
+                        condition_to_add_activity = (effective_conversation_depth_for_activities >= 3 or tutor_asking_for_activity)
+                        if new_topic_being_initiated and not tutor_asking_for_activity:
+                            condition_to_add_activity = False # If new topic and tutor isn't asking, don't add yet
+                        
+                        if condition_to_add_activity:
                             suggested_activities_for_response.append(activity_data)
                         
                         processed_activity_ids.add(activity_data['id'])
@@ -2027,7 +2044,8 @@ How do these options sound for {student_name_for_chat}?" """
                 app.logger.info(f"chat_turn RAG: Top {found_activities_count} activities selected for LLM prompt: {[(a['name'], a['level']) for a in suggested_activities_for_response]}") # ADDED LOG
 
                 # Only include activities in RAG context if conversation is mature enough OR tutor is asking
-                include_activities_in_rag = conversation_depth >= 3 or tutor_asking_for_activity
+                # Use effective_conversation_depth_for_activities here too
+                include_activities_in_rag = (effective_conversation_depth_for_activities >= 3 or tutor_asking_for_activity)
                 
                 if current_found_activities_text_for_prompt and include_activities_in_rag: 
                     retrieved_context_parts.append("\n--- Provided VESPA Activities ---")
@@ -2200,6 +2218,17 @@ How do these options sound for {student_name_for_chat}?" """
     ai_response_text = "An error occurred while generating my response."
     try:
         app.logger.info(f"chat_turn: Sending to LLM. Number of messages: {len(messages_for_llm)}. First system message length: {len(messages_for_llm[0]['content'])}. Second system message (context) length (if present): {len(messages_for_llm[1]['content']) if len(messages_for_llm) > 1 and messages_for_llm[1]['role'] == 'system' else 'N/A'}")
+        
+        # Prepend new topic instruction if applicable
+        final_user_message_for_llm = current_tutor_message
+        if new_topic_being_initiated:
+            final_user_message_for_llm = f"[TUTOR IS STARTING A COMPLETELY NEW DISCUSSION TOPIC. Focus your response solely on the following message as if it's the beginning of a new conversation. Do not refer to previous topics unless the tutor explicitly does so in this new message.] {current_tutor_message}"
+            # Remove the last user message (which is the original current_tutor_message) and add the modified one
+            if messages_for_llm[-1]["role"] == "user":
+                messages_for_llm.pop()
+            messages_for_llm.append({"role": "user", "content": final_user_message_for_llm})
+            app.logger.info("Prepended NEW TOPIC instruction to user message for LLM.")
+
         response = openai.chat.completions.create(
             model="gpt-4o-mini", # Using more capable model for better conversational quality
             messages=messages_for_llm,
